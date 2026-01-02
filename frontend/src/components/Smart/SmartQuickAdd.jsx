@@ -297,7 +297,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
 
     return suggestionsList.slice(0, 3);
   };
-
+/*
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInput(value);
@@ -566,10 +566,10 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     { text: "Ertaga meeting tayyorlash kerak", type: "task", icon: CheckSquare },
     { text: "Haftaga report yozish vazifasi", type: "task", icon: Calendar }
   ];
-
+*/
+  /*
   return (
     <div className="relative">
-      {/* Quick Add Trigger Button */}
       {!showQuickAdd && (
         <button
           onClick={() => setShowQuickAdd(true)}
@@ -580,8 +580,8 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300"></div>
         </button>
       )}
-
-      {/* Quick Add Modal */}
+*/
+  /* 
       {showQuickAdd && (
         <div 
           className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-fade-in"
@@ -592,7 +592,6 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
           }}
         >
           <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-3xl shadow-2xl w-full max-w-2xl border ${isDark ? 'border-gray-700' : 'border-gray-200'} animate-slide-up overflow-hidden`}>
-            {/* Gradient Header */}
             <div className="bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -617,7 +616,6 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
             </div>
 
             <div className="p-6 max-h-[70vh] overflow-y-auto">
-              {/* Tabs */}
               <div className={`flex gap-2 mb-6 ${isDark ? 'bg-gray-700/50' : 'bg-gray-100'} p-1.5 rounded-xl`}>
                 {[
                   { id: 'all', label: 'AI Avtomatik', icon: Zap },
@@ -644,7 +642,6 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
                 })}
               </div>
 
-              {/* Input Area */}
               <div className="mb-6">
                 <div className="relative">
                   <textarea
@@ -662,7 +659,6 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
                   </div>
                 </div>
 
-                {/* AI Analysis Result */}
                 {parsedResult && (
                   <div className={`mt-4 p-4 border-2 rounded-xl ${getResultColor()} transition-all animate-fade-in`}>
                     <div className="flex items-start gap-3">
@@ -689,8 +685,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
                     </div>
                   </div>
                 )}
-
-                {/* Quick Suggestions */}
+                
                 {suggestions.length > 0 && (
                   <div className="mt-4 space-y-2">
                     <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-2 flex items-center gap-2`}>
@@ -713,7 +708,6 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
                 )}
               </div>
 
-              {/* Example Phrases */}
               <div className="mb-6">
                 <p className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-3 flex items-center gap-2`}>
                   <Star className="w-4 h-4" />
@@ -736,7 +730,6 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowQuickAdd(false)}
@@ -776,5 +769,5 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     </div>
   );
 };
-
+*/
 export default SmartQuickAdd;
