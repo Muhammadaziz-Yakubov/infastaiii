@@ -570,7 +570,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
   return (
     <div className="relative">
       {/* Quick Add Trigger Button */}
-      {/* {!showQuickAdd && (
+     {!showQuickAdd && (
         <button
           onClick={() => setShowQuickAdd(true)}
           className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-30 w-16 h-16 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:via-amber-600 hover:to-orange-700 rounded-full shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 flex items-center justify-center transition-all duration-300 group hover:scale-110"
@@ -579,7 +579,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
           <Sparkles className="w-7 h-7 text-white group-hover:rotate-180 transition-transform duration-300" />
           <div className="absolute inset-0 rounded-full bg-gradient-to-r from-orange-400 to-amber-400 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-300"></div>
         </button>
-      )} */}
+      )}
 
       {/* Quick Add Modal */}
       {showQuickAdd && (
