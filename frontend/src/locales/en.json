@@ -1,0 +1,66 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "language": "Language",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "addTask": "New Task",
+    "completed": "Completed",
+    "pending": "Pending",
+    "inProgress": "In Progress"
+  },
+  "finance": {
+    "title": "Finance",
+    "income": "Income",
+    "expense": "Expense",
+    "balance": "Balance"
+  },
+  "goals": {
+    "title": "Goals",
+    "addGoal": "New Goal",
+    "progress": "Progress"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "tasks": "Tasks",
+    "finance": "Finance",
+    "goals": "Goals",
+    "archive": "Archive",
+    "settings": "Settings",
+    "profile": "Profile"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "notifications": "Notifications",
+    "language": "Language",
+    "theme": "Theme",
+    "save": "Save",
+    "reset": "Reset"
+  }
+}
+
