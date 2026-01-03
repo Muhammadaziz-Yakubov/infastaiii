@@ -622,34 +622,34 @@ const Tasks = () => {
   }
 
   return (
-    <div className="w-full space-y-4 sm:space-y-6 pb-24 sm:pb-8">
+    <div className="w-full max-w-7xl mx-auto space-y-6 lg:space-y-8 pb-24 sm:pb-8 px-4 sm:px-6 lg:px-8">
       {/* Toast Container */}
       <div id="toast-container"></div>
 
-      {/* Header Section - Mobile optimized */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-lg border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500 rounded-lg">
-              <ListTodo className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      {/* Header Section - Desktop optimized */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 lg:p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-4">
+            <div className="p-3 lg:p-4 bg-blue-500 rounded-xl">
+              <ListTodo className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
             </div>
             <div className="flex-1">
-              <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white">
                 Vazifalar
               </h1>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400">
                 {stats.total} ta faol
               </p>
             </div>
           </div>
 
-          {/* Action buttons - stacked on mobile */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          {/* Action buttons - Desktop optimized */}
+          <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => navigate('/archive')}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-medium text-sm sm:text-base transition-all"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 lg:px-6 lg:py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg"
             >
-              <Archive className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Archive className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               <span className="hidden sm:inline">Bajarilganlar</span>
               <span className="sm:hidden">Arxiv</span>
             </button>
@@ -667,10 +667,11 @@ const Tasks = () => {
                 });
                 setShowModal(true);
               }}
-              className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl font-medium text-sm sm:text-base transition-all"
+              className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 lg:px-6 lg:py-3.5 rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg"
             >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-              Yangi Vazifa
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+              <span className="hidden sm:inline">Yangi Vazifa</span>
+              <span className="sm:hidden">Qo'shish</span>
             </button>
           </div>
         </div>
@@ -689,38 +690,38 @@ const Tasks = () => {
         </div>
       )}
 
-      {/* Stats Section - 2x2 grid on mobile */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+      {/* Stats Section - 4 columns on desktop */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 sm:block">
               <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg sm:hidden">
                 <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Jami</p>
-                <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm lg:text-base font-medium mb-1">Jami</p>
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
               </div>
             </div>
-            <div className="hidden sm:block p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="hidden sm:block p-3 lg:p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
+              <BarChart3 className="w-6 h-6 lg:w-7 lg:h-7 text-blue-600 dark:text-blue-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 sm:block">
               <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg sm:hidden">
                 <Play className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Bugun</p>
-                <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.today}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm lg:text-base font-medium mb-1">Bugun</p>
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{stats.today}</p>
               </div>
             </div>
-            <div className="hidden sm:block p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
-              <Play className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            <div className="hidden sm:block p-3 lg:p-4 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
+              <Play className="w-6 h-6 lg:w-7 lg:h-7 text-amber-600 dark:text-amber-400" />
             </div>
           </div>
         </div>
@@ -742,19 +743,19 @@ const Tasks = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 sm:block">
               <div className="p-2 bg-rose-50 dark:bg-rose-900/30 rounded-lg sm:hidden">
                 <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               </div>
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">O'tgan</p>
-                <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.overdue}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm lg:text-base font-medium mb-1">O'tgan</p>
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{stats.overdue}</p>
               </div>
             </div>
-            <div className="hidden sm:block p-3 bg-rose-50 dark:bg-rose-900/30 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+            <div className="hidden sm:block p-3 lg:p-4 bg-rose-50 dark:bg-rose-900/30 rounded-xl">
+              <AlertTriangle className="w-6 h-6 lg:w-7 lg:h-7 text-rose-600 dark:text-rose-400" />
             </div>
           </div>
         </div>
@@ -762,14 +763,14 @@ const Tasks = () => {
 
       {/* Tasks Grid/List View */}
       {filteredTasks.length === 0 ? (
-        <div className="text-center py-8 sm:py-20 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="inline-flex items-center justify-center w-16 h-16 sm:w-24 sm:h-24 bg-gray-50 dark:bg-gray-700 rounded-full mb-4 sm:mb-6 border border-gray-200 dark:border-gray-600">
-            <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400" />
+        <div className="text-center py-12 lg:py-24 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="inline-flex items-center justify-center w-20 h-20 lg:w-28 lg:h-28 bg-gray-50 dark:bg-gray-700 rounded-full mb-6 lg:mb-8 border border-gray-200 dark:border-gray-600">
+            <Sparkles className="w-10 h-10 lg:w-14 lg:h-14 text-gray-400" />
           </div>
-          <h3 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">
+          <h3 className="text-xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-3 lg:mb-4">
             Vazifalar yo'q
           </h3>
-          <p className="text-xs sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 max-w-md mx-auto px-4">
+          <p className="text-base lg:text-lg text-gray-600 dark:text-gray-400 mb-6 lg:mb-8 max-w-md mx-auto px-4">
             {searchTerm || Object.values(filters).some(v => v && v !== 'newest')
               ? 'Filtrlar bo\'yicha vazifalar topilmadi. Filtrlarni o\'zgartirib ko\'ring.'
               : 'Hozircha vazifalar mavjud emas. Birinchi vazifangizni yarating va ishni boshlang!'}
@@ -777,16 +778,16 @@ const Tasks = () => {
           {!searchTerm && !Object.values(filters).some(v => v && v !== 'newest') && (
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-3 bg-blue-500 hover:bg-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
+              className="inline-flex items-center gap-3 bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 lg:px-10 lg:py-5 rounded-xl font-semibold text-base lg:text-lg shadow-lg hover:shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 transition-all"
             >
-              <Sparkles className="w-5 h-5" />
+              <Sparkles className="w-5 h-5 lg:w-6 lg:h-6" />
               Birinchi Vazifani Yarating
             </button>
           )}
         </div>
       ) : viewMode === 'grid' ? (
-        /* Grid View - responsive */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+        /* Grid View - Desktop optimized */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 lg:gap-6 xl:gap-8">
           {filteredTasks.map((task) => {
             const timeRemaining = getTimeRemaining(task.deadline);
             const isSelected = selectedTasks.includes(task._id);
@@ -817,7 +818,7 @@ const Tasks = () => {
                       <div className="flex-1 min-w-0 overflow-hidden">
                         <div className="flex items-start justify-between gap-2">
                           <h3
-                            className="font-bold text-lg text-gray-900 task-title-truncate task-title-responsive"
+                            className="font-bold text-lg lg:text-xl text-gray-900 task-title-truncate task-title-responsive"
                             title={task.title}
                           >
                             {task.title}

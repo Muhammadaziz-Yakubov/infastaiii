@@ -11,7 +11,7 @@ PORT=10000
 NODE_ENV=production
 
 # Frontend
-FRONTEND_URL=https://infastaiii.vercel.app
+FRONTEND_URL=https://www.infastproject.uz
 
 # Render Specific (Auto-set by Render)
 RENDER_EXTERNAL_URL=https://infastaiii.onrender.com

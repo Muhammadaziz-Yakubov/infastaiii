@@ -378,6 +378,11 @@ const Goals = () => {
 
     // Filter goals
     const filteredGoals = goals.filter(goal => {
+        // Completed maqsadlarni ko'rsatmaslik - ular Erishilganlar sahifasida
+        if (goal.status === 'completed') {
+            return false;
+        }
+
         // Search filter
         if (searchQuery && !goal.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
             !goal.description?.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -596,6 +601,37 @@ const Goals = () => {
         }
     };
 
+    // Handle complete goal - Maqsadni erishildi deb belgilash
+    const handleCompleteGoal = async (goal) => {
+        try {
+            const data = await goalsService.updateGoalStatus(goal._id, 'completed');
+
+            if (data.success) {
+                toast.success(` Tabriklaymiz! "${goal.name}" maqsadiga erishdingiz!`);
+                loadData();
+            }
+        } catch (error) {
+            console.error('Complete goal error:', error);
+            toast.error('Maqsadni yakunlashda xatolik');
+        }
+    };
+
+    // Check if goal can be completed
+    const canCompleteGoal = (goal) => {
+        if (goal.status === 'completed') return false;
+
+        if (goal.goalType === 'financial') {
+            // Moliyaviy maqsad: to'liq pul yig'ilgan bo'lsa
+            return goal.currentAmount >= goal.targetAmount;
+        } else {
+            // Moliyasiz maqsad: barcha steplar tugagan bo'lsa
+            if (!goal.tracking || !goal.tracking.steps || goal.tracking.steps.length === 0) {
+                return false;
+            }
+            return goal.tracking.steps.every(step => step.completed);
+        }
+    };
+
     // Handle goal delete
     const handleDeleteGoal = async () => {
         if (!goalToDelete) return;
@@ -717,54 +753,63 @@ const Goals = () => {
     }
 
     return (
-        <div className="w-full space-y-4 sm:space-y-6 pb-24 sm:pb-8">
-            {/* Header Section - Mobile optimized */}
-            <div className="bg-blue-500 rounded-xl sm:rounded-2xl p-4 sm:p-8 text-white shadow-xl">
-                <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm">
-                                <Target className="w-5 h-5 sm:w-8 sm:h-8" />
-                            </div>
-                            <div>
-                                <h1 className="text-xl sm:text-3xl font-bold">Maqsadlar</h1>
-                                <p className="text-white/80 text-xs sm:text-sm hidden sm:block">O'z maqsadlaringizga erishing</p>
-                            </div>
+        <div className="w-full max-w-7xl mx-auto space-y-6 lg:space-y-8 pb-24 sm:pb-8 px-4 sm:px-6 lg:px-8">
+            {/* Header Section - Desktop optimized */}
+            <div className="bg-blue-500 rounded-2xl p-6 lg:p-10 text-white shadow-xl">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6 mb-6 lg:mb-8">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 lg:p-4 bg-white/20 rounded-xl backdrop-blur-sm">
+                            <Target className="w-7 h-7 lg:w-10 lg:h-10" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl lg:text-4xl font-bold">Maqsadlar</h1>
+                            <p className="text-white/80 text-sm lg:text-base">O'z maqsadlaringizga erishing</p>
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => {
-                            resetForm();
-                            setShowAddModal(true);
-                        }}
-                        className="w-full flex items-center justify-center gap-2 bg-white text-blue-600 px-4 py-2.5 rounded-xl font-semibold hover:bg-white/90 transition-all text-sm sm:text-base"
-                    >
-                        <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                        Yangi Maqsad
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                        <button
+                            onClick={() => navigate('/goals/completed')}
+                            className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold transition-all text-sm sm:text-base lg:text-lg shadow-lg"
+                        >
+                            <Award className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                            <span className="hidden sm:inline">Erishilganlar</span>
+                            <span className="sm:hidden">Erishilganlar</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                resetForm();
+                                setShowAddModal(true);
+                            }}
+                            className="flex items-center justify-center gap-2 bg-white text-blue-600 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/90 transition-all text-sm sm:text-base lg:text-lg"
+                        >
+                            <Plus className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+                            <span className="hidden sm:inline">Yangi Maqsad</span>
+                            <span className="sm:hidden">Qo'shish</span>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Stats Grid - 2x2 on mobile */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 border border-white/20">
-                        <p className="text-white/80 text-xs sm:text-sm">Jami</p>
-                        <p className="text-xl sm:text-2xl font-bold">{goalsStats.total}</p>
+                {/* Stats Grid - 4 columns on desktop */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 lg:p-6 border border-white/20">
+                        <p className="text-white/80 text-sm lg:text-base mb-2">Jami</p>
+                        <p className="text-2xl lg:text-3xl font-bold">{goalsStats.total}</p>
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 border border-white/20">
-                        <p className="text-white/80 text-xs sm:text-sm">Progress</p>
-                        <p className="text-xl sm:text-2xl font-bold">{goalsStats.totalProgress.toFixed(0)}%</p>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 lg:p-6 border border-white/20">
+                        <p className="text-white/80 text-sm lg:text-base mb-2">Progress</p>
+                        <p className="text-2xl lg:text-3xl font-bold">{goalsStats.totalProgress.toFixed(0)}%</p>
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 border border-white/20">
-                        <p className="text-white/80 text-xs sm:text-sm">Maqsad</p>
-                        <p className="text-lg sm:text-2xl font-bold">{formatCurrencyShort(goalsStats.totalTarget)}</p>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 lg:p-6 border border-white/20">
+                        <p className="text-white/80 text-sm lg:text-base mb-2">Maqsad</p>
+                        <p className="text-xl lg:text-3xl font-bold">{formatCurrencyShort(goalsStats.totalTarget)}</p>
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 border border-white/20">
-                        <p className="text-white/80 text-xs sm:text-sm">Yig'ilgan</p>
-                        <p className="text-lg sm:text-2xl font-bold">{formatCurrencyShort(goalsStats.totalSaved)}</p>
+                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 lg:p-6 border border-white/20">
+                        <p className="text-white/80 text-sm lg:text-base mb-2">Yig'ilgan</p>
+                        <p className="text-xl lg:text-3xl font-bold">{formatCurrencyShort(goalsStats.totalSaved)}</p>
                     </div>
                 </div>
             </div>
@@ -844,26 +889,26 @@ const Goals = () => {
                 </div>
             )} */}
 
-            {/* Goals Grid - Mobile optimized */}
+            {/* Goals Grid - Desktop optimized */}
             {filteredGoals.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-8 sm:p-12 text-center shadow-md">
-                    <Target className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-gray-400" />
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-12 lg:p-16 text-center shadow-md">
+                    <Target className="w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-4 lg:mb-6 text-gray-400" />
+                    <h3 className="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white mb-3">
                         Maqsad yo'q
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
+                    <p className="text-base lg:text-lg text-gray-600 dark:text-gray-400 mb-6 lg:mb-8">
                         Birinchi maqsadingizni yarating
                     </p>
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="bg-blue-500 text-white px-5 py-2.5 rounded-lg hover:bg-blue-600 transition-colors inline-flex items-center gap-2 text-sm sm:text-base"
+                        className="bg-blue-500 text-white px-6 py-3 lg:px-8 lg:py-4 rounded-xl hover:bg-blue-600 transition-colors inline-flex items-center gap-2 text-base lg:text-lg font-semibold"
                     >
-                        <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <Plus className="w-5 h-5 lg:w-6 lg:h-6" />
                         Maqsad yaratish
                     </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 lg:gap-6 xl:gap-8">
                     {filteredGoals.map(goal => {
                         const progress = calculateProgress(goal);
                         const daysRemaining = calculateDaysRemaining(goal.deadline);
@@ -877,7 +922,7 @@ const Goals = () => {
                                         navigate(`/goals/${goal._id}/tracking`);
                                     }
                                 }}
-                                className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow ${
+                                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow ${
                                     goal.goalType === 'non-financial' ? 'cursor-pointer' : ''
                                 }`}
                             >
@@ -887,21 +932,21 @@ const Goals = () => {
                                     style={{ backgroundColor: goal.color }}
                                 ></div>
 
-                                <div className="p-6">
+                                <div className="p-5 lg:p-7">
                                     {/* Goal Info */}
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="flex items-center gap-3">
+                                    <div className="flex items-start justify-between mb-5 lg:mb-6">
+                                        <div className="flex items-center gap-3 lg:gap-4">
                                             <div
-                                                className="p-3 rounded-xl"
+                                                className="p-3 lg:p-4 rounded-xl"
                                                 style={{
                                                     backgroundColor: goal.color + '20',
                                                     color: goal.color
                                                 }}
                                             >
-                                                <Icon className="w-6 h-6" />
+                                                <Icon className="w-6 h-6 lg:w-8 lg:h-8" />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                                                <h3 className="font-bold text-lg lg:text-xl text-gray-900 dark:text-white">
                                                     {goal.name}
                                                 </h3>
                                                 <div className="flex items-center gap-2 mt-1">
@@ -918,7 +963,7 @@ const Goals = () => {
                                             </div>
                                         </div>
 
-                                       <div className="relative">
+                                        <div className="relative">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -991,18 +1036,18 @@ const Goals = () => {
                                         </div>
                                     </div>
 
-                                    {/* Progress Bar - Mobile optimized */}
+                                    {/* Progress Bar - Desktop optimized */}
                                     {goal.goalType === 'financial' ? (
-                                        <div className="mb-4 sm:mb-6">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        <div className="mb-5 lg:mb-7">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <span className="text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300">
                                                     {progress}%
                                                 </span>
-                                                <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                                                <span className="text-sm lg:text-base font-bold text-gray-900 dark:text-white">
                                                     {formatCurrencyShort(goal.currentAmount)} / {formatCurrencyShort(goal.targetAmount)}
                                                 </span>
                                             </div>
-                                            <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <div className="h-3 lg:h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full rounded-full transition-all duration-500"
                                                     style={{
@@ -1013,16 +1058,16 @@ const Goals = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="mb-4 sm:mb-6">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        <div className="mb-5 lg:mb-7">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <span className="text-sm lg:text-base font-medium text-gray-700 dark:text-gray-300">
                                                     Progress
                                                 </span>
-                                                <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                                                <span className="text-sm lg:text-base font-bold text-gray-900 dark:text-white">
                                                     {goal.tracking?.steps?.filter(s => s.completed).length || 0} / {goal.tracking?.steps?.length || 0} step
                                                 </span>
                                             </div>
-                                            <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <div className="h-3 lg:h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                                 <div
                                                     className="h-full rounded-full transition-all duration-500"
                                                     style={{
@@ -1034,20 +1079,20 @@ const Goals = () => {
                                         </div>
                                     )}
 
-                                    {/* Deadline and Stats - Compact on mobile */}
-                                    <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
-                                        <div className="text-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                                            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 sm:mb-2 text-gray-500" />
-                                            <p className="text-xs text-gray-600 dark:text-gray-400">Muddat</p>
-                                            <p className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">
+                                    {/* Deadline and Stats - Desktop optimized */}
+                                    <div className="grid grid-cols-2 gap-3 lg:gap-5 mb-5 lg:mb-7">
+                                        <div className="text-center p-3 lg:p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                                            <Calendar className="w-5 h-5 lg:w-6 lg:h-6 mx-auto mb-2 text-gray-500" />
+                                            <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">Muddat</p>
+                                            <p className="font-bold text-sm lg:text-base text-gray-900 dark:text-white">
                                                 {goal.deadline ? formatDate(goal.deadline) : '-'}
                                             </p>
                                         </div>
 
-                                        <div className="text-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                                            <Clock className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 sm:mb-2 text-gray-500" />
-                                            <p className="text-xs text-gray-600 dark:text-gray-400">Qoldi</p>
-                                            <p className={`font-bold text-xs sm:text-sm ${daysRemaining > 30 ? 'text-green-600' :
+                                        <div className="text-center p-3 lg:p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                                            <Clock className="w-5 h-5 lg:w-6 lg:h-6 mx-auto mb-2 text-gray-500" />
+                                            <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400">Qoldi</p>
+                                            <p className={`font-bold text-sm lg:text-base ${daysRemaining > 30 ? 'text-green-600' :
                                                 daysRemaining > 7 ? 'text-yellow-600' :
                                                     'text-red-600'
                                                 }`}>
@@ -1057,56 +1102,72 @@ const Goals = () => {
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex gap-2">
-                                        {goal.goalType === 'financial' ? (
-                                            <>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleFund(goal);
-                                                    }}
-                                                    className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    <Plus className="w-4 h-4" />
-                                                    Ajratish
-                                                </button>
-
-                                                {goal.status === 'active' && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleStatusChange(goal._id, 'paused');
-                                                        }}
-                                                        className="px-4 py-2.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg font-medium transition-colors"
-                                                    >
-                                                        <Pause className="w-4 h-4" />
-                                                    </button>
-                                                )}
-
-                                                {goal.status === 'paused' && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleStatusChange(goal._id, 'active');
-                                                        }}
-                                                        className="px-4 py-2.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors"
-                                                    >
-                                                        <Play className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                            </>
-                                        ) : (
+                                    <div className="flex flex-col gap-2 lg:gap-3">
+                                        {/* Erishildi tugmasi - faqat maqsad bajarilsa ko'rsatish */}
+                                        {canCompleteGoal(goal) && (
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/goals/${goal._id}/tracking`);
+                                                    handleCompleteGoal(goal);
                                                 }}
-                                                className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                                className="w-full bg-green-500 hover:bg-green-600 text-white py-3 lg:py-3.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 text-sm lg:text-base shadow-lg"
                                             >
-                                                <Target className="w-4 h-4" />
-                                                Tracking
+                                                <CheckCircle className="w-5 h-5 lg:w-6 lg:h-6" />
+                                                🎉 Erishildi deb belgilash
                                             </button>
                                         )}
+
+                                        <div className="flex gap-2 lg:gap-3">
+                                            {goal.goalType === 'financial' ? (
+                                                <>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleFund(goal);
+                                                        }}
+                                                        className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-3 lg:py-3.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 text-sm lg:text-base"
+                                                    >
+                                                        <Plus className="w-4 h-4 lg:w-5 lg:h-5" />
+                                                        Ajratish
+                                                    </button>
+
+                                                    {goal.status === 'active' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleStatusChange(goal._id, 'paused');
+                                                            }}
+                                                            className="px-4 py-2.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg font-medium transition-colors"
+                                                        >
+                                                            <Pause className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+
+                                                    {goal.status === 'paused' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleStatusChange(goal._id, 'active');
+                                                            }}
+                                                            className="px-4 py-2.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors"
+                                                        >
+                                                            <Play className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/goals/${goal._id}/tracking`);
+                                                    }}
+                                                    className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Target className="w-4 h-4" />
+                                                    Tracking
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1187,14 +1248,11 @@ const Goals = () => {
 
             {/* Statistics Modal */}
             {showStatisticsModal && selectedGoal && (
-                <div className="fixed inset-0 z-50 overflow-y-auto">
+                <div className="fixed inset-0 z-50 overflow-y-auto" onClick={() => setShowStatisticsModal(false)}>
                     <div className="flex items-center justify-center min-h-screen px-4 py-6">
-                        <div
-                            className="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm"
-                            onClick={() => setShowStatisticsModal(false)}
-                        ></div>
+                        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm"></div>
 
-                        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl">
+                        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
                             <div className="h-2 bg-blue-500 rounded-t-2xl"></div>
 
                             <div className="p-6">

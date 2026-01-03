@@ -7,6 +7,8 @@ class TelegramService {
     this.bot = null;
     this.botToken = process.env.TELEGRAM_BOT_TOKEN;
     this.adminGroupId = process.env.TELEGRAM_ADMIN_GROUP_ID;
+    this.requiredChannelId = '-1003532739929'; // Majburiy obuna kanali
+    this.channelUrl = 'https://t.me/infastai'; // Kanal URL
     this.isInitialized = false;
   }
 
@@ -89,6 +91,19 @@ class TelegramService {
     }
   }
 
+  // Kanal obunasini tekshirish
+  async checkChannelSubscription(userId) {
+    try {
+      const member = await this.bot.getChatMember(this.requiredChannelId, userId);
+      const isSubscribed = ['member', 'administrator', 'creator'].includes(member.status);
+      console.log(`👤 User ${userId} subscription status:`, member.status, '- Subscribed:', isSubscribed);
+      return isSubscribed;
+    } catch (error) {
+      console.error('❌ Error checking channel subscription:', error.message);
+      return false;
+    }
+  }
+
   setupEventHandlers() {
     if (!this.bot) return;
 
@@ -98,8 +113,43 @@ class TelegramService {
         console.log('📩 /start command received from:', msg.from.username || msg.from.id);
 
         const chatId = msg.chat.id;
+        const userId = msg.from.id;
         const firstName = msg.from.first_name || 'Foydalanuvchi';
 
+        // Kanal obunasini tekshirish
+        const isSubscribed = await this.checkChannelSubscription(userId);
+
+        if (!isSubscribed) {
+          // Obuna bo'lmagan foydalanuvchiga xabar
+          const subscriptionMessage = `
+🔒 Salom, ${firstName}!
+
+❗ InFast AI botidan foydalanish uchun avval bizning rasmiy kanalimizga obuna bo'lishingiz kerak.
+
+📢 Kanal: ${this.channelUrl}
+
+✅ Obuna bo'lgandan so'ng /start ni qayta bosing.
+          `;
+
+          const options = {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: '📢 Kanalga obuna bo\'lish', url: this.channelUrl }
+                ],
+                [
+                  { text: '✅ Obuna bo\'ldim, tekshirish', callback_data: 'check_subscription' }
+                ]
+              ]
+            }
+          };
+
+          await this.bot.sendMessage(chatId, subscriptionMessage, options);
+          console.log('⚠️  User not subscribed, subscription message sent');
+          return;
+        }
+
+        // Obuna bo'lgan foydalanuvchiga welcome message
         const welcomeMessage = `
 🎉 Salom, ${firstName}!
 
@@ -129,6 +179,59 @@ class TelegramService {
       }
     });
 
+    // Handle callback queries (inline button clicks)
+    this.bot.on('callback_query', async (query) => {
+      try {
+        const chatId = query.message.chat.id;
+        const userId = query.from.id;
+        const data = query.data;
+
+        if (data === 'check_subscription') {
+          const isSubscribed = await this.checkChannelSubscription(userId);
+
+          if (isSubscribed) {
+            await this.bot.answerCallbackQuery(query.id, {
+              text: '✅ Obuna tasdiqlandi!',
+              show_alert: false
+            });
+
+            // Welcome message yuborish
+            const firstName = query.from.first_name || 'Foydalanuvchi';
+            const welcomeMessage = `
+🎉 Ajoyib, ${firstName}!
+
+📱 Endi InFast AI dan foydalanishingiz mumkin!
+
+📋 Ro'yxatdan o'tish uchun:
+1️⃣ Saytda telefon raqamingizni kiriting
+2️⃣ Bu yerga qaytib, kontaktni ulashing
+
+📞 Kontaktni ulashish uchun quyidagi tugmani bosing:
+            `;
+
+            const options = {
+              reply_markup: {
+                keyboard: [
+                  [{ text: '📱 Kontaktni ulashish', request_contact: true }]
+                ],
+                resize_keyboard: true,
+                one_time_keyboard: true
+              }
+            };
+
+            await this.bot.sendMessage(chatId, welcomeMessage, options);
+          } else {
+            await this.bot.answerCallbackQuery(query.id, {
+              text: '❌ Siz hali kanalga obuna bo\'lmadingiz!',
+              show_alert: true
+            });
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error handling callback query:', error.message);
+      }
+    });
+
     // Handle contact sharing
     this.bot.on('contact', async (msg) => {
       try {
@@ -137,6 +240,17 @@ class TelegramService {
         const chatId = msg.chat.id;
         const contact = msg.contact;
         const userId = msg.from.id;
+
+        // Kontakt yuborishdan oldin obunani tekshirish
+        const isSubscribed = await this.checkChannelSubscription(userId);
+        if (!isSubscribed) {
+          await this.bot.sendMessage(chatId,
+            '❌ Avval kanalga obuna bo\'lishingiz kerak!\n\n' +
+            '📢 Kanal: ' + this.channelUrl + '\n\n' +
+            'Obuna bo\'lgandan so\'ng /start ni qayta bosing.'
+          );
+          return;
+        }
 
         if (!contact || !contact.phone_number) {
           console.log('❌ Invalid contact data');

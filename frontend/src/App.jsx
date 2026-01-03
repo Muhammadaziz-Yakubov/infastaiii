@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminProtectedRoute from './components/Admin/AdminProtectedRoute';
 import Layout from './components/Layout';
@@ -15,6 +16,7 @@ const PageLoader = () => (
 );
 
 // Lazy load pages for better performance
+const LandingPage = lazy(() => import('./pages/LandingPage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const AuthCallback = lazy(() => import('./pages/AuthCallback'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
@@ -25,6 +27,7 @@ const Archive = lazy(() => import('./pages/Archive'));
 const Finance = lazy(() => import('./pages/Finance'));
 const Goals = lazy(() => import('./pages/Goals'));
 const GoalTracking = lazy(() => import('./pages/GoalTracking'));
+const CompletedGoals = lazy(() => import('./pages/CompletedGoals'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Pricing = lazy(() => import('./pages/Pricing'));
@@ -37,13 +40,13 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" />
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<LandingPage />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/auth/login" element={<AuthPage />} />
-          <Route path="/auth/register" element={<AuthPage />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/banned" element={<BannedPage />} />
 
           {/* Protected routes with Layout */}
@@ -55,6 +58,7 @@ function App() {
               <Route path="/archive" element={<Archive />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/goals" element={<Goals />} />
+              <Route path="/goals/completed" element={<CompletedGoals />} />
               <Route path="/goals/:id/tracking" element={<GoalTracking />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />

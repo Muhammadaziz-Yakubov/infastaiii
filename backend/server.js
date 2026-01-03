@@ -17,6 +17,7 @@ const settingsRoutes = require('./src/routes/settings');
 const paymentRoutes = require('./src/routes/paymentRoutes');
 const aiSuggestionsRoutes = require('./src/routes/aiSuggestions');
 const adminRoutes = require('./src/routes/adminRoutes');
+const publicRoutes = require('./src/routes/publicRoutes');
 const telegramService = require('./src/services/telegramService');
 const { checkBanStatus } = require('./src/middleware/adminMiddleware');
 
@@ -165,9 +166,9 @@ app.use(cors({
 
     const allowedOrigins = [
       process.env.FRONTEND_URL,
-      'https://infastaiii.vercel.app',
-      'https://infastproject.uz',
       'https://www.infastproject.uz',
+      'https://infastproject.uz',
+      'https://infastaiii.vercel.app', // Backup
     ].filter(Boolean);
 
     if (allowedOrigins.includes(origin)) return callback(null, true);
@@ -205,9 +206,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     const origin = res.req.headers.origin;
     const allowedOrigins = [
       process.env.FRONTEND_URL,
-      'https://infastaiii.vercel.app',
-      'https://infastproject.uz',
       'https://www.infastproject.uz',
+      'https://infastproject.uz',
+      'https://infastaiii.vercel.app', // Backup
     ].filter(Boolean);
 
     if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
@@ -238,6 +239,9 @@ app.get('/', (req, res) => {
     }
   });
 });
+
+// 🎯 Public routes - No authentication required
+app.use('/api/public', publicRoutes);
 
 // 🎯 Auth routes - Special handling
 app.use('/api/auth/google', oauthLimiter); // Google OAuth
