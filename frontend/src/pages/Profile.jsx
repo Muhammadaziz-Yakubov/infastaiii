@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Shield, Lock, AlertTriangle, CheckCircle, Eye, EyeOff, Edit3, Camera, X, Upload, Phone } from 'lucide-react';
+import { User, Mail, Shield, Lock, AlertTriangle, CheckCircle, Eye, EyeOff, Edit3, Camera, X, Upload, Phone, Zap, Crown, Calendar } from 'lucide-react';
 import { userService } from '../services/userService';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -43,12 +45,15 @@ const Profile = () => {
     }
   }, [user]);
 
-  // Fetch fresh profile data on component mount and when user changes
+  // Fetch fresh profile data on component mount and when activeTab changes
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchProfile = async () => {
       try {
         const data = await userService.getProfile();
-        if (data.success) {
+        console.log('Profile data fetched:', data.user?.subscriptionType, data.user?.subscriptionEndDate);
+        if (data.success && isMounted) {
           updateUser(data.user);
           // Update formData with fresh user data
           setFormData({
@@ -63,7 +68,12 @@ const Profile = () => {
     };
 
     fetchProfile();
-  }, [updateUser]);
+    
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -343,10 +353,30 @@ const Profile = () => {
                 </>
               ) : null}
             </p>
-            <div className="inline-flex items-center gap-2 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
-              <span className="text-purple-100 dark:text-purple-200 text-sm">Obuna:</span>
-              <span className="text-white font-semibold capitalize">{user?.subscriptionType || 'Free'}</span>
-            </div>
+            {/* {user?.subscriptionType === 'premium' ? (
+              <button
+                onClick={() => setActiveTab('subscription')}
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 backdrop-blur-sm rounded-lg px-4 py-2 border border-yellow-400/50 hover:from-yellow-500/40 hover:to-orange-500/40 transition-all cursor-pointer"
+              >
+                <Crown className="w-5 h-5 text-yellow-300" />
+                <span className="text-white font-bold">Pro Obuna</span>
+                <span className="text-yellow-200 text-xs">→ Batafsil</span>
+              </button>
+            ) : ( */}
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2">
+                  <span className="text-purple-100 dark:text-purple-200 text-sm">Obuna:</span>
+                  <span className="text-white font-semibold">Free</span>
+                </div>
+                {/* <button
+                  onClick={() => navigate('/pricing')}
+                  className="flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-all shadow-lg"
+                > */}
+                  {/* <Zap className="w-4 h-4" />
+                  Pro ga o'tish
+                </button> */}
+              </div>
+            {/* )} */}
           </div>
         </div>
       </div>
@@ -451,6 +481,9 @@ const Profile = () => {
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Telefon raqam
+                      {user?.authProvider === 'phone' && (
+                        <span className="ml-2 text-xs text-gray-500">(o'zgartirib bo'lmaydi)</span>
+                      )}
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -458,9 +491,13 @@ const Profile = () => {
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-900 dark:text-white transition-all hover:border-gray-300 dark:hover:border-gray-500"
+                        className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl outline-none transition-all ${
+                          user?.authProvider === 'phone' || loading
+                            ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                            : 'bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 dark:text-white hover:border-gray-300 dark:hover:border-gray-500'
+                        }`}
                         placeholder="+998901234567"
-                        disabled={loading}
+                        disabled={loading || user?.authProvider === 'phone'}
                       />
                     </div>
                   </div>
@@ -607,6 +644,119 @@ const Profile = () => {
               </button>
             </div>
           </form>
+        )}
+
+        {/* Subscription Tab - Telegram Premium Style */}
+        {activeTab === 'subscription' && user?.subscriptionType === 'premium' && (
+          <div className="space-y-6">
+            {/* Premium Header - Telegram Style */}
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-8 text-white">
+              {/* Background decoration */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-400/20 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl" />
+              
+              <div className="relative z-10">
+                {/* Star icon with glow */}
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-yellow-400 rounded-full blur-xl opacity-50 animate-pulse" />
+                    <div className="relative w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-2xl">
+                      <Crown className="w-10 h-10 text-white" />
+                    </div>
+                  </div>
+                </div>
+                
+                <h2 className="text-3xl font-bold text-center mb-2">InFast Pro</h2>
+                <p className="text-purple-200 text-center mb-6">Premium imkoniyatlar sizniki!</p>
+                
+                {/* Status badge */}
+                <div className="flex justify-center">
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                    <span className="font-medium">Obuna faol</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Subscription Info Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl p-5 border border-purple-200 dark:border-purple-800">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Tugash sanasi</span>
+                </div>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {user?.subscriptionEndDate 
+                    ? new Date(user.subscriptionEndDate).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : '—'}
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-900/30 dark:to-yellow-900/30 rounded-2xl p-5 border border-orange-200 dark:border-orange-800">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Qolgan vaqt</span>
+                </div>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {user?.subscriptionEndDate 
+                    ? `${Math.max(0, Math.ceil((new Date(user.subscriptionEndDate) - new Date()) / (1000 * 60 * 60 * 24)))} kun`
+                    : '—'}
+                </p>
+              </div>
+            </div>
+
+            {/* Pro Features - Telegram Style */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-yellow-500" />
+                  Pro imkoniyatlari
+                </h3>
+              </div>
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                {[
+                  { icon: '🚀', title: 'Cheksiz vazifalar', desc: 'Istalgancha vazifa yarating' },
+                  { icon: '🤖', title: 'AI yordamchi', desc: 'Sun\'iy intellekt bilan vazifa qo\'shing' },
+                  { icon: '🏆', title: 'Challenge tizimi', desc: 'Kunlik va haftalik musobaqalar' },
+                  { icon: '👨‍👩‍👧‍👦', title: 'Oila rejimi', desc: 'Oila a\'zolari bilan birga ishlang' },
+                  { icon: '📊', title: 'Kengaytirilgan statistika', desc: 'Batafsil tahlil va hisobotlar' },
+                  { icon: '⚡', title: 'Ustuvor yordam', desc: '24/7 tezkor qo\'llab-quvvatlash' },
+                  { icon: '🔄', title: 'Sinxronizatsiya', desc: 'Barcha qurilmalarda real-time' },
+                  { icon: '🚫', title: 'Reklama yo\'q', desc: 'Toza va qulay interfeys' },
+                ].map((feature, index) => (
+                  <div key={index} className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <span className="text-2xl">{feature.icon}</span>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 dark:text-white">{feature.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{feature.desc}</p>
+                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Info Card */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-5 border border-blue-200 dark:border-blue-800">
+              <div className="flex gap-4">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white mb-1">Obuna haqida</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Obuna muddati tugagandan so'ng avtomatik ravishda Free rejaga o'tasiz. 
+                    Uzaytirish uchun muddat tugashidan oldin qayta to'lov qiling.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

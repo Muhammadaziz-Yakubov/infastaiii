@@ -56,18 +56,20 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        // Fetch fresh user profile data
-        try {
-          const profileData = await userService.getProfile();
-          if (profileData.success) {
-            updateUser(profileData.user);
-          }
-        } catch (profileError) {
-          console.error('Failed to fetch profile:', profileError);
+        // Fetch all data in parallel for faster loading
+        const [profileResult, tasksData, goalsData, financeData] = await Promise.all([
+          userService.getProfile().catch(err => ({ success: false, error: err })),
+          taskService.getTasks().catch(err => ({ tasks: [] })),
+          goalsService.getGoals().catch(err => ({ goals: [] })),
+          financeService.getTransactions().catch(err => ({ transactions: [] }))
+        ]);
+
+        // Update user profile if successful
+        if (profileResult.success) {
+          updateUser(profileResult.user);
         }
 
-        // Load tasks
-        const tasksData = await taskService.getTasks();
+        // Process tasks
         const tasks = tasksData.tasks || [];
         const completedTasks = tasks.filter(t => t.status === 'completed');
         const pendingTasks = tasks.filter(t => t.status !== 'completed');
@@ -76,14 +78,12 @@ const Dashboard = () => {
           return new Date(t.deadline) < new Date() && t.status !== 'completed';
         });
 
-        // Load goals
-        const goalsData = await goalsService.getGoals();
+        // Process goals
         const goals = goalsData.goals || [];
         const completedGoals = goals.filter(g => g.status === 'completed');
         const inProgressGoals = goals.filter(g => g.status === 'in_progress');
 
-        // Load finance
-        const financeData = await financeService.getTransactions();
+        // Process finance
         const transactions = financeData.transactions || [];
         const income = transactions
           .filter(t => t.type === 'income')

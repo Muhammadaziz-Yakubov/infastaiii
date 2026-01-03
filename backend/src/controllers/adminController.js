@@ -1,8 +1,10 @@
 // src/controllers/adminController.js - Admin dashboard and user management
 const User = require('../models/User');
-const Task = require('../models/Task'); // Assuming Task model exists
-const Payment = require('../models/Payment'); // Assuming Payment model exists
+const Task = require('../models/Task');
+const Payment = require('../models/Payment');
 const jwt = require('jsonwebtoken');
+const path = require('path');
+const fs = require('fs');
 
 // JWT Token Generation
 const generateToken = (payload) => {
@@ -292,17 +294,17 @@ exports.getUserDetails = async (req, res) => {
     // Get user's tasks count (if Task model exists)
     let taskCount = 0;
     try {
-      taskCount = await Task.countDocuments({ userId });
+      taskCount = await Task.countDocuments({ userId: userId });
     } catch (error) {
-      console.log('Task model not available');
+      console.log('Task model not available:', error.message);
     }
 
     // Get user's payments count (if Payment model exists)
     let paymentCount = 0;
     try {
-      paymentCount = await Payment.countDocuments({ userId });
+      paymentCount = await Payment.countDocuments({ userId: userId });
     } catch (error) {
-      console.log('Payment model not available');
+      console.log('Payment model not available:', error.message);
     }
 
     res.json({
@@ -438,6 +440,228 @@ exports.createAdminUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Admin yaratishda xatolik'
+    });
+  }
+};
+
+// Get all payments with pagination
+exports.getAllPayments = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status;
+
+    let query = {};
+    if (status) {
+      query.status = status;
+    }
+
+    const payments = await Payment.find(query)
+      .populate('userId', 'firstName lastName email phone avatar subscriptionType')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .lean();
+
+    const total = await Payment.countDocuments(query);
+
+    res.json({
+      success: true,
+      payments,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Get all payments error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'To\'lovlarni yuklashda xatolik'
+    });
+  }
+};
+
+// Get pending payments
+exports.getPendingPayments = async (req, res) => {
+  try {
+    const payments = await Payment.find({ status: 'pending' })
+      .populate('userId', 'firstName lastName email phone avatar')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json({
+      success: true,
+      payments
+    });
+  } catch (error) {
+    console.error('Get pending payments error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Kutilayotgan to\'lovlarni yuklashda xatolik'
+    });
+  }
+};
+
+// Approve payment - user becomes Pro
+exports.approvePayment = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: 'To\'lov topilmadi'
+      });
+    }
+
+    if (payment.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Bu to\'lov allaqachon ko\'rib chiqilgan'
+      });
+    }
+
+    // Calculate subscription end date
+    const now = new Date();
+    let subscriptionEndDate;
+    if (payment.billingCycle === 'yearly') {
+      subscriptionEndDate = new Date(now.setFullYear(now.getFullYear() + 1));
+    } else {
+      subscriptionEndDate = new Date(now.setMonth(now.getMonth() + 1));
+    }
+
+    // Update payment status
+    payment.status = 'approved';
+    payment.approvedBy = req.userId;
+    payment.approvedAt = new Date();
+    payment.subscriptionEndDate = subscriptionEndDate;
+    await payment.save();
+
+    // Update user subscription to premium
+    await User.findByIdAndUpdate(payment.userId, {
+      subscriptionType: 'premium',
+      subscriptionPlan: payment.plan,
+      subscriptionStatus: 'active',
+      subscriptionEndDate: subscriptionEndDate
+    });
+
+    console.log(`✅ Payment ${paymentId} approved. User ${payment.userId} upgraded to premium until ${subscriptionEndDate}`);
+
+    res.json({
+      success: true,
+      message: 'To\'lov tasdiqlandi! Foydalanuvchi Pro obunaga o\'tdi.',
+      payment: {
+        ...payment.toObject(),
+        subscriptionEndDate
+      }
+    });
+
+  } catch (error) {
+    console.error('Approve payment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'To\'lovni tasdiqlashda xatolik'
+    });
+  }
+};
+
+// Reject payment
+exports.rejectPayment = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+    const { reason } = req.body;
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: 'To\'lov topilmadi'
+      });
+    }
+
+    if (payment.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Bu to\'lov allaqachon ko\'rib chiqilgan'
+      });
+    }
+
+    // Update payment status
+    payment.status = 'rejected';
+    payment.rejectedReason = reason || 'Sabab ko\'rsatilmagan';
+    payment.approvedBy = req.userId;
+    payment.approvedAt = new Date();
+    await payment.save();
+
+    console.log(`❌ Payment ${paymentId} rejected. Reason: ${reason}`);
+
+    res.json({
+      success: true,
+      message: 'To\'lov rad etildi',
+      payment
+    });
+
+  } catch (error) {
+    console.error('Reject payment error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'To\'lovni rad etishda xatolik'
+    });
+  }
+};
+
+// Update user subscription (Admin can give/remove Pro)
+exports.updateUserSubscription = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { subscriptionType, subscriptionEndDate } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Foydalanuvchi topilmadi'
+      });
+    }
+
+    // Update subscription
+    user.subscriptionType = subscriptionType || 'free';
+    
+    if (subscriptionType === 'premium' || subscriptionType === 'enterprise') {
+      user.subscriptionStatus = 'active';
+      user.subscriptionEndDate = subscriptionEndDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // Default 30 days
+    } else {
+      user.subscriptionStatus = 'inactive';
+      user.subscriptionEndDate = null;
+      user.subscriptionPlan = null;
+    }
+
+    await user.save();
+
+    console.log(`✅ User ${userId} subscription updated to ${subscriptionType}`);
+
+    res.json({
+      success: true,
+      message: subscriptionType === 'free' 
+        ? 'Foydalanuvchi Free rejaga o\'tkazildi' 
+        : 'Foydalanuvchi Pro obunaga o\'tkazildi',
+      user: {
+        _id: user._id,
+        subscriptionType: user.subscriptionType,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionEndDate: user.subscriptionEndDate
+      }
+    });
+
+  } catch (error) {
+    console.error('Update user subscription error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Obunani yangilashda xatolik'
     });
   }
 };

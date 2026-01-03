@@ -81,6 +81,66 @@ export const adminService = {
       console.error('toggleUserBan error:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Get pending payments
+  getPendingPayments: async () => {
+    try {
+      const response = await api.get('/api/admin/payments/pending');
+      return response.data;
+    } catch (error) {
+      console.error('getPendingPayments error:', error.response?.data || error.message);
+      return { success: false, payments: [] };
+    }
+  },
+
+  // Get all payments
+  getAllPayments: async (page = 1, limit = 20, status = '') => {
+    try {
+      const params = new URLSearchParams({ page, limit });
+      if (status) params.append('status', status);
+      const response = await api.get(`/api/admin/payments?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('getAllPayments error:', error.response?.data || error.message);
+      return { success: false, payments: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } };
+    }
+  },
+
+  // Approve payment
+  approvePayment: async (paymentId) => {
+    try {
+      const response = await api.put(`/api/admin/payments/${paymentId}/approve`);
+      return response.data;
+    } catch (error) {
+      console.error('approvePayment error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Reject payment
+  rejectPayment: async (paymentId, reason = '') => {
+    try {
+      const response = await api.put(`/api/admin/payments/${paymentId}/reject`, { reason });
+      return response.data;
+    } catch (error) {
+      console.error('rejectPayment error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Update user subscription (give/remove Pro)
+  updateUserSubscription: async (userId, subscriptionType, subscriptionEndDate = null) => {
+    try {
+      const response = await api.put(`/api/admin/users/${userId}/subscription`, { 
+        subscriptionType, 
+        subscriptionEndDate 
+      });
+      return response.data;
+    } catch (error) {
+      console.error('updateUserSubscription error:', error.response?.data || error.message);
+      throw error;
+    }
   }
 };
 

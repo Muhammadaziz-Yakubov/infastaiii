@@ -22,7 +22,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Admin routes uchun adminToken ishlatish
-    if (config.url?.includes('/admin/')) {
+    if (config.url?.includes('/admin')) {
       // Avval oddiy localStorage'dan
       let adminToken = localStorage.getItem('adminToken');
       

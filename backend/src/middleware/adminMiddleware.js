@@ -44,6 +44,7 @@ const requireAdmin = async (req, res, next) => {
     // Add user to request object
     req.user = user;
     req.admin = user;
+    req.userId = user._id;
     next();
 
   } catch (error) {

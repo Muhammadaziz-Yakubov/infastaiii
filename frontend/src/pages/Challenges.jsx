@@ -10,6 +10,7 @@ import {
   Gift, Bell, MessageCircle, Settings, Info
 } from 'lucide-react';
 import { challengeService } from '../services/challengeService';
+import { useAuth } from '../contexts/AuthContext';
 import './Challenges.css';
 
 const CHALLENGE_CATEGORIES = [
@@ -40,6 +41,7 @@ const UNIT_OPTIONS = [
 
 const Challenges = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -49,6 +51,8 @@ const Challenges = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('active');
   const [showChallengeMenu, setShowChallengeMenu] = useState(null);
+  const [appSettings, setAppSettings] = useState(null);
+  const [showProModal, setShowProModal] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -71,7 +75,33 @@ const Challenges = () => {
 
   useEffect(() => {
     loadChallenges();
-  }, []);
+    fetchSettings();
+  }, [user]);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/public`);
+      const data = await response.json();
+      if (data.success) {
+        setAppSettings(data.settings);
+        // If Challenges is disabled, redirect to home
+        if (!data.settings.challenges_enabled) {
+          navigate('/');
+          return;
+        }
+        
+        // Check if user has Pro subscription
+        if (!user) return;
+        const hasProSubscription = user?.subscriptionType === 'premium' || user?.subscriptionType === 'enterprise';
+        if (!hasProSubscription) {
+          // Show Pro modal instead of redirecting
+          setShowProModal(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+    }
+  };
 
   const loadChallenges = async () => {
     try {
@@ -1262,6 +1292,61 @@ const Challenges = () => {
                     Yopish
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pro Subscription Required Modal */}
+      {showProModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+            {/* Header with gradient */}
+            <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-indigo-700 p-8 text-center">
+              <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+                <Crown className="w-10 h-10 text-yellow-300" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">Pro Obuna Talab Qilinadi</h3>
+              <p className="text-blue-100">Challengelarga kirish uchun Pro obunaga ega bo'lishingiz kerak</p>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Cheksiz challengelar yaratish</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Do'stlar bilan raqobatlashish</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Batafsil statistika va tahlil</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Barcha Pro imkoniyatlar</span>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+                >
+                  Orqaga
+                </button>
+                <button
+                  onClick={() => navigate('/pricing')}
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-5 h-5" />
+                  Pro Olish
+                </button>
               </div>
             </div>
           </div>

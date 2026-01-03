@@ -1,0 +1,7 @@
+<svg width="1284" height="2778" viewBox="0 0 1284 2778" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1284" height="2778" fill="#3B82F6"/>
+  <rect x="492" y="1189" width="300" height="300" rx="60" fill="white" fill-opacity="0.2"/>
+  <path d="M642 1239L742 1339L642 1439L542 1339L642 1239Z" fill="white"/>
+  <circle cx="642" cy="1389" r="40" fill="white"/>
+  <text x="642" y="1600" text-anchor="middle" fill="white" font-family="Arial" font-size="72" font-weight="bold">InFast AI</text>
+</svg>

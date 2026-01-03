@@ -38,6 +38,14 @@ const LandingPage = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  // Check if user is already logged in - redirect to dashboard
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
   const features = [
     {
       icon: CheckSquare,

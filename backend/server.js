@@ -19,7 +19,9 @@ const aiSuggestionsRoutes = require('./src/routes/aiSuggestions');
 const adminRoutes = require('./src/routes/adminRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
 const challengeRoutes = require('./src/routes/challengeRoutes');
+const appSettingsRoutes = require('./src/routes/appSettingsRoutes');
 const telegramService = require('./src/services/telegramService');
+const AppSettings = require('./src/models/AppSettings');
 const { checkBanStatus } = require('./src/middleware/adminMiddleware');
 
 const cleanup = () => {
@@ -251,11 +253,11 @@ app.use('/api/auth', authLimiter, authRoutes); // Boshqa auth endpoints
 // 🎯 Umumiy API routes - Keng limit
 app.use('/api/', apiLimiter); // Barcha API endpointlarga
 
-// 🎯 Ban check middleware - Barcha API endpointlar uchun
-app.use('/api/', checkBanStatus);
-
-// Admin routes (before other routes to avoid ban check)
+// Admin routes - BEFORE ban check middleware (admin should not be affected by ban check)
 app.use('/api/admin', adminRoutes);
+
+// 🎯 Ban check middleware - Barcha API endpointlar uchun (admin routes dan keyin)
+app.use('/api/', checkBanStatus);
 
 // Regular API routes
 app.use('/api/goals', goalsRoutes);
@@ -267,6 +269,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/ai-suggestions', aiSuggestionsRoutes);
 app.use('/api/challenges', challengeRoutes);
+app.use('/api/app-settings', appSettingsRoutes);
 
 // 404 handler
 app.use('/api/*', (req, res) => {
@@ -348,6 +351,13 @@ const startServer = async () => {
       console.log('  - Google OAuth: 100 req/15min');
       console.log('Security: ✅ Helmet enabled');
       
+      // Initialize default app settings
+      AppSettings.initializeDefaults().then(() => {
+        console.log('✅ App settings initialized');
+      }).catch((error) => {
+        console.error('❌ App settings initialization failed:', error);
+      });
+
       telegramService.init().then(() => {
         console.log('✅ All services initialized');
       }).catch((error) => {

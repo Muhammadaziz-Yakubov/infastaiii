@@ -26,7 +26,8 @@ import {
   ChevronLeft,
   Menu,
   Trophy,
-  MoreHorizontal
+  MoreHorizontal,
+  Zap
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -117,6 +118,7 @@ const Sidebar = () => {
     return saved === 'true';
   });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [appSettings, setAppSettings] = useState(null);
   const searchRef = useRef(null);
 
   // Save collapse state to localStorage
@@ -124,12 +126,33 @@ const Sidebar = () => {
     localStorage.setItem('sidebarCollapsed', isCollapsed);
   }, [isCollapsed]);
 
+  // Fetch app settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/public`);
+        const data = await response.json();
+        if (data.success) {
+          setAppSettings(data.settings);
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   const navigation = [
     { name: 'Boshqaruv Paneli', href: '/dashboard', icon: LayoutDashboard, badge: null },
     { name: 'Vazifalar', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'Moliya', href: '/finance', icon: Wallet, badge: null },
     { name: 'Maqsad', href: '/goals', icon: Goal, badge: null },
-    // { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' },
+    ...(appSettings?.challenges_enabled ? [
+      { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' }
+    ] : []),
+    ...(appSettings?.pro_subscription_enabled && user?.subscriptionType !== 'premium' ? [
+      { name: 'Pro Obuna', href: '/pricing', icon: Zap, badge: 'Pro' }
+    ] : []),
   ];
 
   // Click outside handlers

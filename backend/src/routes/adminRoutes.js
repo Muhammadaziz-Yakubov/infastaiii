@@ -30,4 +30,13 @@ router.post('/users/:userId/toggle-ban', adminController.toggleUserBan);
 // Admin user creation (for setup)
 router.post('/create-admin', adminController.createAdminUser);
 
+// Payment management
+router.get('/payments', adminController.getAllPayments);
+router.get('/payments/pending', adminController.getPendingPayments);
+router.put('/payments/:paymentId/approve', adminController.approvePayment);
+router.put('/payments/:paymentId/reject', adminController.rejectPayment);
+
+// User subscription management
+router.put('/users/:userId/subscription', adminController.updateUserSubscription);
+
 module.exports = router;
