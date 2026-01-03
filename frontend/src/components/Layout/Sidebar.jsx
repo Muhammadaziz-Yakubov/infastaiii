@@ -37,7 +37,7 @@ const MobileBottomBar = () => {
   const [showAddModal, setShowAddModal] = useState(false);
 
   const navigation = [
-    { name: 'Home', href: '/', icon: LayoutDashboard, label: 'Bosh' },
+    { name: 'Home', href: '/dashboard', icon: LayoutDashboard, label: 'Bosh' },
     { name: 'Tasks', href: '/tasks', icon: CheckSquare, label: 'Vazifalar' },
     { name: 'Add', href: '#', icon: Plus, label: '+', isAdd: true },
     { name: 'Finance', href: '/finance', icon: Wallet, label: 'Moliya' },
