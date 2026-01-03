@@ -45,6 +45,8 @@ const Goals = () => {
     const [showAutoSaveModal, setShowAutoSaveModal] = useState(false);
     const [showTaskModal, setShowTaskModal] = useState(false);
     const [showStatisticsModal, setShowStatisticsModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [goalToDelete, setGoalToDelete] = useState(null);
 
     // Selected goal
     const [selectedGoal, setSelectedGoal] = useState(null);
@@ -53,6 +55,7 @@ const Goals = () => {
     const [formData, setFormData] = useState({
         name: '',
         description: '',
+        goalType: 'financial',
         targetAmount: 0,
         currentAmount: 0,
         deadline: '',
@@ -408,17 +411,35 @@ const Goals = () => {
     const handleGoalSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.name || !formData.targetAmount || !formData.deadline) {
-            toast.error('Nomi, maqsad summasi va muddati majburiy');
+        // Validatsiya - goalType ga qarab
+        if (!formData.name || !formData.deadline) {
+            toast.error('Nomi va muddati majburiy');
+            return;
+        }
+
+        if (formData.goalType === 'financial' && !formData.targetAmount) {
+            toast.error('Moliyaviy maqsad uchun summa majburiy');
             return;
         }
 
         try {
             const goalData = {
-                ...formData,
-                targetAmount: typeof formData.targetAmount === 'number' ? formData.targetAmount : parseFloat(formData.targetAmount),
-                currentAmount: typeof formData.currentAmount === 'number' ? formData.currentAmount : (parseFloat(formData.currentAmount) || 0)
+                ...formData
             };
+
+            // Faqat moliyaviy maqsadlar uchun summa qo'shish
+            if (formData.goalType === 'financial') {
+                goalData.targetAmount = typeof formData.targetAmount === 'number' ? formData.targetAmount : parseFloat(formData.targetAmount);
+                goalData.currentAmount = typeof formData.currentAmount === 'number' ? formData.currentAmount : (parseFloat(formData.currentAmount) || 0);
+            } else {
+                // Moliyasiz maqsadlar uchun tracking strukturasini yaratish
+                goalData.tracking = {
+                    totalDays: 0,
+                    completedDays: 0,
+                    dailyChecks: [],
+                    steps: []
+                };
+            }
 
             let data;
             if (selectedGoal) {
@@ -576,16 +597,16 @@ const Goals = () => {
     };
 
     // Handle goal delete
-    const handleDeleteGoal = async (goalId) => {
-        if (!window.confirm('Bu maqsadni o\'chirmoqchimisiz? Barcha bog\'liq ma\'lumotlar ham o\'chiriladi.')) {
-            return;
-        }
+    const handleDeleteGoal = async () => {
+        if (!goalToDelete) return;
 
         try {
-            const data = await goalsService.deleteGoal(goalId);
+            const data = await goalsService.deleteGoal(goalToDelete._id);
 
             if (data.success) {
                 toast.success('Maqsad o\'chirildi 🗑️');
+                setShowDeleteModal(false);
+                setGoalToDelete(null);
                 loadData();
             }
         } catch (error) {
@@ -594,11 +615,17 @@ const Goals = () => {
         }
     };
 
+    const openDeleteModal = (goal) => {
+        setGoalToDelete(goal);
+        setShowDeleteModal(true);
+    };
+
     // Reset form
     const resetForm = () => {
         setFormData({
             name: '',
             description: '',
+            goalType: 'financial',
             targetAmount: 0,
             currentAmount: 0,
             deadline: '',
@@ -617,6 +644,7 @@ const Goals = () => {
         setFormData({
             name: goal.name,
             description: goal.description || '',
+            goalType: goal.goalType || 'financial',
             targetAmount: goal.targetAmount || 0,
             currentAmount: goal.currentAmount || 0,
             deadline: goal.deadline ? new Date(goal.deadline).toISOString().split('T')[0] : '',
@@ -844,7 +872,14 @@ const Goals = () => {
                         return (
                             <div
                                 key={goal._id}
-                                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow"
+                                onClick={() => {
+                                    if (goal.goalType === 'non-financial') {
+                                        navigate(`/goals/${goal._id}/tracking`);
+                                    }
+                                }}
+                                className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow ${
+                                    goal.goalType === 'non-financial' ? 'cursor-pointer' : ''
+                                }`}
                             >
                                 {/* Goal Header */}
                                 <div
@@ -895,7 +930,10 @@ const Goals = () => {
                                             </button>
 
                                             {selectedGoal?._id === goal._id && (
-                                                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 py-2">
+                                                <div 
+                                                    className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 py-2"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
@@ -907,22 +945,40 @@ const Goals = () => {
                                                         <Edit className="w-4 h-4" />
                                                         Tahrirlash
                                                     </button>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleStatistics(goal);
-                                                            setSelectedGoal(null);
-                                                        }}
-                                                        className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
-                                                    >
-                                                        <BarChart3 className="w-4 h-4" />
-                                                        Statistika
-                                                    </button>
+                                                    
+                                                    {goal.goalType === 'financial' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleStatistics(goal);
+                                                                setSelectedGoal(null);
+                                                            }}
+                                                            className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                                                        >
+                                                            <BarChart3 className="w-4 h-4" />
+                                                            Statistika
+                                                        </button>
+                                                    )}
+                                                    
+                                                    {goal.goalType === 'non-financial' && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                navigate(`/goals/${goal._id}/tracking`);
+                                                                setSelectedGoal(null);
+                                                            }}
+                                                            className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors"
+                                                        >
+                                                            <Target className="w-4 h-4" />
+                                                            Tracking
+                                                        </button>
+                                                    )}
+                                                    
                                                     <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            handleDeleteGoal(goal._id);
+                                                            openDeleteModal(goal);
                                                             setSelectedGoal(null);
                                                         }}
                                                         className="w-full px-4 py-2 text-left hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 text-red-600 dark:text-red-400 transition-colors"
@@ -936,25 +992,47 @@ const Goals = () => {
                                     </div>
 
                                     {/* Progress Bar - Mobile optimized */}
-                                    <div className="mb-4 sm:mb-6">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                {progress}%
-                                            </span>
-                                            <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
-                                                {formatCurrencyShort(goal.currentAmount)} / {formatCurrencyShort(goal.targetAmount)}
-                                            </span>
+                                    {goal.goalType === 'financial' ? (
+                                        <div className="mb-4 sm:mb-6">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    {progress}%
+                                                </span>
+                                                <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                                                    {formatCurrencyShort(goal.currentAmount)} / {formatCurrencyShort(goal.targetAmount)}
+                                                </span>
+                                            </div>
+                                            <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full transition-all duration-500"
+                                                    style={{
+                                                        width: `${progress}%`,
+                                                        backgroundColor: goal.color
+                                                    }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                        <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full rounded-full transition-all duration-500"
-                                                style={{
-                                                    width: `${progress}%`,
-                                                    backgroundColor: goal.color
-                                                }}
-                                            ></div>
+                                    ) : (
+                                        <div className="mb-4 sm:mb-6">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                    Progress
+                                                </span>
+                                                <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                                                    {goal.tracking?.steps?.filter(s => s.completed).length || 0} / {goal.tracking?.steps?.length || 0} step
+                                                </span>
+                                            </div>
+                                            <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full rounded-full transition-all duration-500"
+                                                    style={{
+                                                        width: `${goal.tracking?.steps?.length > 0 ? (goal.tracking.steps.filter(s => s.completed).length / goal.tracking.steps.length * 100) : 0}%`,
+                                                        backgroundColor: goal.color
+                                                    }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
 
                                     {/* Deadline and Stats - Compact on mobile */}
                                     <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
@@ -980,29 +1058,53 @@ const Goals = () => {
 
                                     {/* Action Buttons */}
                                     <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleFund(goal)}
-                                            className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                            Ajratish
-                                        </button>
+                                        {goal.goalType === 'financial' ? (
+                                            <>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleFund(goal);
+                                                    }}
+                                                    className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                    Ajratish
+                                                </button>
 
-                                        {goal.status === 'active' && (
-                                            <button
-                                                onClick={() => handleStatusChange(goal._id, 'paused')}
-                                                className="px-4 py-2.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg font-medium transition-colors"
-                                            >
-                                                <Pause className="w-4 h-4" />
-                                            </button>
-                                        )}
+                                                {goal.status === 'active' && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleStatusChange(goal._id, 'paused');
+                                                        }}
+                                                        className="px-4 py-2.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded-lg font-medium transition-colors"
+                                                    >
+                                                        <Pause className="w-4 h-4" />
+                                                    </button>
+                                                )}
 
-                                        {goal.status === 'paused' && (
+                                                {goal.status === 'paused' && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleStatusChange(goal._id, 'active');
+                                                        }}
+                                                        className="px-4 py-2.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors"
+                                                    >
+                                                        <Play className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </>
+                                        ) : (
                                             <button
-                                                onClick={() => handleStatusChange(goal._id, 'active')}
-                                                className="px-4 py-2.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg font-medium transition-colors"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/goals/${goal._id}/tracking`);
+                                                }}
+                                                className="flex-1 bg-purple-500 hover:bg-purple-600 text-white py-2.5 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                                             >
-                                                <Play className="w-4 h-4" />
+                                                <Target className="w-4 h-4" />
+                                                Tracking
                                             </button>
                                         )}
                                     </div>
@@ -1120,6 +1222,48 @@ const Goals = () => {
                 </div>
             )}
 
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && goalToDelete && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Maqsadni o'chirish</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+                            </div>
+                        </div>
+                        
+                        <p className="text-gray-600 dark:text-gray-300 mb-2">
+                            <span className="font-semibold text-gray-900 dark:text-white">"{goalToDelete.name}"</span> maqsadini o'chirmoqchimisiz?
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                            Barcha bog'liq ma'lumotlar ham o'chiriladi.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setGoalToDelete(null);
+                                }}
+                                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Bekor qilish
+                            </button>
+                            <button
+                                onClick={handleDeleteGoal}
+                                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
+                            >
+                                Ha, o'chirish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Click outside to close menu */}
             {selectedGoal && (
                 <div
@@ -1176,6 +1320,37 @@ const GoalModal = ({ formData, setFormData, handleSubmit, onClose, isEditing }) 
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-3 space-y-3">
+                    {/* Maqsad turi */}
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                            Maqsad turi <span className="text-red-500">*</span>
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, goalType: 'financial' })}
+                                className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-all border-2 ${
+                                    formData.goalType === 'financial'
+                                        ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                        : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
+                                }`}
+                            >
+                                💰 Moliyaviy
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, goalType: 'non-financial' })}
+                                className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-all border-2 ${
+                                    formData.goalType === 'non-financial'
+                                        ? 'bg-purple-50 border-purple-500 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                                        : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
+                                }`}
+                            >
+                                🎯 Moliyasiz
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Maqsad nomi */}
                     <div>
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1185,30 +1360,32 @@ const GoalModal = ({ formData, setFormData, handleSubmit, onClose, isEditing }) 
                             type="text"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="Masalan: MacBook olish"
+                            placeholder={formData.goalType === 'financial' ? "Masalan: MacBook olish" : "Masalan: JavaScript o'rganish"}
                             className="w-full px-2.5 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                             required
                         />
                     </div>
 
-                    {/* Summalar */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <CurrencyInput
-                            label="Maqsad summasi"
-                            value={formData.targetAmount}
-                            onChange={(value) => setFormData({ ...formData, targetAmount: value })}
-                            currency="UZS"
-                            placeholder="0"
-                            required
-                        />
-                        <CurrencyInput
-                            label="Boshlang'ich"
-                            value={formData.currentAmount}
-                            onChange={(value) => setFormData({ ...formData, currentAmount: value })}
-                            currency="UZS"
-                            placeholder="0"
-                        />
-                    </div>
+                    {/* Summalar - faqat moliyaviy maqsadlar uchun */}
+                    {formData.goalType === 'financial' && (
+                        <div className="grid grid-cols-2 gap-2">
+                            <CurrencyInput
+                                label="Maqsad summasi"
+                                value={formData.targetAmount}
+                                onChange={(value) => setFormData({ ...formData, targetAmount: value })}
+                                currency="UZS"
+                                placeholder="0"
+                                required
+                            />
+                            <CurrencyInput
+                                label="Boshlang'ich"
+                                value={formData.currentAmount}
+                                onChange={(value) => setFormData({ ...formData, currentAmount: value })}
+                                currency="UZS"
+                                placeholder="0"
+                            />
+                        </div>
+                    )}
 
                     {/* Muddat */}
                     <div>

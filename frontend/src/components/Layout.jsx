@@ -13,6 +13,26 @@ const Layout = () => {
     isOpen: false,
     type: null // 'task', 'finance', 'goal', 'debt'
   });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem('sidebarCollapsed');
+    return saved === 'true';
+  });
+
+  // Listen to localStorage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('sidebarCollapsed');
+      setSidebarCollapsed(saved === 'true');
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 100);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     const loadGoals = async () => {
@@ -58,7 +78,9 @@ const Layout = () => {
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-80">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+        sidebarCollapsed ? 'lg:ml-24' : 'lg:ml-80'
+      }`}>
         {/* Navbar */}
         <Navbar />
 

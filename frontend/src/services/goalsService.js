@@ -39,6 +39,26 @@ export const goalsService = {
   setupAutoSave: async (id, data) => {
     const response = await api.post(`/api/goals/${id}/auto-save`, data);
     return response.data;
+  },
+
+  addDailyCheck: async (id, data) => {
+    const response = await api.post(`/api/goals/${id}/daily-check`, data);
+    return response.data;
+  },
+
+  addStep: async (id, data) => {
+    const response = await api.post(`/api/goals/${id}/steps`, data);
+    return response.data;
+  },
+
+  updateStep: async (id, stepId, data) => {
+    const response = await api.put(`/api/goals/${id}/steps/${stepId}`, data);
+    return response.data;
+  },
+
+  deleteStep: async (id, stepId) => {
+    const response = await api.delete(`/api/goals/${id}/steps/${stepId}`);
+    return response.data;
   }
 };
 

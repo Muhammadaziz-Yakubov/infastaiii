@@ -15,9 +15,17 @@ const goalSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  goalType: {
+    type: String,
+    enum: ['financial', 'non-financial'],
+    default: 'financial',
+    required: true
+  },
   targetAmount: {
     type: Number,
-    required: true,
+    required: function() {
+      return this.goalType === 'financial';
+    },
     min: 0
   },
   currentAmount: {
@@ -58,6 +66,22 @@ const goalSchema = new mongoose.Schema({
     amount: { type: Number, default: 0 },
     percentage: { type: Number, default: 10, min: 0, max: 100 },
     nextDate: { type: Date }
+  },
+  tracking: {
+    totalDays: { type: Number, default: 0 },
+    completedDays: { type: Number, default: 0 },
+    dailyChecks: [{
+      date: { type: Date, required: true },
+      completed: { type: Boolean, default: false },
+      note: { type: String, default: '' }
+    }],
+    steps: [{
+      title: { type: String, required: true },
+      description: { type: String, default: '' },
+      completed: { type: Boolean, default: false },
+      completedAt: { type: Date },
+      order: { type: Number, default: 0 }
+    }]
   },
   createdAt: {
     type: Date,

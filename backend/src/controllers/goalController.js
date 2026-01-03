@@ -25,6 +25,7 @@ exports.createGoal = async (req, res) => {
     const {
       name,
       description,
+      goalType = 'financial',
       targetAmount,
       currentAmount = 0,
       deadline,
@@ -32,22 +33,29 @@ exports.createGoal = async (req, res) => {
       color,
       status,
       priority,
-      category
+      category,
+      tracking
     } = req.body;
 
-    if (!name || !targetAmount || !deadline) {
+    if (!name || !deadline) {
       return res.status(400).json({
         success: false,
-        message: 'Nomi, maqsad summasi va muddati majburiy'
+        message: 'Nomi va muddati majburiy'
       });
     }
 
-    const goal = await Goal.create({
+    if (goalType === 'financial' && !targetAmount) {
+      return res.status(400).json({
+        success: false,
+        message: 'Moliyaviy maqsad uchun summa majburiy'
+      });
+    }
+
+    const goalData = {
       userId: req.userId,
       name,
       description,
-      targetAmount: parseFloat(targetAmount),
-      currentAmount: parseFloat(currentAmount) || 0,
+      goalType,
       deadline: new Date(deadline),
       icon: icon || 'Target',
       color: color || '#3B82F6',
@@ -56,7 +64,18 @@ exports.createGoal = async (req, res) => {
       category: category || 'personal',
       createdAt: Date.now(),
       updatedAt: Date.now()
-    });
+    };
+
+    if (goalType === 'financial') {
+      goalData.targetAmount = parseFloat(targetAmount);
+      goalData.currentAmount = parseFloat(currentAmount) || 0;
+    }
+
+    if (goalType === 'non-financial' && tracking) {
+      goalData.tracking = tracking;
+    }
+
+    const goal = await Goal.create(goalData);
 
     res.status(201).json({
       success: true,
@@ -219,6 +238,235 @@ exports.updateGoalStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Update status error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server xatosi'
+    });
+  }
+};
+
+// Add daily check
+exports.addDailyCheck = async (req, res) => {
+  try {
+    const { date, completed, note } = req.body;
+    
+    const goal = await Goal.findOne({
+      _id: req.params.id,
+      userId: req.userId
+    });
+
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Maqsad topilmadi'
+      });
+    }
+
+    if (goal.goalType !== 'non-financial') {
+      return res.status(400).json({
+        success: false,
+        message: 'Bu funksiya faqat moliyasiz maqsadlar uchun'
+      });
+    }
+
+    if (!goal.tracking) {
+      goal.tracking = {
+        totalDays: 0,
+        completedDays: 0,
+        dailyChecks: [],
+        steps: []
+      };
+    }
+
+    const checkDate = date ? new Date(date) : new Date();
+    checkDate.setHours(0, 0, 0, 0);
+
+    const existingCheck = goal.tracking.dailyChecks.find(
+      check => new Date(check.date).setHours(0, 0, 0, 0) === checkDate.getTime()
+    );
+
+    if (existingCheck) {
+      existingCheck.completed = completed !== undefined ? completed : true;
+      existingCheck.note = note || '';
+    } else {
+      goal.tracking.dailyChecks.push({
+        date: checkDate,
+        completed: completed !== undefined ? completed : true,
+        note: note || ''
+      });
+    }
+
+    goal.tracking.completedDays = goal.tracking.dailyChecks.filter(c => c.completed).length;
+    goal.updatedAt = Date.now();
+    await goal.save();
+
+    res.json({
+      success: true,
+      message: 'Kunlik belgi qo\'shildi',
+      goal
+    });
+  } catch (error) {
+    console.error('Add daily check error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server xatosi'
+    });
+  }
+};
+
+// Add step
+exports.addStep = async (req, res) => {
+  try {
+    const { title, description, order } = req.body;
+    
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        message: 'Step nomi majburiy'
+      });
+    }
+
+    const goal = await Goal.findOne({
+      _id: req.params.id,
+      userId: req.userId
+    });
+
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Maqsad topilmadi'
+      });
+    }
+
+    if (goal.goalType !== 'non-financial') {
+      return res.status(400).json({
+        success: false,
+        message: 'Bu funksiya faqat moliyasiz maqsadlar uchun'
+      });
+    }
+
+    if (!goal.tracking) {
+      goal.tracking = {
+        totalDays: 0,
+        completedDays: 0,
+        dailyChecks: [],
+        steps: []
+      };
+    }
+
+    goal.tracking.steps.push({
+      title,
+      description: description || '',
+      completed: false,
+      order: order !== undefined ? order : goal.tracking.steps.length
+    });
+
+    goal.updatedAt = Date.now();
+    await goal.save();
+
+    res.json({
+      success: true,
+      message: 'Step qo\'shildi',
+      goal
+    });
+  } catch (error) {
+    console.error('Add step error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server xatosi'
+    });
+  }
+};
+
+// Update step
+exports.updateStep = async (req, res) => {
+  try {
+    const { stepId } = req.params;
+    const { title, description, completed, order } = req.body;
+    
+    const goal = await Goal.findOne({
+      _id: req.params.id,
+      userId: req.userId
+    });
+
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Maqsad topilmadi'
+      });
+    }
+
+    const step = goal.tracking?.steps?.id(stepId);
+    if (!step) {
+      return res.status(404).json({
+        success: false,
+        message: 'Step topilmadi'
+      });
+    }
+
+    if (title !== undefined) step.title = title;
+    if (description !== undefined) step.description = description;
+    if (completed !== undefined) {
+      step.completed = completed;
+      step.completedAt = completed ? new Date() : null;
+    }
+    if (order !== undefined) step.order = order;
+
+    goal.updatedAt = Date.now();
+    await goal.save();
+
+    res.json({
+      success: true,
+      message: 'Step yangilandi',
+      goal
+    });
+  } catch (error) {
+    console.error('Update step error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server xatosi'
+    });
+  }
+};
+
+// Delete step
+exports.deleteStep = async (req, res) => {
+  try {
+    const { stepId } = req.params;
+    
+    const goal = await Goal.findOne({
+      _id: req.params.id,
+      userId: req.userId
+    });
+
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Maqsad topilmadi'
+      });
+    }
+
+    if (!goal.tracking?.steps) {
+      return res.status(404).json({
+        success: false,
+        message: 'Steps topilmadi'
+      });
+    }
+
+    goal.tracking.steps = goal.tracking.steps.filter(
+      step => step._id.toString() !== stepId
+    );
+
+    goal.updatedAt = Date.now();
+    await goal.save();
+
+    res.json({
+      success: true,
+      message: 'Step o\'chirildi',
+      goal
+    });
+  } catch (error) {
+    console.error('Delete step error:', error);
     res.status(500).json({
       success: false,
       message: 'Server xatosi'

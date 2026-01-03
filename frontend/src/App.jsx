@@ -24,6 +24,7 @@ const Tasks = lazy(() => import('./pages/Tasks'));
 const Archive = lazy(() => import('./pages/Archive'));
 const Finance = lazy(() => import('./pages/Finance'));
 const Goals = lazy(() => import('./pages/Goals'));
+const GoalTracking = lazy(() => import('./pages/GoalTracking'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Pricing = lazy(() => import('./pages/Pricing'));
@@ -54,6 +55,7 @@ function App() {
               <Route path="/archive" element={<Archive />} />
               <Route path="/finance" element={<Finance />} />
               <Route path="/goals" element={<Goals />} />
+              <Route path="/goals/:id/tracking" element={<GoalTracking />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/pricing" element={<Pricing />} /> {/* Pricing page enabled */}

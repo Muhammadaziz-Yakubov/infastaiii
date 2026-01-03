@@ -61,4 +61,17 @@ router.post('/:id/auto-save', (req, res) => {
   });
 });
 
+// Tracking endpoints
+// POST /api/goals/:id/daily-check - Add daily check
+router.post('/:id/daily-check', goalController.addDailyCheck);
+
+// POST /api/goals/:id/steps - Add step
+router.post('/:id/steps', goalController.addStep);
+
+// PUT /api/goals/:id/steps/:stepId - Update step
+router.put('/:id/steps/:stepId', goalController.updateStep);
+
+// DELETE /api/goals/:id/steps/:stepId - Delete step
+router.delete('/:id/steps/:stepId', goalController.deleteStep);
+
 module.exports = router;

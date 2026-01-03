@@ -22,6 +22,8 @@ const Tasks = () => {
   const [viewingTask, setViewingTask] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [selectedTasks, setSelectedTasks] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [activeView, setActiveView] = useState('active');
@@ -287,24 +289,26 @@ const Tasks = () => {
     }
   };
 
-  const handleDelete = async (taskId) => {
-    const message = 'Vazifani o\'chirishni xohlaysizmi?';
-
-    if (!window.confirm(message)) return;
+  const handleDelete = async () => {
+    if (!taskToDelete) return;
 
     try {
-      const data = await taskService.deleteTask(taskId);
-
+      const data = await taskService.deleteTask(taskToDelete._id);
       if (data.success) {
-        await loadAllData();
-        showToast('Vazifa o\'chirildi', 'success');
-      } else {
-        showToast(data.message || 'Xatolik yuz berdi', 'error');
+        toast.success('Vazifa o\'chirildi');
+        setShowDeleteModal(false);
+        setTaskToDelete(null);
+        loadAllData();
       }
     } catch (error) {
       console.error('Delete error:', error);
-      showToast('Server xatoligi', 'error');
+      toast.error('O\'chirishda xatolik');
     }
+  };
+
+  const openDeleteModal = (task) => {
+    setTaskToDelete(task);
+    setShowDeleteModal(true);
   };
 
   const handleBulkAction = async (action) => {
@@ -880,7 +884,7 @@ const Tasks = () => {
                             </button>
                             <button
                               onClick={() => {
-                                handleDelete(task._id);
+                                openDeleteModal(task);
                                 setShowTaskMenu(null);
                               }}
                               className="w-full px-4 py-2 text-left hover:bg-rose-50 flex items-center gap-3 text-rose-600"
@@ -1079,7 +1083,7 @@ const Tasks = () => {
                             <Edit className="w-4 h-4 text-gray-600" />
                           </button>
                           <button
-                            onClick={() => handleDelete(task._id)}
+                            onClick={() => openDeleteModal(task)}
                             className="p-2 hover:bg-rose-50 rounded-lg transition-colors"
                             title="O'chirish"
                           >
@@ -1317,6 +1321,48 @@ const Tasks = () => {
                 className="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium"
               >
                 Yopish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && taskToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Vazifani o'chirish</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+              </div>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-300 mb-2">
+              <span className="font-semibold text-gray-900 dark:text-white">"{taskToDelete.title}"</span> vazifasini o'chirmoqchimisiz?
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              Vazifa butunlay o'chiriladi va uni qayta tiklab bo'lmaydi.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setTaskToDelete(null);
+                }}
+                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Bekor qilish
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
+              >
+                Ha, o'chirish
               </button>
             </div>
           </div>

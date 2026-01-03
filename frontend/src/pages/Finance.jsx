@@ -58,9 +58,12 @@ const Finance = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDebtModal, setShowDebtModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showDeleteTransactionModal, setShowDeleteTransactionModal] = useState(false);
+    const [showDeleteDebtModal, setShowDeleteDebtModal] = useState(false);
     const [editingTransaction, setEditingTransaction] = useState(null);
     const [editingDebt, setEditingDebt] = useState(null);
     const [selectedDebt, setSelectedDebt] = useState(null);
+    const [itemToDelete, setItemToDelete] = useState(null);
     const [showBalance, setShowBalance] = useState(true);
 
     // Form data
@@ -334,35 +337,47 @@ const Finance = () => {
     };
 
     // Tranzaksiya o'chirish
-    const handleDeleteTransaction = async (id) => {
-        if (!window.confirm('O\'chirmoqchimisiz?')) return;
+    const handleDeleteTransaction = async () => {
+        if (!itemToDelete) return;
 
         try {
-            const data = await financeService.deleteTransaction(id);
-
+            const data = await financeService.deleteTransaction(itemToDelete.id);
             if (data.success) {
-                toast.success('O\'chirildi 🗑️');
+                toast.success('Tranzaksiya o\'chirildi');
+                setShowDeleteTransactionModal(false);
+                setItemToDelete(null);
                 loadData();
             }
         } catch (error) {
-            toast.error('Xatolik');
+            toast.error('O\'chirishda xatolik');
         }
     };
 
+    const openDeleteTransactionModal = (transaction) => {
+        setItemToDelete({ id: transaction._id, name: transaction.description || transaction.category });
+        setShowDeleteTransactionModal(true);
+    };
+
     // Qarz o'chirish
-    const handleDeleteDebt = async (id) => {
-        if (!window.confirm('Qarzni o\'chirmoqchimisiz?')) return;
+    const handleDeleteDebt = async () => {
+        if (!itemToDelete) return;
 
         try {
-            const data = await financeService.deleteDebt(id);
-
+            const data = await financeService.deleteDebt(itemToDelete.id);
             if (data.success) {
-                toast.success('Qarz o\'chirildi 🗑️');
+                toast.success('Qarz o\'chirildi');
+                setShowDeleteDebtModal(false);
+                setItemToDelete(null);
                 loadData();
             }
         } catch (error) {
-            toast.error('Xatolik');
+            toast.error('O\'chirishda xatolik');
         }
+    };
+
+    const openDeleteDebtModal = (debt) => {
+        setItemToDelete({ id: debt._id, name: debt.personName });
+        setShowDeleteDebtModal(true);
     };
 
     // To'lov qilish
@@ -737,7 +752,7 @@ const Finance = () => {
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        handleDeleteTransaction(transaction._id);
+                                                        openDeleteTransactionModal(transaction);
                                                     }}
                                                     className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg text-red-600"
                                                 >
@@ -864,7 +879,7 @@ const Finance = () => {
                                                         Tahrirlash
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDeleteDebt(debt._id)}
+                                                        onClick={() => openDeleteDebtModal(debt)}
                                                         className="px-4 py-2 bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/40 transition-colors text-sm font-medium"
                                                     >
                                                         O'chirish
@@ -925,6 +940,84 @@ const Finance = () => {
                         setPaymentAmount('');
                     }}
                 />
+            )}
+
+            {/* Delete Transaction Confirmation Modal */}
+            {showDeleteTransactionModal && itemToDelete && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Tranzaksiyani o'chirish</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+                            </div>
+                        </div>
+                        
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            <span className="font-semibold text-gray-900 dark:text-white">"{itemToDelete.name}"</span> tranzaksiyasini o'chirmoqchimisiz?
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteTransactionModal(false);
+                                    setItemToDelete(null);
+                                }}
+                                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Bekor qilish
+                            </button>
+                            <button
+                                onClick={handleDeleteTransaction}
+                                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
+                            >
+                                Ha, o'chirish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Debt Confirmation Modal */}
+            {showDeleteDebtModal && itemToDelete && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Qarzni o'chirish</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+                            </div>
+                        </div>
+                        
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            <span className="font-semibold text-gray-900 dark:text-white">{itemToDelete.name}</span> bilan bog'liq qarzni o'chirmoqchimisiz?
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteDebtModal(false);
+                                    setItemToDelete(null);
+                                }}
+                                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                Bekor qilish
+                            </button>
+                            <button
+                                onClick={handleDeleteDebt}
+                                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
+                            >
+                                Ha, o'chirish
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
         
