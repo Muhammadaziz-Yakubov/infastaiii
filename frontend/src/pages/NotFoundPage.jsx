@@ -72,16 +72,6 @@ const NotFoundPage = () => {
           </button>
         </div>
 
-        {/* Additional Info */}
-        <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 max-w-md mx-auto">
-          <div className="flex items-center justify-center mb-4">
-            <Zap className="w-6 h-6 text-yellow-400 mr-2" />
-            <span className="text-gray-300 font-medium">InFast AI</span>
-          </div>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            Sizning ishlar boshqaruv tizimingiz. Vazifalar, moliya va maqsadlarni samarali boshqaring.
-          </p>
-        </div>
       </div>
 
       {/* Floating Elements for Visual Appeal */}
