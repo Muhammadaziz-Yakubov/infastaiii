@@ -244,7 +244,7 @@ const Sidebar = () => {
   }, [isCollapsed]);
 
   const navigation = [
-    { name: 'Boshqaruv Paneli', href: '/', icon: LayoutDashboard, badge: null },
+    { name: 'Boshqaruv Paneli', href: '/dashboard', icon: LayoutDashboard, badge: null },
     { name: 'Vazifalar', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'Moliya', href: '/finance', icon: Wallet, badge: null },
     { name: 'Maqsad', href: '/goals', icon: Goal, badge: null },
