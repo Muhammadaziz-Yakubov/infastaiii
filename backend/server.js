@@ -20,13 +20,16 @@ const adminRoutes = require('./src/routes/adminRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
 const challengeRoutes = require('./src/routes/challengeRoutes');
 const appSettingsRoutes = require('./src/routes/appSettingsRoutes');
+const supportRoutes = require('./src/routes/supportRoutes');
 const telegramService = require('./src/services/telegramService');
+const supportBotService = require('./src/services/supportBotService');
 const AppSettings = require('./src/models/AppSettings');
 const { checkBanStatus } = require('./src/middleware/adminMiddleware');
 
 const cleanup = () => {
   console.log('🧹 Cleaning up services...');
   telegramService.stop();
+  supportBotService.stop();
   process.exit(0);
 };
 
@@ -270,6 +273,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/ai-suggestions', aiSuggestionsRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/app-settings', appSettingsRoutes);
+app.use('/api/support', supportRoutes);
 
 // 404 handler
 app.use('/api/*', (req, res) => {
@@ -359,9 +363,15 @@ const startServer = async () => {
       });
 
       telegramService.init().then(() => {
-        console.log('✅ All services initialized');
+        console.log('✅ Telegram service initialized');
       }).catch((error) => {
         console.error('❌ Telegram service initialization failed:', error);
+      });
+
+      supportBotService.init().then(() => {
+        console.log('✅ Support bot initialized');
+      }).catch((error) => {
+        console.error('❌ Support bot initialization failed:', error);
       });
     });
 
