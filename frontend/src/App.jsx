@@ -31,6 +31,8 @@ const CompletedGoals = lazy(() => import('./pages/CompletedGoals'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Pricing = lazy(() => import('./pages/Pricing'));
+const Challenges = lazy(() => import('./pages/Challenges'));
+const More = lazy(() => import('./pages/More'));
 
 // Admin pages
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
@@ -64,6 +66,8 @@ function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/pricing" element={<Pricing />} /> {/* Pricing page enabled */}
+              <Route path="/challenges" element={<Challenges />} />
+              <Route path="/more" element={<More />} />
             </Route>
           </Route>
 

@@ -24,7 +24,9 @@ import {
   ChevronRight,
   Crown,
   ChevronLeft,
-  Menu
+  Menu,
+  Trophy,
+  MoreHorizontal
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -32,117 +34,23 @@ import { useAuth } from '../../contexts/AuthContext';
 /* ================= MOBILE BOTTOM BAR ================= */
 const MobileBottomBar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [showQuickActions, setShowQuickActions] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
 
   const navigation = [
     { name: 'Home', href: '/dashboard', icon: LayoutDashboard, label: 'Bosh' },
     { name: 'Tasks', href: '/tasks', icon: CheckSquare, label: 'Vazifalar' },
-    { name: 'Add', href: '#', icon: Plus, label: '+', isAdd: true },
     { name: 'Finance', href: '/finance', icon: Wallet, label: 'Moliya' },
     { name: 'Goals', href: '/goals', icon: Goal, label: 'Maqsad' },
+    { name: 'More', href: '/more', icon: MoreHorizontal, label: 'Ko\'proq' },
   ];
-
-  const addOptions = [
-    {
-      name: 'Vazifa qo\'shish',
-      icon: CheckSquare,
-      action: () => handleAdd('task'),
-      color: 'bg-blue-500 hover:bg-blue-600'
-    },
-    {
-      name: 'Tranzaksiya',
-      icon: Wallet,
-      action: () => handleAdd('finance'),
-      color: 'bg-green-500 hover:bg-green-600'
-    },
-    {
-      name: 'Maqsad',
-      icon: Goal,
-      action: () => handleAdd('goal'),
-      color: 'bg-blue-500 hover:bg-blue-600'
-    },
-    {
-      name: 'Qarz',
-      icon: User,
-      action: () => handleAdd('debt'),
-      color: 'bg-blue-500 hover:bg-blue-600'
-    }
-  ];
-
-  const handleAdd = (type) => {
-    setShowAddModal(false);
-    // Sahifaga navigate qilish
-    switch (type) {
-      case 'task':
-        navigate('/tasks?add=true');
-        break;
-      case 'finance':
-        navigate('/finance?add=true');
-        break;
-      case 'goal':
-        navigate('/goals?add=true');
-        break;
-      case 'debt':
-        navigate('/finance?add=debt');
-        break;
-    }
-  };
 
   return (
     <>
-      {/* ADD MODAL OVERLAY */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] lg:hidden" onClick={() => setShowAddModal(false)}>
-          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 w-80">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 space-y-3">
-              <h3 className="text-lg font-bold text-center text-gray-900 dark:text-white mb-4">
-                Nima qo'shmoqchisiz?
-              </h3>
-              {addOptions.map((option, index) => (
-                <button
-                  key={option.name}
-                  onClick={option.action}
-                  className={`w-full flex items-center gap-4 ${option.color} text-white px-4 py-3 rounded-xl font-medium transition-all hover:scale-105`}
-                  style={{
-                    animationDelay: `${index * 50}ms`,
-                    animation: 'slideUp 0.3s ease-out forwards'
-                  }}
-                >
-                  <option.icon className="w-6 h-6" />
-                  <span>{option.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* BOTTOM BAR */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-800/50 shadow-2xl">
         <div className="flex justify-around items-center h-20 px-2 safe-area-bottom">
           {navigation.map((item) => {
-            const isActive = location.pathname === item.href && !item.isAdd;
+            const isActive = location.pathname === item.href;
             const Icon = item.icon;
-
-            // Special handling for Add button
-            if (item.isAdd) {
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => setShowAddModal(true)}
-                  className="flex flex-col items-center justify-center flex-1 h-full relative group transition-all duration-300 scale-100"
-                >
-                  <div className="relative w-12 h-12 flex items-center justify-center rounded-2xl bg-blue-500 text-white shadow-lg scale-110">
-                    <Icon className="w-6 h-6 transition-transform duration-300" />
-                  </div>
-                  <span className="text-[10px] font-medium mt-1 text-primary-600 dark:text-primary-400">
-                    {item.label}
-                  </span>
-                </button>
-              );
-            }
 
             return (
               <NavLink
@@ -188,33 +96,6 @@ const MobileBottomBar = () => {
             );
           })}
         </div>
-
-        {/* Quick Actions Menu */}
-        {showQuickActions && (
-          <>
-            <div 
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 -mt-20"
-              onClick={() => setShowQuickActions(false)}
-            />
-            <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 z-50 min-w-[200px] border border-gray-200 dark:border-gray-700 animate-slide-up">
-              <div className="flex flex-col gap-2">
-                {quickActions.map((action) => (
-                  <button
-                    key={action.name}
-                    onClick={() => {
-                      navigate(action.href);
-                      setShowQuickActions(false);
-                    }}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl ${action.color} text-white hover:opacity-90 transition-all duration-200 transform hover:scale-105`}
-                  >
-                    <action.icon className="w-5 h-5" />
-                    <span className="font-medium">{action.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
       </div>
 
       {/* SPACER – CONTENT UCHUN JOY */}
@@ -248,7 +129,7 @@ const Sidebar = () => {
     { name: 'Vazifalar', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'Moliya', href: '/finance', icon: Wallet, badge: null },
     { name: 'Maqsad', href: '/goals', icon: Goal, badge: null },
-    // { name: 'Narxlar', href: '/pricing', icon: Crown, badge: null }
+    // { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' },
   ];
 
   // Click outside handlers

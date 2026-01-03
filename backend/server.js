@@ -18,6 +18,7 @@ const paymentRoutes = require('./src/routes/paymentRoutes');
 const aiSuggestionsRoutes = require('./src/routes/aiSuggestions');
 const adminRoutes = require('./src/routes/adminRoutes');
 const publicRoutes = require('./src/routes/publicRoutes');
+const challengeRoutes = require('./src/routes/challengeRoutes');
 const telegramService = require('./src/services/telegramService');
 const { checkBanStatus } = require('./src/middleware/adminMiddleware');
 
@@ -229,7 +230,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
 app.get('/', (req, res) => {
   res.json({
     success: true,
-    message: 'InFast AI Authentication API',
+    message: 'InFast AI API',
     version: '1.0.0',
     status: 'running',
     timestamp: new Date().toISOString(),
@@ -265,6 +266,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/ai-suggestions', aiSuggestionsRoutes);
+app.use('/api/challenges', challengeRoutes);
 
 // 404 handler
 app.use('/api/*', (req, res) => {
