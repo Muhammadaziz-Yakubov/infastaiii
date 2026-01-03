@@ -270,7 +270,7 @@ const LandingPage = () => {
                     ))}
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-semibold text-gray-900 dark:text-white">10,000+</span> foydalanuvchi ishonadi
+                    <span className="font-semibold text-gray-900 dark:text-white">500+</span> foydalanuvchi ishonadi
                   </p>
                 </div>
               </div>
