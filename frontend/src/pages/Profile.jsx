@@ -169,14 +169,14 @@ const Profile = () => {
         } catch (profileError) {
           console.error('Failed to fetch updated profile:', profileError);
           // Fallback: update with the response data
-          const updatedUser = { ...user, avatar: data.avatar };
+          const updatedUser = { ...user, avatar: response.data.avatar };
           updateUser(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
         }
         
         toast.success('Rasm muvaffaqiyatli yuklandi');
       } else {
-        toast.error(data.message || 'Rasm yuklashda xatolik');
+        toast.error(response.data.message || 'Rasm yuklashda xatolik');
       }
     } catch (err) {
       console.error('Rasm yuklashda xatolik:', err);
