@@ -19,7 +19,6 @@ exports.getPublicStats = async (req, res) => {
       console.log('Task model error:', error.message);
     }
 
-    // Count total goals
     let totalGoals = 0;
     let completedGoals = 0;
     try {
