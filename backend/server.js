@@ -203,27 +203,19 @@ if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir);
 if (!fs.existsSync(receiptsDir)) fs.mkdirSync(receiptsDir);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
-  setHeaders: (res, path) => {
-    if (path.endsWith('.jpg') || path.endsWith('.jpeg')) res.setHeader('Content-Type', 'image/jpeg');
-    else if (path.endsWith('.png')) res.setHeader('Content-Type', 'image/png');
-    else if (path.endsWith('.gif')) res.setHeader('Content-Type', 'image/gif');
-    else if (path.endsWith('.webp')) res.setHeader('Content-Type', 'image/webp');
+  setHeaders: (res, filePath) => {
+    // Content-Type headers
+    if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) res.setHeader('Content-Type', 'image/jpeg');
+    else if (filePath.endsWith('.png')) res.setHeader('Content-Type', 'image/png');
+    else if (filePath.endsWith('.gif')) res.setHeader('Content-Type', 'image/gif');
+    else if (filePath.endsWith('.webp')) res.setHeader('Content-Type', 'image/webp');
 
-    const origin = res.req.headers.origin;
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'https://www.infastproject.uz',
-      'https://infastproject.uz',
-      'https://infastaiii.vercel.app', // Backup
-    ].filter(Boolean);
-
-    if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'development') {
-      res.setHeader('Access-Control-Allow-Origin', origin || '*');
-    }
-
+    // CORS headers - rasmlar uchun barcha originlarga ruxsat
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
     res.setHeader('Cache-Control', 'public, max-age=31536000');
   }
 }));
