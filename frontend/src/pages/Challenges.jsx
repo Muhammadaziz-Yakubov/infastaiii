@@ -20,7 +20,7 @@ const CATEGORIES = [
   { id: 'language', name: 'Til o\'rganish', emoji: '🌍', color: '#F59E0B' },
   { id: 'finance', name: 'Moliyaviy', emoji: '💰', color: '#06B6D4' },
   { id: 'health', name: 'Salomatlik', emoji: '❤️', color: '#EC4899' },
-  { id: 'health', name: 'Dasturlash', emoji: '💻', color: '#0004ffff' },
+  { id: 'programming', name: 'Dasturlash', emoji: '💻', color: '#3B82F6' },
   { id: 'custom', name: 'Boshqa', emoji: '🎯', color: '#6366F1' }
 ];
 
@@ -577,70 +577,55 @@ const Challenges = () => {
                     </div>
                   </div>
 
-                  {/* Mini Progress Grid - oxirgi 7 kun */}
-                  <div className="mb-3 p-2 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-gray-500">Oxirgi 7 kun:</span>
-                      <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {getTodayDayNumber(challenge.startDate)}-kun
-                      </span>
-                    </div>
-                    <div className="flex gap-1">
-                      {Array.from({ length: 7 }, (_, i) => {
-                        const today = getTodayDayNumber(challenge.startDate);
-                        const dayNum = Math.max(1, today - 6 + i);
-                        if (dayNum > challenge.duration || dayNum < 1) {
-                          return <div key={i} className="flex-1 h-6 rounded bg-gray-200 dark:bg-gray-700 opacity-30" />;
-                        }
-                        const dayProgress = challenge.progress?.find(p => p.dayNumber === dayNum);
-                        const status = dayProgress?.status || 'pending';
-                        const isToday = dayNum === today;
-                        const isPast = dayNum < today;
-                        
-                        return (
-                          <div
-                            key={i}
-                            className={`flex-1 h-6 rounded flex items-center justify-center text-[10px] font-medium
-                              ${isToday ? 'ring-1 ring-orange-500' : ''}
-                              ${status === 'done' ? 'bg-green-500 text-white' : ''}
-                              ${status === 'missed' || (status === 'pending' && isPast) ? 'bg-red-200 dark:bg-red-900/40 text-red-600' : ''}
-                              ${status === 'pending' && isToday ? 'bg-orange-200 dark:bg-orange-900/40 text-orange-600' : ''}
-                              ${status === 'pending' && !isPast && !isToday ? 'bg-gray-200 dark:bg-gray-700 text-gray-400' : ''}
-                            `}
-                          >
-                            {status === 'done' ? '✓' : dayNum}
-                          </div>
-                        );
-                      })}
+                  {/* Progress Info */}
+                  <div className="mb-4 p-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white font-bold text-sm">
+                          {getTodayDayNumber(challenge.startDate)}
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Hozirgi kun</p>
+                          <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                            {challenge.duration} kundan {getTodayDayNumber(challenge.startDate)}-kuni
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Bajarildi</p>
+                        <p className="font-bold text-green-600 dark:text-green-400">
+                          {challenge.participantData?.completedDays || 0} kun
+                        </p>
+                      </div>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="space-y-2">
+                  <div className="flex gap-2">
                     {challenge.status === 'active' && (
                       <>
                         {todayStatus === 'done' ? (
-                          <div className="flex items-center justify-center gap-2 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl font-medium">
+                          <div className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl font-medium">
                             <CheckCircle className="w-5 h-5" />
-                            Bugun bajarildi! ✅
+                            Bajarildi ✅
                           </div>
                         ) : (
                           <button
                             onClick={() => handleUpdateProgress(challenge, 'done')}
-                            className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-600 transition-all shadow-md active:scale-[0.98]"
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-600 transition-all shadow-md active:scale-[0.98]"
                           >
                             <Check className="w-5 h-5" />
-                            ✅ Bugun bajarildi
+                            Bajardim
                           </button>
                         )}
                       </>
                     )}
                     <button
                       onClick={() => openDetailModal(challenge)}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-[0.98]"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-[0.98]"
                     >
-                      <Calendar className="w-4 h-4" />
-                      Batafsil ko'rish
+                      <Eye className="w-4 h-4" />
+                      Batafsil
                     </button>
                   </div>
                 </div>

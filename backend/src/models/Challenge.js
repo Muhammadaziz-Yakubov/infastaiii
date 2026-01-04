@@ -40,7 +40,7 @@ const challengeSchema = new mongoose.Schema({
   // Category
   category: {
     type: String,
-    enum: ['sport', 'reading', 'water', 'meditation', 'language', 'finance', 'health', 'custom'],
+    enum: ['sport', 'reading', 'water', 'meditation', 'language', 'finance', 'health', 'programming', 'custom'],
     default: 'custom'
   },
   
