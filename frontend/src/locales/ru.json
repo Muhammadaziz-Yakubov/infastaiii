@@ -1,0 +1,66 @@
+{
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "add": "Добавить",
+    "search": "Поиск",
+    "filter": "Фильтр",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "close": "Закрыть",
+    "settings": "Настройки",
+    "profile": "Профиль",
+    "logout": "Выйти",
+    "language": "Язык",
+    "theme": "Тема",
+    "darkMode": "Темный режим",
+    "lightMode": "Светлый режим"
+  },
+  "auth": {
+    "login": "Войти",
+    "register": "Регистрация",
+    "email": "Email",
+    "password": "Пароль",
+    "forgotPassword": "Забыли пароль?"
+  },
+  "tasks": {
+    "title": "Задачи",
+    "addTask": "Новая задача",
+    "completed": "Выполнено",
+    "pending": "Ожидание",
+    "inProgress": "В процессе"
+  },
+  "finance": {
+    "title": "Финансы",
+    "income": "Доход",
+    "expense": "Расход",
+    "balance": "Баланс"
+  },
+  "goals": {
+    "title": "Цели",
+    "addGoal": "Новая цель",
+    "progress": "Прогресс"
+  },
+  "sidebar": {
+    "dashboard": "Главная",
+    "tasks": "Задачи",
+    "finance": "Финансы",
+    "goals": "Цели",
+    "archive": "Архив",
+    "settings": "Настройки",
+    "profile": "Профиль"
+  },
+  "settings": {
+    "title": "Настройки",
+    "appearance": "Внешний вид",
+    "notifications": "Уведомления",
+    "language": "Язык",
+    "theme": "Тема",
+    "save": "Сохранить",
+    "reset": "Сбросить"
+  }
+}
+

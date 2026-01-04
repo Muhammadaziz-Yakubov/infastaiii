@@ -1,0 +1,66 @@
+{
+  "common": {
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "delete": "O'chirish",
+    "edit": "Tahrirlash",
+    "add": "Qo'shish",
+    "search": "Qidirish",
+    "filter": "Filtr",
+    "loading": "Yuklanmoqda...",
+    "error": "Xatolik",
+    "success": "Muvaffaqiyatli",
+    "close": "Yopish",
+    "settings": "Sozlamalar",
+    "profile": "Profil",
+    "logout": "Chiqish",
+    "language": "Til",
+    "theme": "Mavzu",
+    "darkMode": "Qora rejim",
+    "lightMode": "Och rejim"
+  },
+  "auth": {
+    "login": "Kirish",
+    "register": "Ro'yxatdan o'tish",
+    "email": "Email",
+    "password": "Parol",
+    "forgotPassword": "Parolni unutdingizmi?"
+  },
+  "tasks": {
+    "title": "Vazifalar",
+    "addTask": "Yangi vazifa",
+    "completed": "Bajarilgan",
+    "pending": "Kutilmoqda",
+    "inProgress": "Jarayonda"
+  },
+  "finance": {
+    "title": "Moliya",
+    "income": "Daromad",
+    "expense": "Xarajat",
+    "balance": "Balans"
+  },
+  "goals": {
+    "title": "Maqsadlar",
+    "addGoal": "Yangi maqsad",
+    "progress": "Progress"
+  },
+  "sidebar": {
+    "dashboard": "Bosh sahifa",
+    "tasks": "Vazifalar",
+    "finance": "Moliya",
+    "goals": "Maqsadlar",
+    "archive": "Arxiv",
+    "settings": "Sozlamalar",
+    "profile": "Profil"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "appearance": "Ko'rinish",
+    "notifications": "Bildirishnomalar",
+    "language": "Til",
+    "theme": "Mavzu",
+    "save": "Saqlash",
+    "reset": "Tiklash"
+  }
+}
+
