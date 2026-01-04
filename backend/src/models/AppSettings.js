@@ -50,7 +50,7 @@ appSettingsSchema.statics.initializeDefaults = async function() {
     },
     {
       key: 'challenges_enabled',
-      value: false,
+      value: true,
       description: 'Challengelar funksiyasi'
     },
     {
