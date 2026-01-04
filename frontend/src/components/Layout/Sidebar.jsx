@@ -5,6 +5,7 @@ import { taskService } from '../../services/taskService';
 import { financeService } from '../../services/financeService';
 import { goalsService } from '../../services/goalsService';
 import { debtService } from '../../services/debtService';
+import api from '../../services/api';
 import logoImage from '../../assets/infastai.png';
 import {
   LayoutDashboard,
@@ -130,10 +131,9 @@ const Sidebar = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/public`);
-        const data = await response.json();
-        if (data.success) {
-          setAppSettings(data.settings);
+        const response = await api.get('/api/app-settings/public');
+        if (response.data.success) {
+          setAppSettings(response.data.settings);
         }
       } catch (error) {
         console.error('Error fetching settings:', error);

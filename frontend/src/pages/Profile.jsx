@@ -4,6 +4,7 @@ import { User, Mail, Shield, Lock, AlertTriangle, CheckCircle, Eye, EyeOff, Edit
 import { userService } from '../services/userService';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import api from '../services/api';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
@@ -148,18 +149,14 @@ const Profile = () => {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/user/upload-avatar`, {
-        method: 'POST',
+      const response = await api.post('/api/user/upload-avatar', formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        console.log('Avatar uploaded successfully:', data.avatar);
+      if (response.data.success) {
+        console.log('Avatar uploaded successfully:', response.data.avatar);
         
         // Fetch fresh profile to ensure all data is up to date
         try {

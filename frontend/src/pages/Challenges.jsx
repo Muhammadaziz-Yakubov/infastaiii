@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { challengeService } from '../services/challengeService';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 import './Challenges.css';
 
 const CHALLENGE_CATEGORIES = [
@@ -188,12 +189,11 @@ const Challenges = () => {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/public`);
-      const data = await response.json();
-      if (data.success) {
-        setAppSettings(data.settings);
+      const response = await api.get('/api/app-settings/public');
+      if (response.data.success) {
+        setAppSettings(response.data.settings);
         // If Challenges is disabled, redirect to home
-        if (!data.settings.challenges_enabled) {
+        if (!response.data.settings.challenges_enabled) {
           navigate('/');
           return;
         }
