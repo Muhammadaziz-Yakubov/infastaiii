@@ -147,7 +147,7 @@ const Sidebar = () => {
     { name: 'Vazifalar', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'Moliya', href: '/finance', icon: Wallet, badge: null },
     { name: 'Maqsad', href: '/goals', icon: Goal, badge: null },
-    { name: 'Challengelar', href: '/challenges', icon: Trophy, 'Yangi' : null },
+    { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' },
     ...(appSettings?.pro_subscription_enabled && user?.subscriptionType !== 'premium' ? [
       { name: 'Pro Obuna', href: '/pricing', icon: Zap, badge: 'Pro' }
     ] : []),
