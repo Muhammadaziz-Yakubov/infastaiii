@@ -54,6 +54,12 @@ export const challengeService = {
   deleteChallenge: async (id) => {
     const response = await api.delete(`/api/challenges/${id}`);
     return response.data;
+  },
+
+  // Update challenge
+  updateChallenge: async (id, data) => {
+    const response = await api.put(`/api/challenges/${id}`, data);
+    return response.data;
   }
 };
 

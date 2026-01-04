@@ -19,6 +19,9 @@ router.post('/join', challengeController.joinChallenge);
 // Get challenge details
 router.get('/:id', challengeController.getChallengeDetails);
 
+// Update challenge
+router.put('/:id', challengeController.updateChallenge);
+
 // Update daily progress
 router.put('/:id/progress', challengeController.updateProgress);
 

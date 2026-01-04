@@ -47,6 +47,8 @@ const Challenges = () => {
   const [joinCode, setJoinCode] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingChallenge, setEditingChallenge] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -212,6 +214,53 @@ const Challenges = () => {
       loadChallenges();
     } catch (error) {
       toast.error('Xatolik yuz berdi');
+    }
+  };
+
+  const openEditModal = (challenge) => {
+    setEditingChallenge(challenge);
+    setFormData({
+      title: challenge.title,
+      description: challenge.description || '',
+      category: challenge.category,
+      duration: challenge.duration,
+      dailyGoal: challenge.dailyGoal?.value || 1,
+      unit: challenge.dailyGoal?.unit || 'times',
+      maxParticipants: challenge.maxParticipants || 10,
+      startDate: challenge.startDate?.split('T')[0] || new Date().toISOString().split('T')[0]
+    });
+    setShowEditModal(true);
+    setActiveMenu(null);
+  };
+
+  const handleEditChallenge = async (e) => {
+    e.preventDefault();
+    if (!formData.title.trim()) {
+      toast.error('Challenge nomini kiriting');
+      return;
+    }
+    try {
+      setCreateLoading(true);
+      await challengeService.updateChallenge(editingChallenge._id, {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        maxParticipants: formData.maxParticipants,
+        dailyGoal: {
+          value: formData.dailyGoal,
+          unit: formData.unit
+        }
+      });
+      toast.success('Challenge yangilandi! ✅');
+      setShowEditModal(false);
+      setEditingChallenge(null);
+      resetForm();
+      loadChallenges();
+    } catch (error) {
+      console.error('Edit challenge error:', error);
+      toast.error(error.response?.data?.message || 'Xatolik yuz berdi');
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -512,6 +561,15 @@ const Challenges = () => {
                             <Copy className="w-4 h-4" />
                             Kodni nusxalash
                           </button>
+                          {isOwner && (
+                            <button
+                              onClick={() => openEditModal(challenge)}
+                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                              Tahrirlash
+                            </button>
+                          )}
                           <hr className="my-2 border-gray-200 dark:border-gray-700" />
                           {isOwner ? (
                             <button
@@ -759,6 +817,28 @@ const Challenges = () => {
                 </div>
               </div>
 
+              {/* Max Participants */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Users className="w-4 h-4 inline mr-1" />
+                  Maksimal qatnashuvchilar soni
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="2"
+                    max="50"
+                    value={formData.maxParticipants}
+                    onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                  />
+                  <div className="w-16 px-3 py-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-center">
+                    <span className="font-bold text-orange-600">{formData.maxParticipants}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">2 dan 50 gacha odam qatnashishi mumkin</p>
+              </div>
+
               {/* Buttons */}
               <div className="flex gap-4 pt-4">
                 <button
@@ -866,6 +946,168 @@ const Challenges = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Challenge Modal */}
+      {showEditModal && editingChallenge && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-5 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-xl">
+                    <RefreshCw className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Challengeni tahrirlash</h2>
+                    <p className="text-white/80 text-sm">Ma'lumotlarni yangilash</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowEditModal(false); setEditingChallenge(null); resetForm(); }}
+                  className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleEditChallenge} className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-100px)]">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Challenge nomi
+                </label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Tavsif (ixtiyoriy)
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={2}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Kategoriya
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, category: cat.id })}
+                      className={`p-3 rounded-xl border-2 text-center transition-all ${
+                        formData.category === cat.id
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="text-xl">{cat.emoji}</span>
+                      <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">{cat.name}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Daily Goal */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Kunlik maqsad
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.dailyGoal}
+                    onChange={(e) => setFormData({ ...formData, dailyGoal: parseInt(e.target.value) || 1 })}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-center font-bold text-xl"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Birlik
+                  </label>
+                  <select
+                    value={formData.unit}
+                    onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl"
+                  >
+                    <option value="times">Marta</option>
+                    <option value="minutes">Daqiqa</option>
+                    <option value="pages">Sahifa</option>
+                    <option value="liters">Litr</option>
+                    <option value="steps">Qadam</option>
+                    <option value="custom">Boshqa</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Max Participants */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Users className="w-4 h-4 inline mr-1" />
+                  Maksimal qatnashuvchilar
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="2"
+                    max="50"
+                    value={formData.maxParticipants}
+                    onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
+                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  <div className="w-16 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-center">
+                    <span className="font-bold text-blue-600">{formData.maxParticipants}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => { setShowEditModal(false); setEditingChallenge(null); resetForm(); }}
+                  className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {createLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Saqlanmoqda...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-5 h-5" />
+                      Saqlash
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

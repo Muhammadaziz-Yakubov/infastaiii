@@ -72,7 +72,7 @@ const NotFoundPage = () => {
           </button>
 
           <button
-            onClick={() => window.open('https://t.me/infastai_support_bot', '_blank')}
+            onClick={() => window.open('https://t.me/infast_support_bot', '_blank')}
             className="flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             <MessageCircle className="w-5 h-5" />

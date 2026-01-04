@@ -48,7 +48,7 @@ const BannedPage = () => {
               </button>
 
               <button
-                onClick={() => window.open('https://t.me/infastai_support_bot', '_blank')}
+                onClick={() => window.open('https://t.me/infast_support_bot', '_blank')}
                 className="w-full md:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-green-500/50"
               >
                 <MessageCircle className="w-5 h-5" />

@@ -647,6 +647,54 @@ exports.getLeaderboard = async (req, res) => {
   }
 };
 
+// Update challenge
+exports.updateChallenge = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { id } = req.params;
+    const { title, description, category, dailyGoal, maxParticipants } = req.body;
+    
+    const challenge = await Challenge.findById(id);
+    
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: 'Challenge topilmadi'
+      });
+    }
+    
+    if (challenge.creatorId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Faqat challenge egasi tahrirlashi mumkin'
+      });
+    }
+    
+    // Update fields
+    if (title) challenge.title = title;
+    if (description !== undefined) challenge.description = description;
+    if (category) challenge.category = category;
+    if (dailyGoal) challenge.dailyGoal = dailyGoal;
+    if (maxParticipants && maxParticipants >= challenge.currentParticipants) {
+      challenge.maxParticipants = maxParticipants;
+    }
+    
+    await challenge.save();
+    
+    res.json({
+      success: true,
+      message: 'Challenge yangilandi',
+      challenge
+    });
+  } catch (error) {
+    console.error('Update challenge error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Challengeni yangilashda xatolik'
+    });
+  }
+};
+
 // Delete/Cancel challenge
 exports.deleteChallenge = async (req, res) => {
   try {
