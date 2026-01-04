@@ -266,11 +266,13 @@ class TelegramService {
         console.log(`📱 Contact received from user ${userId}: ${phoneNumber}`);
 
         try {
+          // Avval mavjud so'rovni tekshirish
           const pendingVerification = await VerificationCode.findOne({
             phone: phoneNumber,
             type: 'phone_verification',
+            used: false,
             expiresAt: { $gt: new Date() }
-          });
+          }).sort({ createdAt: -1 });
 
           if (!pendingVerification) {
             await this.bot.sendMessage(chatId,
@@ -280,6 +282,12 @@ class TelegramService {
             return;
           }
 
+          // Eski OTP ni o'chirib, yangi yaratish (chunki eski kod hash qilingan)
+          await VerificationCode.deleteMany({
+            phone: phoneNumber,
+            type: 'phone_verification'
+          });
+          
           const { code } = await VerificationCode.createOTP(phoneNumber, 'phone_verification');
 
           const otpMessage = `

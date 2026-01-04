@@ -55,19 +55,25 @@ exports.checkPhone = async (req, res) => {
         message: 'Bu telefon raqam mavjud. Parolingizni kiriting.'
       });
     } else {
-      // New user - generate OTP for Telegram bot
+      // New user - delete old OTPs and create new session marker
+      await VerificationCode.deleteMany({
+        phone: normalizedPhone,
+        type: 'phone_verification'
+      });
+      
+      // Create session marker (OTP will be created when user shares contact in Telegram)
       const { otp, code } = await VerificationCode.createOTP(normalizedPhone, 'phone_verification');
 
       console.log(`📱 New user registration for phone: ${normalizedPhone}`);
-      console.log(`🔢 VERIFICATION CODE: ${code} (User should get this from Telegram bot)`);
+      console.log(`🔢 Session created for Telegram bot verification`);
       console.log(`🤖 User needs to: 1) Go to Telegram bot, 2) Press /start, 3) Share contact`);
 
       return res.json({
         success: true,
         userExists: false,
-        message: 'Telegram botga boring va /start bosib, kontaktni ulashing. 3 daqiqa amal qiluvchi kod olishingiz mumkin.',
+        message: 'Telegram botga boring va /start bosib, kontaktni ulashing. Kod olasiz.',
         phone: normalizedPhone,
-        tempToken: generateToken({ phone: normalizedPhone, type: 'phone_verification' }) // Temporary token for verification
+        tempToken: generateToken({ phone: normalizedPhone, type: 'phone_verification' })
       });
     }
 
