@@ -192,14 +192,16 @@ const Challenges = () => {
       const response = await api.get('/api/app-settings/public');
       if (response.data.success) {
         setAppSettings(response.data.settings);
-        // If Challenges is disabled, redirect to home
-        if (!response.data.settings.challenges_enabled) {
+        // If Challenges is explicitly disabled, redirect to home
+        // Default to enabled if setting doesn't exist
+        if (response.data.settings.challenges_enabled === false) {
           navigate('/');
           return;
         }
       }
     } catch (error) {
       console.error('Error fetching settings:', error);
+      // Don't redirect on error - allow access by default
     }
   };
 
