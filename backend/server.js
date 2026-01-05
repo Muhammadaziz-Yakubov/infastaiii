@@ -22,6 +22,7 @@ const publicRoutes = require('./src/routes/publicRoutes');
 const challengeRoutes = require('./src/routes/challengeRoutes');
 const appSettingsRoutes = require('./src/routes/appSettingsRoutes');
 const supportRoutes = require('./src/routes/supportRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
 const telegramService = require('./src/services/telegramService');
 const supportBotService = require('./src/services/supportBotService');
 const AppSettings = require('./src/models/AppSettings');
@@ -268,6 +269,7 @@ app.use('/api/ai-suggestions', aiSuggestionsRoutes);
 app.use('/api/challenges', challengeRoutes);
 app.use('/api/app-settings', appSettingsRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler
 app.use('/api/*', (req, res) => {
