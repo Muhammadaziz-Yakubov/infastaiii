@@ -28,7 +28,8 @@ import {
   Menu,
   Trophy,
   MoreHorizontal,
-  Zap
+  Zap,
+  DollarSign
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -42,6 +43,7 @@ const MobileBottomBar = () => {
     { name: 'Tasks', href: '/tasks', icon: CheckSquare, label: 'Vazifalar' },
     { name: 'Finance', href: '/finance', icon: Wallet, label: 'Moliya' },
     { name: 'Goals', href: '/goals', icon: Goal, label: 'Maqsad' },
+    { name: 'Pricing', href: '/pricing', icon: DollarSign, label: 'Narxlar' },
     { name: 'More', href: '/more', icon: MoreHorizontal, label: 'Ko\'proq' },
   ];
 
@@ -148,6 +150,9 @@ const Sidebar = () => {
     { name: 'Moliya', href: '/finance', icon: Wallet, badge: null },
     { name: 'Maqsad', href: '/goals', icon: Goal, badge: null },
     { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' },
+    ...(appSettings?.pro_subscription_enabled ? [
+      { name: 'Narxlar', href: '/pricing', icon: DollarSign, badge: null }
+    ] : []),
     ...(appSettings?.pro_subscription_enabled && user?.subscriptionType !== 'premium' ? [
       { name: 'Pro Obuna', href: '/pricing', icon: Zap, badge: 'Pro' }
     ] : []),
