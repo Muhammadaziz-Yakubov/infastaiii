@@ -125,10 +125,24 @@ const Pricing = () => {
     }
 
     try {
-      const amount = selectedPlan.price[billingCycle];
+      const rawAmount = selectedPlan.price[billingCycle];
+      const parsedAmount = parseInt(rawAmount);
+
+      // Some plans (e.g., Korporativ) don't have fixed pricing
+      if (!Number.isFinite(parsedAmount) || parsedAmount < 1000) {
+        const msg = 'Ushbu tarif uchun narx individual. Iltimos admin/qo\'llab-quvvatlash bilan bog\'laning.';
+        setPaymentError(msg);
+        toast.error(msg);
+        try {
+          if (paymentPopup && !paymentPopup.closed) paymentPopup.close();
+        } catch (_) {
+          // ignore
+        }
+        return;
+      }
       
       const response = await api.post('/api/payments/inpay/create', {
-        amount: parseInt(amount),
+        amount: parsedAmount,
         phone: phoneNumber.replace(/\D/g, ''),
         plan: selectedPlan.name,
         billingCycle: billingCycle

@@ -125,6 +125,23 @@ const createPayment = async (paymentData) => {
       timeout: 15000
     });
 
+    // InPay may return 200 with success=false
+    if (response.data && response.data.success === false) {
+      return {
+        success: false,
+        error: response.data.message || 'InPay payment creation failed',
+        details: response.data
+      };
+    }
+
+    if (!response.data || !response.data.pay_url) {
+      return {
+        success: false,
+        error: 'InPay did not return pay_url',
+        details: response.data
+      };
+    }
+
     console.log('✅ InPay payment created:', order_id);
     return {
       success: true,

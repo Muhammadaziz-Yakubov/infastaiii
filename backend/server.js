@@ -142,6 +142,8 @@ const oauthLimiter = rateLimit({
 // =============================================
 
 app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -220,6 +222,19 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     res.setHeader('Cache-Control', 'public, max-age=31536000');
   }
 }));
+
+app.use('/uploads', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
+  res.status(200).send(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">'
+    + '<rect width="256" height="256" fill="#e5e7eb"/>'
+    + '<circle cx="128" cy="96" r="48" fill="#9ca3af"/>'
+    + '<path d="M48 224c16-48 48-72 80-72s64 24 80 72" fill="#9ca3af"/>'
+    + '</svg>'
+  );
+});
 
 // =============================================
 // ROUTES WITH SMART RATE LIMITING
