@@ -1,4 +1,3 @@
-// src/pages/Archive.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Archive as ArchiveIcon, Trash2, RefreshCw, Calendar, Flag } from 'lucide-react';
 import toast from 'react-hot-toast';

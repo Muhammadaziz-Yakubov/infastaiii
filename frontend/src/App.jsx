@@ -33,6 +33,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const Challenges = lazy(() => import('./pages/Challenges'));
 const More = lazy(() => import('./pages/More'));
 const Download = lazy(() => import('./pages/Download'));
+const Notifications = lazy(() => import('./pages/Notifications'));
 
 // Admin pages
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
@@ -68,6 +69,7 @@ function App() {
               <Route path="/settings" element={<Settings />} />
                             <Route path="/challenges" element={<Challenges />} />
               <Route path="/more" element={<More />} />
+              <Route path="/notifications" element={<Notifications />} />
             </Route>
           </Route>
 

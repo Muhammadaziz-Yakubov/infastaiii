@@ -1,4 +1,3 @@
-// src/pages/AuthPage.jsx - Authentication Page Wrapper
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthComponent from '../components/Auth/AuthComponent';

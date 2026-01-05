@@ -871,6 +871,13 @@ const AdminDashboard = () => {
                   <option value="system">Tizim xabari</option>
                 </select>
               </div>
+              <div className="bg-gray-700/50 rounded-lg p-4 border border-gray-600">
+                <p className="text-sm text-gray-400 mb-2">💡 Maslahat:</p>
+                <p className="text-xs text-gray-500">
+                  Xabar matniga havola qo'shish uchun to'liq URL yozing. Masalan:<br/>
+                  <code className="bg-gray-800 px-2 py-1 rounded text-blue-400">https://t.me/infastai</code>
+                </p>
+              </div>
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={handleSendNotification}

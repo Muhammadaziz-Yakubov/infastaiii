@@ -1,4 +1,3 @@
-// src/pages/NotFoundPage.jsx - Professional 404 Page
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home, ArrowLeft, Search, Zap, MessageCircle } from 'lucide-react';

@@ -1,4 +1,3 @@
-// src/pages/AuthCallback.jsx - Google OAuth Callback Handler
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';

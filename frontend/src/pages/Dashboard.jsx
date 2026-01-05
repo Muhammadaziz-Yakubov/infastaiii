@@ -1,4 +1,3 @@
-// src/pages/Dashboard.jsx - Perfect Beautiful Dashboard
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
