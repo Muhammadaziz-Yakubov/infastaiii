@@ -217,7 +217,6 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
     res.setHeader('Cache-Control', 'public, max-age=31536000');
   }
 }));

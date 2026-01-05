@@ -33,6 +33,11 @@ const paymentSchema = new mongoose.Schema({
   telegramMessageId: {
     type: String
   },
+  merchantOrderId: {
+    type: String,
+    sparse: true,
+    index: true
+  },
   inpayOrderId: {
     type: String,
     sparse: true,

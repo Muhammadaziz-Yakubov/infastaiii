@@ -83,7 +83,7 @@ const createPayment = async (paymentData) => {
   try {
     const token = await getBearerToken();
 
-    const { order_id, amount, phone, description, callback_url, return_url } = paymentData;
+    const { order_id, amount, phone, description, callback_url, return_url, payment_method } = paymentData;
 
     // Validate required fields
     if (!order_id) throw new Error('order_id is required');
@@ -104,6 +104,18 @@ const createPayment = async (paymentData) => {
       description: description || `Payment for order ${order_id}`,
       callback_url: callback_url || process.env.INPAY_CALLBACK_URL
     };
+
+    // Some merchants configure these in dashboard, but if API supports it we pass through.
+    if (payment_method) {
+      payload.payment_method = payment_method;
+    }
+    if (return_url) {
+      payload.return_url = return_url;
+    }
+    // InPay docs generate order_id on their side; still pass ours if accepted (won't hurt if ignored)
+    if (order_id) {
+      payload.order_id = order_id;
+    }
 
     const response = await axios.post(INPAY_CREATE_URL, payload, {
       headers: {

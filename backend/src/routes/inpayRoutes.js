@@ -24,6 +24,10 @@ router.post('/create', authMiddleware, async (req, res) => {
   try {
     const { amount, phone, plan, billingCycle } = req.body;
 
+    // Map UI plan names to internal enum values
+    // UI uses: 'Korporativ' but DB enum expects: 'Enterprise'
+    const normalizedPlan = plan === 'Korporativ' ? 'Enterprise' : plan;
+
     // Validate input
     const validation = inpayService.validatePaymentInput(amount, phone);
     if (!validation.valid) {
@@ -36,7 +40,7 @@ router.post('/create', authMiddleware, async (req, res) => {
 
     // Validate plan
     const validPlans = ['Pro', 'Family', 'Enterprise'];
-    if (!plan || !validPlans.includes(plan)) {
+    if (!normalizedPlan || !validPlans.includes(normalizedPlan)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid plan. Must be one of: Pro, Family, Enterprise'
@@ -56,19 +60,30 @@ router.post('/create', authMiddleware, async (req, res) => {
     const orderId = `INF-${Date.now()}-${uuidv4().substring(0, 8)}`;
 
     // Get callback URL from environment or construct it
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
-    const callbackUrl = process.env.INPAY_CALLBACK_URL || `${baseUrl}/api/payments/inpay/callback`;
-    const returnUrl = process.env.INPAY_RETURN_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const rawBaseUrl = process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+    const baseUrl = rawBaseUrl.endsWith('/') ? rawBaseUrl.slice(0, -1) : rawBaseUrl;
+
+    const rawFrontendBaseUrl = process.env.INPAY_RETURN_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendBaseUrl = rawFrontendBaseUrl.endsWith('/') ? rawFrontendBaseUrl.slice(0, -1) : rawFrontendBaseUrl;
+
+    let callbackUrl = process.env.INPAY_CALLBACK_URL || `${baseUrl}/api/payments/inpay/callback`;
+    if (process.env.NODE_ENV === 'production' && callbackUrl.includes('localhost')) {
+      callbackUrl = `${baseUrl}/api/payments/inpay/callback`;
+    }
+
+    if (process.env.NODE_ENV === 'production' && frontendBaseUrl.includes('localhost')) {
+      console.warn('⚠️ INPAY_RETURN_URL/FRONTEND_URL points to localhost in production. Fix your Render env vars.');
+    }
 
     // Create payment record in database first
     const payment = new Payment({
       userId: req.userId,
-      plan,
+      plan: normalizedPlan,
       billingCycle,
       amount: parseInt(amount),
       receiptUrl: '', // No receipt for InPay
       status: 'pending',
-      inpayOrderId: orderId
+      merchantOrderId: orderId
     });
     await payment.save();
 
@@ -77,9 +92,9 @@ router.post('/create', authMiddleware, async (req, res) => {
       order_id: orderId,
       amount: parseInt(amount),
       phone: phone.toString().replace(/\D/g, ''),
-      description: `InFast AI ${plan} - ${billingCycle === 'yearly' ? 'Yillik' : 'Oylik'} obuna`,
+      description: `InFast AI ${normalizedPlan} - ${billingCycle === 'yearly' ? 'Yillik' : 'Oylik'} obuna`,
       callback_url: callbackUrl,
-      return_url: `${returnUrl}/payment/success?order_id=${orderId}`
+      return_url: `${frontendBaseUrl}/payment/success?order_id=${orderId}`
     });
 
     if (!paymentResult.success) {
@@ -96,14 +111,41 @@ router.post('/create', authMiddleware, async (req, res) => {
       });
     }
 
+    // Ensure pay_url exists (required to redirect user to checkout)
+    const payUrl = paymentResult.data?.pay_url;
+    const inpayOrderId = paymentResult.data?.order_id;
+    if (!payUrl) {
+      payment.status = 'rejected';
+      payment.rejectedReason = 'InPay did not return pay_url';
+      await payment.save();
+
+      return res.status(400).json({
+        success: false,
+        message: 'Payment created but checkout URL not returned (pay_url missing). Check whitelist / merchant settings.',
+        details: paymentResult.data
+      });
+    }
+
+    if (!inpayOrderId) {
+      payment.status = 'rejected';
+      payment.rejectedReason = 'InPay did not return order_id';
+      await payment.save();
+
+      return res.status(400).json({
+        success: false,
+        message: 'Payment created but order_id not returned. Check InPay response / merchant settings.',
+        details: paymentResult.data
+      });
+    }
+
     // Update payment with InPay response data
     if (paymentResult.data) {
+      payment.inpayOrderId = inpayOrderId;
       payment.inpayTransactionId = paymentResult.data.transaction_id;
       await payment.save();
     }
 
     console.log('✅ InPay payment initiated:', orderId);
-    console.log('🔍 InPay response data:', JSON.stringify(paymentResult.data, null, 2));
 
     res.json({
       success: true,
@@ -111,8 +153,8 @@ router.post('/create', authMiddleware, async (req, res) => {
       data: {
         orderId,
         paymentId: payment._id,
-        pay_url: paymentResult.data?.pay_url, // InPay returns pay_url
-        order_id: paymentResult.data?.order_id,
+        pay_url: payUrl, // InPay returns pay_url
+        order_id: inpayOrderId,
         phone: paymentResult.data?.phone,
         message: paymentResult.data?.message
       }
@@ -145,7 +187,7 @@ router.get('/status/:order_id', authMiddleware, async (req, res) => {
     }
 
     // Check local database first
-    const payment = await Payment.findOne({ inpayOrderId: order_id });
+    const payment = await Payment.findOne({ merchantOrderId: order_id }) || await Payment.findOne({ inpayOrderId: order_id });
     
     if (!payment) {
       return res.status(404).json({
@@ -162,8 +204,10 @@ router.get('/status/:order_id', authMiddleware, async (req, res) => {
       });
     }
 
-    // Get status from InPay
-    const statusResult = await inpayService.checkTransactionStatus(order_id);
+    // Get status from InPay (requires InPay order_id)
+    const statusResult = payment.inpayOrderId
+      ? await inpayService.checkTransactionStatus(payment.inpayOrderId)
+      : { success: false, error: 'InPay order_id not stored yet' };
 
     res.json({
       success: true,
@@ -209,16 +253,21 @@ router.post('/callback', async (req, res) => {
     // Validate required fields
     if (!order_id) {
       console.error('❌ InPay callback: Missing order_id');
-      return res.status(200).json({ success: true, message: 'Received' });
+      return res.status(200).send('OK');
     }
 
-    // Find payment in database
+    // Find payment in database (InPay sends its own order_id)
     const payment = await Payment.findOne({ inpayOrderId: order_id });
 
     if (!payment) {
       console.error('❌ InPay callback: Payment not found for order_id:', order_id);
       // Still return 200 to acknowledge receipt
-      return res.status(200).json({ success: true, message: 'Received' });
+      return res.status(200).send('OK');
+    }
+
+    // Idempotency: if already finalized, acknowledge and exit
+    if (payment.status === 'approved' || payment.status === 'rejected') {
+      return res.status(200).send('OK');
     }
 
     // Process based on status
@@ -264,18 +313,12 @@ router.post('/callback', async (req, res) => {
     }
 
     // Always respond with 200 OK to acknowledge receipt
-    res.status(200).json({
-      success: true,
-      message: 'Callback processed'
-    });
+    res.status(200).send('OK');
 
   } catch (error) {
     console.error('❌ InPay callback processing error:', error);
     // Still return 200 to prevent InPay from retrying
-    res.status(200).json({
-      success: true,
-      message: 'Received with error'
-    });
+    res.status(200).send('OK');
   }
 });
 
@@ -289,7 +332,7 @@ router.get('/verify/:order_id', authMiddleware, async (req, res) => {
     const { order_id } = req.params;
 
     // Find payment
-    const payment = await Payment.findOne({ inpayOrderId: order_id });
+    const payment = await Payment.findOne({ merchantOrderId: order_id }) || await Payment.findOne({ inpayOrderId: order_id });
 
     if (!payment) {
       return res.status(404).json({
@@ -322,7 +365,15 @@ router.get('/verify/:order_id', authMiddleware, async (req, res) => {
 
     // If pending, check with InPay
     if (payment.status === 'pending') {
-      const statusResult = await inpayService.checkTransactionStatus(order_id);
+      if (!payment.inpayOrderId) {
+        return res.json({
+          success: true,
+          status: 'pending',
+          message: 'Payment pending (waiting for InPay order_id).'
+        });
+      }
+
+      const statusResult = await inpayService.checkTransactionStatus(payment.inpayOrderId);
 
       if (statusResult.success && statusResult.data) {
         const inpayStatus = statusResult.data.status;
@@ -343,7 +394,7 @@ router.get('/verify/:order_id', authMiddleware, async (req, res) => {
 
           // Update user
           await User.findByIdAndUpdate(payment.userId, {
-            subscriptionType: payment.plan === 'Pro' ? 'premium' : 'enterprise',
+            subscriptionType: payment.plan === 'Enterprise' ? 'enterprise' : 'premium',
             subscriptionPlan: payment.plan,
             subscriptionStatus: 'active',
             subscriptionEndDate: payment.subscriptionEndDate

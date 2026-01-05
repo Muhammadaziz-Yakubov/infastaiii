@@ -115,6 +115,15 @@ const Pricing = () => {
     setProcessing(true);
     setPaymentError('');
 
+    // Try to open a popup immediately to avoid browser popup blocking (user gesture)
+    // If blocked, we will fall back to redirecting in the same tab.
+    let paymentPopup = null;
+    try {
+      paymentPopup = window.open('', '_blank', 'noopener,noreferrer');
+    } catch (e) {
+      paymentPopup = null;
+    }
+
     try {
       const amount = selectedPlan.price[billingCycle];
       
@@ -126,23 +135,40 @@ const Pricing = () => {
       });
 
       if (response.data.success) {
-        console.log('🔍 InPay response:', JSON.stringify(response.data, null, 2));
-        
         // Get payment URL from response (InPay returns pay_url)
         const paymentUrl = response.data.data?.pay_url;
-        
-        console.log('🔍 Payment URL:', paymentUrl);
         
         if (paymentUrl) {
           // Redirect to InPay payment page
           toast.success('To\'lov sahifasiga yo\'naltirilmoqda...');
-          window.location.href = paymentUrl;
-        } else {
-          // If no URL, show success message
           setShowPaymentModal(false);
-          setPhoneNumber('');
-          toast.success('To\'lov yaratildi! InPay orqali to\'lang.');
-          console.log('❌ No payment URL found in response');
+
+          try {
+            if (paymentPopup && !paymentPopup.closed) {
+              paymentPopup.location.href = paymentUrl;
+              paymentPopup.focus();
+            } else {
+              window.location.assign(paymentUrl);
+            }
+          } catch (e) {
+            // Last resort: same tab
+            try {
+              if (paymentPopup && !paymentPopup.closed) paymentPopup.close();
+            } catch (_) {
+              // ignore
+            }
+            window.location.assign(paymentUrl);
+          }
+        } else {
+          // If no URL, show error
+          const msg = 'To\'lov havolasi topilmadi. Iltimos qayta urinib ko\'ring.';
+          setPaymentError(msg);
+          toast.error(msg);
+          try {
+            if (paymentPopup && !paymentPopup.closed) paymentPopup.close();
+          } catch (_) {
+            // ignore
+          }
         }
       } else {
         setPaymentError(response.data.message || 'To\'lov yaratishda xatolik');
@@ -153,6 +179,13 @@ const Pricing = () => {
       const errorMsg = error.response?.data?.message || 'Server xatosi. Qayta urinib ko\'ring.';
       setPaymentError(errorMsg);
       toast.error(errorMsg);
+
+      // Close blank popup if payment creation failed
+      try {
+        if (paymentPopup && !paymentPopup.closed) paymentPopup.close();
+      } catch (e) {
+        // ignore
+      }
     } finally {
       setProcessing(false);
     }
