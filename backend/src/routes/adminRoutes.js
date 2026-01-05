@@ -26,6 +26,12 @@ router.get('/dashboard', adminController.getDashboardStats);
 router.get('/users', adminController.getUsers);
 router.get('/users/:userId', adminController.getUserDetails);
 router.post('/users/:userId/toggle-ban', adminController.toggleUserBan);
+router.put('/users/:userId/profile', adminController.updateUserProfile);
+router.delete('/users/:userId', adminController.deleteUser);
+router.get('/users/:userId/notifications', adminController.getUserNotifications);
+
+// Notifications
+router.post('/notifications/send', adminController.sendNotification);
 
 // Admin user creation (for setup)
 router.post('/create-admin', adminController.createAdminUser);

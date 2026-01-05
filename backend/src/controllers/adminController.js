@@ -1,6 +1,7 @@
 // src/controllers/adminController.js - Admin dashboard and user management
 const User = require('../models/User');
 const Task = require('../models/Task');
+const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
@@ -426,6 +427,182 @@ exports.createAdminUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Admin yaratishda xatolik'
+    });
+  }
+};
+
+// Send notification to all users or specific user
+exports.sendNotification = async (req, res) => {
+  try {
+    const { title, message, type, userId } = req.body;
+
+    if (!title || !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Sarlavha va xabar majburiy'
+      });
+    }
+
+    let targetUsers = [];
+    
+    if (userId) {
+      // Send to specific user
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'Foydalanuvchi topilmadi'
+        });
+      }
+      targetUsers = [user];
+    } else {
+      // Send to all active users
+      targetUsers = await User.find({ isBanned: false, isActive: true });
+    }
+
+    const notifications = [];
+    for (const user of targetUsers) {
+      const notification = new Notification({
+        userId: user._id,
+        type: type || 'announcement',
+        title,
+        message,
+        priority: 'medium',
+        status: 'sent',
+        channel: 'in_app',
+        scheduledFor: new Date(),
+        sentAt: new Date()
+      });
+      await notification.save();
+      notifications.push(notification);
+    }
+
+    console.log(`✅ Notification sent to ${notifications.length} users`);
+
+    res.json({
+      success: true,
+      message: `${notifications.length} ta foydalanuvchiga xabar yuborildi`,
+      count: notifications.length
+    });
+
+  } catch (error) {
+    console.error('Send notification error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Xabar yuborishda xatolik'
+    });
+  }
+};
+
+// Update user profile (admin)
+exports.updateUserProfile = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { firstName, lastName, email, phone } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Foydalanuvchi topilmadi'
+      });
+    }
+
+    if (firstName) user.firstName = firstName;
+    if (lastName) user.lastName = lastName;
+    if (email) user.email = email;
+    if (phone) user.phone = phone;
+
+    await user.save();
+
+    console.log(`✅ User ${userId} profile updated by admin`);
+
+    res.json({
+      success: true,
+      message: 'Foydalanuvchi profili yangilandi',
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone
+      }
+    });
+
+  } catch (error) {
+    console.error('Update user profile error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Profilni yangilashda xatolik'
+    });
+  }
+};
+
+// Delete user (admin)
+exports.deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Foydalanuvchi topilmadi'
+      });
+    }
+
+    if (user.isAdmin) {
+      return res.status(400).json({
+        success: false,
+        message: 'Admin foydalanuvchini o\'chirish mumkin emas'
+      });
+    }
+
+    // Delete user's notifications
+    await Notification.deleteMany({ userId: user._id });
+    
+    // Delete user's tasks
+    await Task.deleteMany({ userId: user._id });
+
+    // Delete user
+    await User.findByIdAndDelete(userId);
+
+    console.log(`✅ User ${userId} deleted by admin`);
+
+    res.json({
+      success: true,
+      message: 'Foydalanuvchi o\'chirildi'
+    });
+
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Foydalanuvchini o\'chirishda xatolik'
+    });
+  }
+};
+
+// Get user notifications (for admin to see)
+exports.getUserNotifications = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const notifications = await Notification.find({ userId })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+
+    res.json({
+      success: true,
+      notifications
+    });
+
+  } catch (error) {
+    console.error('Get user notifications error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Xabarlarni yuklashda xatolik'
     });
   }
 };

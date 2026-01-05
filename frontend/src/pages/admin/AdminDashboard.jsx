@@ -4,7 +4,7 @@ import {
   Clock, BarChart3, RefreshCw, LogOut,
   Search, Eye, Ban, CheckCircle, AlertTriangle,
   Shield, ArrowUpRight, ArrowDownRight,
-  Settings, ToggleLeft, ToggleRight, Trophy
+  Bell, Send, Trash2, Edit
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../../stores/adminStore';
@@ -131,12 +131,14 @@ const AdminDashboard = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 0 });
   const [statusFilter, setStatusFilter] = useState('');
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-  const [appSettings, setAppSettings] = useState({
-    challenges_enabled: false
-  });
-  const [settingsLoading, setSettingsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, users
+  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, users, notifications
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationData, setNotificationData] = useState({ title: '', message: '', type: 'info' });
+  const [sendingNotification, setSendingNotification] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   const getAdminToken = () => {
     let token = localStorage.getItem('adminToken');
@@ -161,7 +163,6 @@ const AdminDashboard = () => {
       return;
     }
     fetchData();
-    fetchAppSettings();
   }, [isAdminAuthenticated, navigate]);
 
   useEffect(() => {
@@ -169,39 +170,6 @@ const AdminDashboard = () => {
       fetchUsers();
     }
   }, [searchQuery, statusFilter, pagination.page]);
-
-  const fetchAppSettings = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/public`);
-      const data = await response.json();
-      if (data.success) {
-        setAppSettings(prev => ({ ...prev, ...data.settings }));
-      }
-    } catch (error) {
-      console.error('Error fetching app settings:', error);
-    }
-  };
-
-  const handleToggleChallenges = async () => {
-    setSettingsLoading(true);
-    try {
-      const token = getAdminToken();
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/toggle-challenges`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setAppSettings(prev => ({ ...prev, challenges_enabled: data.enabled }));
-      }
-    } catch (error) {
-      console.error('Error toggling challenges:', error);
-    }
-    setSettingsLoading(false);
-  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -211,8 +179,6 @@ const AdminDashboard = () => {
         adminService.getUsers(1, 20, '', '')
       ]);
       
-      // Fetch app settings too
-      await fetchAppSettings();
 
       console.log('Dashboard Response:', dashboardRes);
       console.log('Users Response:', usersRes);
@@ -273,6 +239,72 @@ const AdminDashboard = () => {
     navigate('/admin');
   };
 
+  // Send notification to all users
+  const handleSendNotification = async () => {
+    if (!notificationData.title || !notificationData.message) {
+      alert('Sarlavha va xabar majburiy!');
+      return;
+    }
+    setSendingNotification(true);
+    try {
+      const result = await adminService.sendNotification(
+        notificationData.title,
+        notificationData.message,
+        notificationData.type
+      );
+      if (result.success) {
+        alert(result.message);
+        setShowNotificationModal(false);
+        setNotificationData({ title: '', message: '', type: 'info' });
+      }
+    } catch (error) {
+      alert('Xabar yuborishda xatolik!');
+    }
+    setSendingNotification(false);
+  };
+
+  // Update user profile
+  const handleUpdateUser = async () => {
+    if (!editingUser) return;
+    try {
+      const result = await adminService.updateUserProfile(editingUser._id, {
+        firstName: editingUser.firstName,
+        lastName: editingUser.lastName,
+        email: editingUser.email,
+        phone: editingUser.phone
+      });
+      if (result.success) {
+        setUsers(users.map(u => u._id === editingUser._id ? { ...u, ...editingUser } : u));
+        setShowEditModal(false);
+        setEditingUser(null);
+        alert('Profil yangilandi!');
+      }
+    } catch (error) {
+      alert('Profilni yangilashda xatolik!');
+    }
+  };
+
+  // Delete user
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    try {
+      const result = await adminService.deleteUser(userToDelete._id);
+      if (result.success) {
+        setUsers(users.filter(u => u._id !== userToDelete._id));
+        setStats(prev => ({ ...prev, totalUsers: prev.totalUsers - 1 }));
+        setShowDeleteConfirm(false);
+        setUserToDelete(null);
+        if (showUserModal && selectedUser?._id === userToDelete._id) {
+          setShowUserModal(false);
+          setSelectedUser(null);
+        }
+        alert('Foydalanuvchi o\'chirildi!');
+      }
+    } catch (error) {
+      alert('Foydalanuvchini o\'chirishda xatolik!');
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Noma\'lum';
     return new Date(dateString).toLocaleDateString('uz-UZ', {
@@ -304,11 +336,11 @@ const AdminDashboard = () => {
           </div>
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setShowSettingsModal(true)}
+              onClick={() => setShowNotificationModal(true)}
               className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-              title="Sozlamalar"
+              title="Xabar yuborish"
             >
-              <Settings className="w-5 h-5" />
+              <Bell className="w-5 h-5" />
             </button>
             <button
               onClick={fetchData}
@@ -737,10 +769,20 @@ const AdminDashboard = () => {
               </div>
 
               <div className="pt-4 space-y-3">
-                {/* Ban/Unban */}
-                <div className="flex gap-2">
-                  {!selectedUser.isAdmin && (
-                    selectedUser.isBanned ? (
+                {/* Action Buttons */}
+                {!selectedUser.isAdmin && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingUser({ ...selectedUser });
+                        setShowEditModal(true);
+                      }}
+                      className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Edit className="w-4 h-4" />
+                      Tahrirlash
+                    </button>
+                    {selectedUser.isBanned ? (
                       <button
                         onClick={() => handleToggleBan(selectedUser._id, selectedUser.isBanned)}
                         className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
@@ -751,97 +793,208 @@ const AdminDashboard = () => {
                     ) : (
                       <button
                         onClick={() => handleToggleBan(selectedUser._id, selectedUser.isBanned)}
-                        className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
                       >
                         <Ban className="w-4 h-4" />
                         Bloklash
                       </button>
-                    )
-                  )}
-                  <button
-                    onClick={() => setShowUserModal(false)}
-                    className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                  >
-                    Yopish
-                  </button>
-                </div>
+                    )}
+                    <button
+                      onClick={() => {
+                        setUserToDelete(selectedUser);
+                        setShowDeleteConfirm(true);
+                      }}
+                      className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      O'chirish
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowUserModal(false)}
+                  className="w-full py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Yopish
+                </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Settings Modal */}
-      {showSettingsModal && (
+      {/* Notification Modal */}
+      {showNotificationModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-xl max-w-lg w-full border border-gray-700 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-700 flex items-center justify-between sticky top-0 bg-gray-800">
+          <div className="bg-gray-800 rounded-xl max-w-lg w-full border border-gray-700">
+            <div className="p-6 border-b border-gray-700 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Settings className="w-5 h-5 text-blue-500" />
-                Ilova sozlamalari
+                <Bell className="w-5 h-5 text-blue-500" />
+                Xabar yuborish
               </h3>
               <button
-                onClick={() => setShowSettingsModal(false)}
+                onClick={() => setShowNotificationModal(false)}
                 className="text-gray-400 hover:text-white"
               >
                 ✕
               </button>
             </div>
-            <div className="p-6 space-y-6">
-              {/* Challenges Toggle */}
-              <div className="bg-gradient-to-r from-orange-900/50 to-yellow-900/50 rounded-xl p-6 border border-orange-700/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-orange-600 rounded-xl">
-                      <Trophy className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-white">Challengelar</h4>
-                      <p className="text-sm text-gray-400">
-                        {appSettings.challenges_enabled 
-                          ? 'Foydalanuvchilar Challengelarga kirishi mumkin' 
-                          : 'Challengelar o\'chirilgan'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleToggleChallenges}
-                    disabled={settingsLoading}
-                    className={`p-2 rounded-lg transition-colors ${
-                      appSettings.challenges_enabled 
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : 'bg-gray-600 hover:bg-gray-500'
-                    }`}
-                  >
-                    {appSettings.challenges_enabled ? (
-                      <ToggleRight className="w-8 h-8 text-white" />
-                    ) : (
-                      <ToggleLeft className="w-8 h-8 text-white" />
-                    )}
-                  </button>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Sarlavha</label>
+                <input
+                  type="text"
+                  value={notificationData.title}
+                  onChange={(e) => setNotificationData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Xabar sarlavhasi..."
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Xabar matni</label>
+                <textarea
+                  value={notificationData.message}
+                  onChange={(e) => setNotificationData(prev => ({ ...prev, message: e.target.value }))}
+                  placeholder="Xabar matnini kiriting..."
+                  rows={4}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Xabar turi</label>
+                <select
+                  value={notificationData.type}
+                  onChange={(e) => setNotificationData(prev => ({ ...prev, type: e.target.value }))}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="announcement">E'lon</option>
+                  <option value="system">Tizim xabari</option>
+                </select>
+              </div>
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleSendNotification}
+                  disabled={sendingNotification}
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                >
+                  {sendingNotification ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  Barcha foydalanuvchilarga yuborish
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl max-w-lg w-full border border-gray-700">
+            <div className="p-6 border-b border-gray-700 flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                <Edit className="w-5 h-5 text-blue-500" />
+                Profilni tahrirlash
+              </h3>
+              <button
+                onClick={() => { setShowEditModal(false); setEditingUser(null); }}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Ism</label>
+                  <input
+                    type="text"
+                    value={editingUser.firstName || ''}
+                    onChange={(e) => setEditingUser(prev => ({ ...prev, firstName: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
-                <div className={`mt-4 p-3 rounded-lg ${
-                  appSettings.challenges_enabled 
-                    ? 'bg-green-500/20 border border-green-500/30' 
-                    : 'bg-red-500/20 border border-red-500/30'
-                }`}>
-                  <p className={`text-sm font-medium ${
-                    appSettings.challenges_enabled ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {appSettings.challenges_enabled 
-                      ? '✅ Challengelar YOQILGAN - Sidebar\'da ko\'rinadi' 
-                      : '❌ Challengelar O\'CHIRILGAN - Sidebar\'da yashirilgan'}
-                  </p>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Familiya</label>
+                  <input
+                    type="text"
+                    value={editingUser.lastName || ''}
+                    onChange={(e) => setEditingUser(prev => ({ ...prev, lastName: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
-
-              {/* Close Button */}
-              <div className="pt-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Telefon</label>
+                <input
+                  type="text"
+                  value={editingUser.phone || ''}
+                  onChange={(e) => setEditingUser(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={editingUser.email || ''}
+                  onChange={(e) => setEditingUser(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div className="flex gap-3 pt-4">
                 <button
-                  onClick={() => setShowSettingsModal(false)}
-                  className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  onClick={handleUpdateUser}
+                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
                 >
-                  Yopish
+                  <CheckCircle className="w-4 h-4" />
+                  Saqlash
+                </button>
+                <button
+                  onClick={() => { setShowEditModal(false); setEditingUser(null); }}
+                  className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Bekor qilish
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && userToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl max-w-md w-full border border-gray-700">
+            <div className="p-6 border-b border-gray-700">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                Foydalanuvchini o'chirish
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-300 mb-4">
+                <strong className="text-white">{getUserName(userToDelete)}</strong> foydalanuvchisini o'chirishni tasdiqlaysizmi?
+              </p>
+              <p className="text-red-400 text-sm mb-6">
+                ⚠️ Bu amalni qaytarib bo'lmaydi! Foydalanuvchining barcha ma'lumotlari o'chiriladi.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDeleteUser}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Ha, o'chirish
+                </button>
+                <button
+                  onClick={() => { setShowDeleteConfirm(false); setUserToDelete(null); }}
+                  className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Bekor qilish
                 </button>
               </div>
             </div>

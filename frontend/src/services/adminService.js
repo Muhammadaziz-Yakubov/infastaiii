@@ -129,17 +129,52 @@ export const adminService = {
     }
   },
 
-  // Update user subscription (give/remove Pro)
-  updateUserSubscription: async (userId, subscriptionType, subscriptionEndDate = null) => {
+  // Send notification to users
+  sendNotification: async (title, message, type = 'announcement', userId = null) => {
     try {
-      const response = await api.put(`/api/admin/users/${userId}/subscription`, { 
-        subscriptionType, 
-        subscriptionEndDate 
+      const response = await api.post('/api/admin/notifications/send', { 
+        title, 
+        message, 
+        type,
+        userId 
       });
       return response.data;
     } catch (error) {
-      console.error('updateUserSubscription error:', error.response?.data || error.message);
+      console.error('sendNotification error:', error.response?.data || error.message);
       throw error;
+    }
+  },
+
+  // Update user profile
+  updateUserProfile: async (userId, data) => {
+    try {
+      const response = await api.put(`/api/admin/users/${userId}/profile`, data);
+      return response.data;
+    } catch (error) {
+      console.error('updateUserProfile error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Delete user
+  deleteUser: async (userId) => {
+    try {
+      const response = await api.delete(`/api/admin/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error('deleteUser error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Get user notifications
+  getUserNotifications: async (userId) => {
+    try {
+      const response = await api.get(`/api/admin/users/${userId}/notifications`);
+      return response.data;
+    } catch (error) {
+      console.error('getUserNotifications error:', error.response?.data || error.message);
+      return { success: false, notifications: [] };
     }
   }
 };
