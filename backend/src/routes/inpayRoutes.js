@@ -103,6 +103,7 @@ router.post('/create', authMiddleware, async (req, res) => {
     }
 
     console.log('✅ InPay payment initiated:', orderId);
+    console.log('🔍 InPay response data:', JSON.stringify(paymentResult.data, null, 2));
 
     res.json({
       success: true,
@@ -110,7 +111,7 @@ router.post('/create', authMiddleware, async (req, res) => {
       data: {
         orderId,
         paymentId: payment._id,
-        paymentUrl: paymentResult.data?.payment_url || paymentResult.data?.url,
+        paymentUrl: paymentResult.data?.payment_url || paymentResult.data?.url || paymentResult.data?.pay_url,
         ...paymentResult.data
       }
     });
