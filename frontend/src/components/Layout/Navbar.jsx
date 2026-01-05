@@ -27,6 +27,7 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
   const [notifications, setNotifications] = useState([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
   const searchRef = useRef(null);
   const notificationsRef = useRef(null);
   const profileMenuRef = useRef(null);
@@ -47,8 +48,8 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
   useEffect(() => {
     loadNotifications();
 
-    // Har 30 soniyada yangilash
-    const interval = setInterval(loadNotifications, 30000);
+    // Har 2 daqiqada yangilash (120000ms) - sayt tezligini oshirish uchun
+    const interval = setInterval(loadNotifications, 120000);
 
     return () => clearInterval(interval);
   }, []);
@@ -149,14 +150,11 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
 
   const handleNotificationClick = (notification) => {
     markAsRead(notification._id);
-    setShowNotifications(false);
-    
-    // Notification turiga qarab navigate qilish
-    if (notification.data?.debtId) {
-      navigate('/finance/debts');
-    } else if (notification.data?.taskId) {
-      navigate(`/tasks/${notification.data.taskId}`);
-    }
+    setSelectedNotification(notification);
+  };
+
+  const closeNotificationModal = () => {
+    setSelectedNotification(null);
   };
 
   const getNotificationIcon = (type) => {
@@ -739,6 +737,93 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
           </div>
         </div>
       </div>
+
+      {/* Notification Detail Modal */}
+      {selectedNotification && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4" onClick={closeNotificationModal}>
+          <div 
+            className="bg-white dark:bg-gray-800 rounded-2xl max-w-lg w-full shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className={`p-6 ${getNotificationBgColor(selectedNotification.priority)}`}>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-3 rounded-xl bg-white/20 ${getNotificationColor(selectedNotification.priority)}`}>
+                    {getNotificationIcon(selectedNotification.type)}
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                      {selectedNotification.type === 'announcement' ? "E'lon" : 
+                       selectedNotification.type === 'system' ? 'Tizim xabari' : 
+                       selectedNotification.type === 'debt_reminder' ? 'Qarz eslatmasi' : 'Bildirishnoma'}
+                    </span>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                      {selectedNotification.title}
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  onClick={closeNotificationModal}
+                  className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed whitespace-pre-wrap">
+                {selectedNotification.message}
+              </p>
+              
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    {formatDate(selectedNotification.createdAt)}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {selectedNotification.priority === 'high' && (
+                      <span className="px-3 py-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full text-xs font-medium">
+                        Muhim
+                      </span>
+                    )}
+                    {selectedNotification.status === 'read' ? (
+                      <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                        <CheckCircle className="w-4 h-4" />
+                        O'qilgan
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                        <Bell className="w-4 h-4" />
+                        Yangi
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={() => {
+                  deleteNotification(selectedNotification._id, { stopPropagation: () => {} });
+                  closeNotificationModal();
+                }}
+                className="flex-1 py-3 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-xl transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                O'chirish
+              </button>
+              <button
+                onClick={closeNotificationModal}
+                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-white rounded-xl transition-colors font-medium"
+              >
+                Yopish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

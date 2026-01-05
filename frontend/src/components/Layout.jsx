@@ -26,11 +26,9 @@ const Layout = () => {
     };
     
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(handleStorageChange, 100);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
 
