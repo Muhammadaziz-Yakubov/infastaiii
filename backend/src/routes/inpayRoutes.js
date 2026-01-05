@@ -192,13 +192,14 @@ router.get('/status/:order_id', authMiddleware, async (req, res) => {
 // ============================================
 router.post('/callback', async (req, res) => {
   try {
-    const { order_id, status, amount, transaction_id } = req.body;
+    const { order_id, status, amount, transaction_id, created_at } = req.body;
 
     console.log('📥 InPay callback received:', {
       order_id,
       status,
       amount,
       transaction_id,
+      created_at,
       body: req.body
     });
 
@@ -218,7 +219,7 @@ router.post('/callback', async (req, res) => {
     }
 
     // Process based on status
-    if (status === 'completed' || status === 'success' || status === 'paid') {
+    if (status === 'success' || status === 'completed' || status === 'paid') {
       // Payment successful - update payment status
       payment.status = 'approved';
       payment.approvedAt = new Date();
@@ -246,7 +247,7 @@ router.post('/callback', async (req, res) => {
       console.log('✅ InPay payment completed:', order_id);
       console.log('✅ User subscription activated:', payment.userId);
 
-    } else if (status === 'failed' || status === 'cancelled' || status === 'expired') {
+    } else if (status === 'failed' || status === 'cancelled') {
       // Payment failed
       payment.status = 'rejected';
       payment.rejectedReason = `InPay status: ${status}`;
@@ -348,7 +349,12 @@ router.get('/verify/:order_id', authMiddleware, async (req, res) => {
           return res.json({
             success: true,
             status: 'completed',
-            message: 'Payment completed successfully'
+            message: 'Payment completed successfully',
+            data: {
+              plan: payment.plan,
+              billingCycle: payment.billingCycle,
+              subscriptionEndDate: payment.subscriptionEndDate
+            }
           });
         }
       }

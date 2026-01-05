@@ -34,7 +34,7 @@ const PaymentSuccess = () => {
             const response = await api.get(`/api/payments/inpay/verify/${orderId}`);
             
             if (response.data.success) {
-              if (response.data.status === 'completed') {
+              if (response.data.status === 'completed' || response.data.status === 'success') {
                 setStatus('success');
                 setMessage('To\'lov muvaffaqiyatli amalga oshirildi!');
                 setPaymentData(response.data.data);
@@ -49,7 +49,7 @@ const PaymentSuccess = () => {
                   console.error('Error refreshing user:', e);
                 }
                 return true;
-              } else if (response.data.status === 'rejected') {
+              } else if (response.data.status === 'rejected' || response.data.status === 'failed') {
                 setStatus('failed');
                 setMessage('To\'lov amalga oshmadi. Qayta urinib ko\'ring.');
                 return true;

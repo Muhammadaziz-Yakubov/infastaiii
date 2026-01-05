@@ -28,6 +28,32 @@ const Pricing = () => {
   const subscriptionEndDate = user?.subscriptionEndDate ? new Date(user.subscriptionEndDate) : null;
   const isSubscriptionActive = subscriptionEndDate && subscriptionEndDate > new Date();
 
+  // Show Pro subscription notification if user doesn't have it
+  useEffect(() => {
+    if (user && !hasProSubscription && !isSubscriptionActive && appSettings?.pro_subscription_enabled) {
+      // Create a notification for Pro subscription
+      const showProSubscriptionNotification = () => {
+        // This would typically be handled by the backend, but for now we'll show a toast
+        toast('🚀 Pro obuna oling!', {
+          duration: 5000,
+          icon: '💎',
+          style: {
+            background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
+            color: 'white',
+            fontWeight: 'bold',
+          },
+        });
+      };
+
+      // Show notification once per session
+      const notificationShown = sessionStorage.getItem('proNotificationShown');
+      if (!notificationShown) {
+        showProSubscriptionNotification();
+        sessionStorage.setItem('proNotificationShown', 'true');
+      }
+    }
+  }, [user, hasProSubscription, isSubscriptionActive, appSettings]);
+
   // Fetch app settings and refresh user data on mount
   useEffect(() => {
     const fetchData = async () => {
@@ -101,7 +127,7 @@ const Pricing = () => {
 
       if (response.data.success) {
         // Get payment URL from response
-        const paymentUrl = response.data.data?.paymentUrl || response.data.data?.url || response.data.data?.payment_url;
+        const paymentUrl = response.data.data?.pay_url || response.data.data?.paymentUrl || response.data.data?.url || response.data.data?.payment_url;
         
         if (paymentUrl) {
           // Redirect to InPay payment page
@@ -125,7 +151,7 @@ const Pricing = () => {
     } finally {
       setProcessing(false);
     }
-  }, [phoneNumber, selectedPlan, billingCycle]);
+  }, [phoneNumber, selectedPlan, billingCycle, updateUser]);
 
   // Get dynamic prices from settings
   const proMonthlyPrice = appSettings?.pro_monthly_price || 39000;

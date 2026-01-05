@@ -11,7 +11,7 @@ const axios = require('axios');
 
 // InPay API Configuration
 const INPAY_BASE_URL = 'https://inpay.uz/api/v1';
-const INPAY_CREATE_URL = 'https://inpay.uz/create/';
+const INPAY_CREATE_URL = 'https://inpay.uz/api/v1/create';
 
 // Token cache (valid for 24 hours)
 let cachedToken = null;
@@ -43,8 +43,9 @@ const getBearerToken = async () => {
       timeout: 10000
     });
 
-    if (response.data && response.data.token) {
-      cachedToken = response.data.token;
+    
+    if (response.data && (response.data.token || response.data.bearer_token)) {
+      cachedToken = response.data.token || response.data.bearer_token;
       // Cache for 23 hours (1 hour buffer)
       tokenExpiresAt = Date.now() + (23 * 60 * 60 * 1000);
       
@@ -96,12 +97,12 @@ const createPayment = async (paymentData) => {
     }
 
     const payload = {
-      order_id,
+      merchant_id: process.env.INPAY_MERCHANT_ID,
+      token: process.env.INPAY_MERCHANT_TOKEN,
       amount: parseInt(amount),
       phone: phone.replace(/\D/g, ''), // Remove non-digits
       description: description || `Payment for order ${order_id}`,
-      callback_url: callback_url || process.env.INPAY_CALLBACK_URL,
-      return_url: return_url || process.env.INPAY_RETURN_URL
+      callback_url: callback_url || process.env.INPAY_CALLBACK_URL
     };
 
     const response = await axios.post(INPAY_CREATE_URL, payload, {
@@ -115,7 +116,13 @@ const createPayment = async (paymentData) => {
     console.log('✅ InPay payment created:', order_id);
     return {
       success: true,
-      data: response.data
+      data: {
+        order_id: response.data.order_id,
+        pay_url: response.data.pay_url,
+        payment_url: response.data.pay_url,
+        url: response.data.pay_url,
+        ...response.data
+      }
     };
   } catch (error) {
     console.error('❌ InPay createPayment error:', error.message);

@@ -43,15 +43,15 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Notificationlarni yuklash (disabled)
-  // useEffect(() => {
-  //   loadNotifications();
-  //
-  //   // Har 30 soniyada yangilash
-  //   const interval = setInterval(loadNotifications, 30000);
-  //
-  //   return () => clearInterval(interval);
-  // }, []);
+  // Notificationlarni yuklash
+  useEffect(() => {
+    loadNotifications();
+
+    // Har 30 soniyada yangilash
+    const interval = setInterval(loadNotifications, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
 
   // Click outside to close results
