@@ -40,7 +40,6 @@ const MobileBottomBar = () => {
     { name: 'Tasks', href: '/tasks', icon: CheckSquare, label: 'Vazifalar' },
     { name: 'Finance', href: '/finance', icon: Wallet, label: 'Moliya' },
     { name: 'Goals', href: '/goals', icon: Goal, label: 'Maqsad' },
-    { name: 'Pricing', href: '/pricing', icon: DollarSign, label: 'Narxlar' },
     { name: 'More', href: '/more', icon: MoreHorizontal, label: 'Ko\'proq' },
   ];
 
