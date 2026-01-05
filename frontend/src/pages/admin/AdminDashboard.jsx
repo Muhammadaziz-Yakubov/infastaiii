@@ -133,7 +133,7 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, users, notifications
   const [showNotificationModal, setShowNotificationModal] = useState(false);
-  const [notificationData, setNotificationData] = useState({ title: '', message: '', type: 'info' });
+  const [notificationData, setNotificationData] = useState({ title: '', message: '', type: 'announcement' });
   const [sendingNotification, setSendingNotification] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -255,7 +255,7 @@ const AdminDashboard = () => {
       if (result.success) {
         alert(result.message);
         setShowNotificationModal(false);
-        setNotificationData({ title: '', message: '', type: 'info' });
+        setNotificationData({ title: '', message: '', type: 'announcement' });
       }
     } catch (error) {
       alert('Xabar yuborishda xatolik!');
