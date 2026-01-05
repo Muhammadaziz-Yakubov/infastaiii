@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Users, UserCheck, UserX, TrendingUp, Activity, 
-  Calendar, Clock, BarChart3, RefreshCw, LogOut,
-  ChevronDown, Search, Eye, Ban, CheckCircle, AlertTriangle,
-  ListTodo, CreditCard, DollarSign, Shield, ArrowUpRight, ArrowDownRight,
-  Zap, Settings, ToggleLeft, ToggleRight, Save, Trophy
+  Clock, BarChart3, RefreshCw, LogOut,
+  Search, Eye, Ban, CheckCircle, AlertTriangle,
+  Shield, ArrowUpRight, ArrowDownRight,
+  Settings, ToggleLeft, ToggleRight, Trophy
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../../stores/adminStore';
@@ -133,20 +133,10 @@ const AdminDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [appSettings, setAppSettings] = useState({
-    pro_subscription_enabled: false,
-    challenges_enabled: false,
-    pro_monthly_price: 39000,
-    pro_yearly_price: 399000,
-    payment_card_number: '',
-    payment_card_holder: ''
+    challenges_enabled: false
   });
   const [settingsLoading, setSettingsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, users, payments
-  const [payments, setPayments] = useState([]);
-  const [paymentsLoading, setPaymentsLoading] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
+  const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, users
 
   const getAdminToken = () => {
     let token = localStorage.getItem('adminToken');
@@ -192,27 +182,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleTogglePro = async () => {
-    setSettingsLoading(true);
-    try {
-      const token = getAdminToken();
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/toggle-pro`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await response.json();
-      if (data.success) {
-        setAppSettings(prev => ({ ...prev, pro_subscription_enabled: data.enabled }));
-      }
-    } catch (error) {
-      console.error('Error toggling pro:', error);
-    }
-    setSettingsLoading(false);
-  };
-
   const handleToggleChallenges = async () => {
     setSettingsLoading(true);
     try {
@@ -230,55 +199,6 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('Error toggling challenges:', error);
-    }
-    setSettingsLoading(false);
-  };
-
-  const handleSaveSettings = async () => {
-    setSettingsLoading(true);
-    try {
-      const token = getAdminToken();
-      
-      // Update prices
-      const pricesResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/pro-prices`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          monthlyPrice: Number(appSettings.pro_monthly_price),
-          yearlyPrice: Number(appSettings.pro_yearly_price)
-        })
-      });
-      
-      const pricesData = await pricesResponse.json();
-      console.log('Prices update response:', pricesData);
-
-      // Update card info
-      const cardResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/app-settings/payment-card`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          cardNumber: appSettings.payment_card_number,
-          cardHolder: appSettings.payment_card_holder
-        })
-      });
-      
-      const cardData = await cardResponse.json();
-      console.log('Card update response:', cardData);
-
-      if (pricesData.success && cardData.success) {
-        alert('Sozlamalar saqlandi!');
-      } else {
-        alert('Xatolik: ' + (pricesData.message || cardData.message || 'Noma\'lum xato'));
-      }
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      alert('Xatolik yuz berdi: ' + error.message);
     }
     setSettingsLoading(false);
   };
@@ -326,52 +246,6 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('Error fetching users:', error);
-    }
-  };
-
-  const fetchPayments = async () => {
-    setPaymentsLoading(true);
-    try {
-      const res = await adminService.getAllPayments(1, 50, '');
-      if (res.success) {
-        setPayments(res.payments || []);
-      }
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-    }
-    setPaymentsLoading(false);
-  };
-
-  const handleApprovePayment = async (paymentId) => {
-    try {
-      const res = await adminService.approvePayment(paymentId);
-      if (res.success) {
-        alert('To\'lov tasdiqlandi! Foydalanuvchi Pro obunaga o\'tdi.');
-        fetchPayments();
-        setShowPaymentModal(false);
-      } else {
-        alert('Xatolik: ' + res.message);
-      }
-    } catch (error) {
-      console.error('Error approving payment:', error);
-      alert('Xatolik yuz berdi');
-    }
-  };
-
-  const handleRejectPayment = async (paymentId) => {
-    try {
-      const res = await adminService.rejectPayment(paymentId, rejectReason);
-      if (res.success) {
-        alert('To\'lov rad etildi');
-        fetchPayments();
-        setShowPaymentModal(false);
-        setRejectReason('');
-      } else {
-        alert('Xatolik: ' + res.message);
-      }
-    } catch (error) {
-      console.error('Error rejecting payment:', error);
-      alert('Xatolik yuz berdi');
     }
   };
 
@@ -476,22 +350,6 @@ const AdminDashboard = () => {
             }`}
           >
             Foydalanuvchilar
-          </button>
-          <button
-            onClick={() => { setActiveTab('payments'); fetchPayments(); }}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-              activeTab === 'payments' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            }`}
-          >
-            <CreditCard className="w-4 h-4" />
-            Obunalar
-            {payments.filter(p => p.status === 'pending').length > 0 && (
-              <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                {payments.filter(p => p.status === 'pending').length}
-              </span>
-            )}
           </button>
         </div>
 
@@ -814,131 +672,6 @@ const AdminDashboard = () => {
           </>
         )}
 
-        {activeTab === 'payments' && (
-          <>
-            {/* Payments Section */}
-            <div className="bg-gray-800 rounded-xl border border-gray-700">
-              <div className="p-6 border-b border-gray-700">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-green-500" />
-                    Obunalar va To'lovlar
-                    <span className="text-sm font-normal text-gray-400">({payments.length} ta)</span>
-                  </h2>
-                  <button
-                    onClick={fetchPayments}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg"
-                  >
-                    <RefreshCw className={`w-5 h-5 ${paymentsLoading ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
-              </div>
-
-              {paymentsLoading ? (
-                <div className="p-12 text-center">
-                  <RefreshCw className="w-8 h-8 text-gray-600 mx-auto mb-4 animate-spin" />
-                  <p className="text-gray-400">Yuklanmoqda...</p>
-                </div>
-              ) : payments.length === 0 ? (
-                <div className="p-12 text-center">
-                  <CreditCard className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">Hozircha to'lovlar yo'q</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left text-gray-400 text-sm border-b border-gray-700">
-                        <th className="px-6 py-4">Foydalanuvchi</th>
-                        <th className="px-6 py-4">Plan</th>
-                        <th className="px-6 py-4">Miqdor</th>
-                        <th className="px-6 py-4">Davr</th>
-                        <th className="px-6 py-4">Sana</th>
-                        <th className="px-6 py-4">Holat</th>
-                        <th className="px-6 py-4">Amallar</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {payments.map((payment) => (
-                        <tr key={payment._id} className={`border-b border-gray-700 hover:bg-gray-750 ${payment.status === 'pending' ? 'bg-yellow-500/5' : ''}`}>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                                {payment.userId?.firstName?.charAt(0) || '?'}
-                              </div>
-                              <div>
-                                <p className="text-white font-medium">
-                                  {payment.userId?.firstName} {payment.userId?.lastName}
-                                </p>
-                                <p className="text-gray-400 text-xs">{payment.userId?.email || payment.userId?.phone}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium">
-                              {payment.plan}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-white font-medium">
-                            {payment.amount?.toLocaleString()} so'm
-                          </td>
-                          <td className="px-6 py-4 text-gray-300">
-                            {payment.billingCycle === 'yearly' ? 'Yillik' : 'Oylik'}
-                          </td>
-                          <td className="px-6 py-4 text-gray-400 text-sm">{formatDate(payment.createdAt)}</td>
-                          <td className="px-6 py-4">
-                            {payment.status === 'pending' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">
-                                <Clock className="w-3 h-3" /> Kutilmoqda
-                              </span>
-                            ) : payment.status === 'approved' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 text-sm rounded-full">
-                                <CheckCircle className="w-3 h-3" /> Tasdiqlangan
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/20 text-red-400 text-sm rounded-full">
-                                <Ban className="w-3 h-3" /> Rad etilgan
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => { setSelectedPayment(payment); setShowPaymentModal(true); }}
-                                className="p-2 text-gray-400 hover:text-blue-400 hover:bg-gray-700 rounded-lg"
-                                title="Ko'rish"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              {payment.status === 'pending' && (
-                                <>
-                                  <button
-                                    onClick={() => handleApprovePayment(payment._id)}
-                                    className="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded-lg"
-                                    title="Tasdiqlash"
-                                  >
-                                    <CheckCircle className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => { setSelectedPayment(payment); setShowPaymentModal(true); }}
-                                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded-lg"
-                                    title="Rad etish"
-                                  >
-                                    <Ban className="w-4 h-4" />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </>
-        )}
       </main>
 
       {/* User Details Modal */}
@@ -1004,49 +737,6 @@ const AdminDashboard = () => {
               </div>
 
               <div className="pt-4 space-y-3">
-                {/* Pro subscription toggle */}
-                {!selectedUser.isAdmin && (
-                  <div className="flex gap-2">
-                    {selectedUser.subscriptionType === 'premium' ? (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const res = await adminService.updateUserSubscription(selectedUser._id, 'free');
-                            if (res.success) {
-                              alert('Pro obuna olib tashlandi');
-                              setSelectedUser({ ...selectedUser, subscriptionType: 'free', subscriptionEndDate: null });
-                              fetchUsers();
-                            }
-                          } catch (e) { alert('Xatolik'); }
-                        }}
-                        className="flex-1 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Zap className="w-4 h-4" />
-                        Pro ni olib tashlash
-                      </button>
-                    ) : (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const endDate = new Date();
-                            endDate.setMonth(endDate.getMonth() + 1);
-                            const res = await adminService.updateUserSubscription(selectedUser._id, 'premium', endDate);
-                            if (res.success) {
-                              alert('Pro obuna berildi (1 oy)');
-                              setSelectedUser({ ...selectedUser, subscriptionType: 'premium', subscriptionEndDate: endDate });
-                              fetchUsers();
-                            }
-                          } catch (e) { alert('Xatolik'); }
-                        }}
-                        className="flex-1 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
-                      >
-                        <Zap className="w-4 h-4" />
-                        Pro berish (1 oy)
-                      </button>
-                    )}
-                  </div>
-                )}
-                
                 {/* Ban/Unban */}
                 <div className="flex gap-2">
                   {!selectedUser.isAdmin && (
@@ -1098,53 +788,6 @@ const AdminDashboard = () => {
               </button>
             </div>
             <div className="p-6 space-y-6">
-              {/* Pro Subscription Toggle */}
-              <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-xl p-6 border border-blue-700/50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-blue-600 rounded-xl">
-                      <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-white">Pro Obuna</h4>
-                      <p className="text-sm text-gray-400">
-                        {appSettings.pro_subscription_enabled 
-                          ? 'Foydalanuvchilar Pro sotib olishi mumkin' 
-                          : 'Pro obuna o\'chirilgan'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleTogglePro}
-                    disabled={settingsLoading}
-                    className={`p-2 rounded-lg transition-colors ${
-                      appSettings.pro_subscription_enabled 
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : 'bg-gray-600 hover:bg-gray-500'
-                    }`}
-                  >
-                    {appSettings.pro_subscription_enabled ? (
-                      <ToggleRight className="w-8 h-8 text-white" />
-                    ) : (
-                      <ToggleLeft className="w-8 h-8 text-white" />
-                    )}
-                  </button>
-                </div>
-                <div className={`mt-4 p-3 rounded-lg ${
-                  appSettings.pro_subscription_enabled 
-                    ? 'bg-green-500/20 border border-green-500/30' 
-                    : 'bg-red-500/20 border border-red-500/30'
-                }`}>
-                  <p className={`text-sm font-medium ${
-                    appSettings.pro_subscription_enabled ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {appSettings.pro_subscription_enabled 
-                      ? '✅ Pro obuna YOQILGAN - Pricing sahifasi ko\'rinadi' 
-                      : '❌ Pro obuna O\'CHIRILGAN - Pricing sahifasi yashirilgan'}
-                  </p>
-                </div>
-              </div>
-
               {/* Challenges Toggle */}
               <div className="bg-gradient-to-r from-orange-900/50 to-yellow-900/50 rounded-xl p-6 border border-orange-700/50">
                 <div className="flex items-center justify-between">
@@ -1192,238 +835,20 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Pro Prices */}
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-green-500" />
-                  Pro narxlari
-                </h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Oylik narx (so'm)</label>
-                    <input
-                      type="number"
-                      value={appSettings.pro_monthly_price}
-                      onChange={(e) => setAppSettings(prev => ({ ...prev, pro_monthly_price: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Yillik narx (so'm)</label>
-                    <input
-                      type="number"
-                      value={appSettings.pro_yearly_price}
-                      onChange={(e) => setAppSettings(prev => ({ ...prev, pro_yearly_price: parseInt(e.target.value) || 0 }))}
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Card Info */}
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-purple-500" />
-                  To'lov kartasi
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Karta raqami</label>
-                    <input
-                      type="text"
-                      value={appSettings.payment_card_number}
-                      onChange={(e) => setAppSettings(prev => ({ ...prev, payment_card_number: e.target.value }))}
-                      placeholder="9860 0607 0978 0345"
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Karta egasi</label>
-                    <input
-                      type="text"
-                      value={appSettings.payment_card_holder}
-                      onChange={(e) => setAppSettings(prev => ({ ...prev, payment_card_holder: e.target.value }))}
-                      placeholder="Muhammadaziz Yakubov"
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Save Button */}
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={handleSaveSettings}
-                  disabled={settingsLoading}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
-                >
-                  {settingsLoading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  Saqlash
-                </button>
+              {/* Close Button */}
+              <div className="pt-4">
                 <button
                   onClick={() => setShowSettingsModal(false)}
-                  className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                >
-                  Yopish
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Payment Details Modal */}
-      {showPaymentModal && selectedPayment && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-xl max-w-2xl w-full border border-gray-700 max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-700 flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-white">To'lov ma'lumotlari</h3>
-              <button
-                onClick={() => { setShowPaymentModal(false); setRejectReason(''); }}
-                className="text-gray-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-6 space-y-6">
-              {/* User Info */}
-              <div className="flex items-center gap-4 p-4 bg-gray-700/50 rounded-xl">
-                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {selectedPayment.userId?.firstName?.charAt(0) || '?'}
-                </div>
-                <div>
-                  <h4 className="text-lg font-semibold text-white">
-                    {selectedPayment.userId?.firstName} {selectedPayment.userId?.lastName}
-                  </h4>
-                  <p className="text-gray-400">{selectedPayment.userId?.email || selectedPayment.userId?.phone}</p>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs ${
-                    selectedPayment.userId?.subscriptionType === 'premium' 
-                      ? 'bg-yellow-500/20 text-yellow-400' 
-                      : 'bg-gray-500/20 text-gray-400'
-                  }`}>
-                    {selectedPayment.userId?.subscriptionType === 'premium' ? 'Pro' : 'Free'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Payment Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-700/50 rounded-lg p-4">
-                  <p className="text-gray-400 text-sm">Plan</p>
-                  <p className="text-xl font-bold text-blue-400">{selectedPayment.plan}</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-4">
-                  <p className="text-gray-400 text-sm">Miqdor</p>
-                  <p className="text-xl font-bold text-green-400">{selectedPayment.amount?.toLocaleString()} so'm</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-4">
-                  <p className="text-gray-400 text-sm">Davr</p>
-                  <p className="text-lg font-bold text-white">{selectedPayment.billingCycle === 'yearly' ? 'Yillik' : 'Oylik'}</p>
-                </div>
-                <div className="bg-gray-700/50 rounded-lg p-4">
-                  <p className="text-gray-400 text-sm">Holat</p>
-                  <p className={`text-lg font-bold ${
-                    selectedPayment.status === 'pending' ? 'text-yellow-400' :
-                    selectedPayment.status === 'approved' ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {selectedPayment.status === 'pending' ? 'Kutilmoqda' :
-                     selectedPayment.status === 'approved' ? 'Tasdiqlangan' : 'Rad etilgan'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Receipt Image */}
-              {selectedPayment.receiptUrl && (
-                <div>
-                  <p className="text-gray-400 text-sm mb-2">Chek rasmi:</p>
-                  <div className="bg-gray-700/50 rounded-xl p-4">
-                    <img 
-                      src={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${selectedPayment.receiptUrl}`}
-                      alt="Chek"
-                      className="max-w-full h-auto rounded-lg mx-auto max-h-96 object-contain"
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                    <a 
-                      href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${selectedPayment.receiptUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-center mt-2 text-blue-400 hover:text-blue-300 text-sm"
-                    >
-                      Katta ko'rinishda ochish
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Dates */}
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Yuborilgan:</span>
-                  <span className="text-white">{formatDate(selectedPayment.createdAt)}</span>
-                </div>
-                {selectedPayment.approvedAt && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Ko'rib chiqilgan:</span>
-                    <span className="text-white">{formatDate(selectedPayment.approvedAt)}</span>
-                  </div>
-                )}
-                {selectedPayment.subscriptionEndDate && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Obuna tugash sanasi:</span>
-                    <span className="text-green-400">{formatDate(selectedPayment.subscriptionEndDate)}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Actions for pending payments */}
-              {selectedPayment.status === 'pending' && (
-                <div className="space-y-4 pt-4 border-t border-gray-700">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Rad etish sababi (ixtiyoriy):</label>
-                    <input
-                      type="text"
-                      value={rejectReason}
-                      onChange={(e) => setRejectReason(e.target.value)}
-                      placeholder="Masalan: Chek noto'g'ri, summa mos kelmaydi..."
-                      className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => handleApprovePayment(selectedPayment._id)}
-                      className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
-                    >
-                      <CheckCircle className="w-5 h-5" />
-                      Tasdiqlash (Pro berish)
-                    </button>
-                    <button
-                      onClick={() => handleRejectPayment(selectedPayment._id)}
-                      className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
-                    >
-                      <Ban className="w-5 h-5" />
-                      Rad etish
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Close button for non-pending */}
-              {selectedPayment.status !== 'pending' && (
-                <button
-                  onClick={() => setShowPaymentModal(false)}
                   className="w-full py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
                 >
                   Yopish
                 </button>
-              )}
+              </div>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

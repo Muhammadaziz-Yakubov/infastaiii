@@ -23,13 +23,10 @@ import {
   Plus,
   TrendingUp,
   ChevronRight,
-  Crown,
   ChevronLeft,
   Menu,
   Trophy,
-  MoreHorizontal,
-  Zap,
-  DollarSign
+  MoreHorizontal
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -149,10 +146,7 @@ const Sidebar = () => {
     { name: 'Vazifalar', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'Moliya', href: '/finance', icon: Wallet, badge: null },
     { name: 'Maqsad', href: '/goals', icon: Goal, badge: null },
-    { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' },
-    ...(appSettings?.pro_subscription_enabled ? [
-      { name: 'Narxlar', href: '/pricing', icon: DollarSign, badge: null }
-    ] : [])
+    { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' }
   ];
 
   // Click outside handlers
