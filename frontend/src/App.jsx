@@ -34,6 +34,7 @@ const Pricing = lazy(() => import('./pages/Pricing'));
 const Challenges = lazy(() => import('./pages/Challenges'));
 const More = lazy(() => import('./pages/More'));
 const Download = lazy(() => import('./pages/Download'));
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 
 // Admin pages
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
@@ -53,6 +54,7 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/banned" element={<BannedPage />} />
           <Route path="/download" element={<Download />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
 
           {/* Protected routes with Layout */}
           <Route element={<ProtectedRoute />}>

@@ -22,7 +22,8 @@ const paymentSchema = new mongoose.Schema({
   },
   receiptUrl: {
     type: String,
-    required: true
+    required: false,
+    default: ''
   },
   status: {
     type: String,
@@ -30,6 +31,14 @@ const paymentSchema = new mongoose.Schema({
     default: 'pending'
   },
   telegramMessageId: {
+    type: String
+  },
+  inpayOrderId: {
+    type: String,
+    sparse: true,
+    index: true
+  },
+  inpayTransactionId: {
     type: String
   },
   approvedBy: {

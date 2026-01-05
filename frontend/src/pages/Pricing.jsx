@@ -3,7 +3,7 @@ import {
   Check, X, Star, Zap, Crown, Users,
   Calendar, Shield, Cloud, Headphones,
   TrendingUp, Sparkles, ArrowRight,
-  CreditCard, Lock, Infinity, Upload, FileText, Loader2, CheckCircle, Clock
+  CreditCard, Lock, Infinity, Loader2, CheckCircle, Clock, Phone, ExternalLink
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -17,8 +17,9 @@ const Pricing = () => {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [receiptFile, setReceiptFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
   const [appSettings, setAppSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -62,39 +63,69 @@ const Pricing = () => {
     fetchData();
   }, [navigate]);
 
-  // Payment submit handler
-  const handlePaymentSubmit = useCallback(async () => {
-    if (!receiptFile) return;
+  // Validate phone number
+  const validatePhone = (phone) => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    // Accept 998xxxxxxxxx or 9xxxxxxxx format
+    return /^(998\d{9}|9\d{8})$/.test(cleanPhone);
+  };
 
-    setUploading(true);
+  // Format phone for display
+  const formatPhoneInput = (value) => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.startsWith('998')) {
+      return digits.slice(0, 12);
+    }
+    return digits.slice(0, 9);
+  };
+
+  // Payment submit handler - InPay integration
+  const handlePaymentSubmit = useCallback(async () => {
+    if (!phoneNumber || !validatePhone(phoneNumber)) {
+      setPaymentError('Telefon raqamini to\'g\'ri kiriting (998xxxxxxxxx)');
+      return;
+    }
+
+    setProcessing(true);
+    setPaymentError('');
 
     try {
-      const formData = new FormData();
-      formData.append('plan', selectedPlan.name);
-      formData.append('billingCycle', billingCycle);
-      formData.append('amount', selectedPlan.price[billingCycle].toString().replace(/\D/g, ''));
-      formData.append('receipt', receiptFile);
-
-      const response = await api.post('/api/payments/submit', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const amount = selectedPlan.price[billingCycle];
+      
+      const response = await api.post('/api/payments/inpay/create', {
+        amount: parseInt(amount),
+        phone: phoneNumber.replace(/\D/g, ''),
+        plan: selectedPlan.name,
+        billingCycle: billingCycle
       });
 
       if (response.data.success) {
-        setShowPaymentModal(false);
-        setReceiptFile(null);
-        toast.success('To\'lov yuborildi! Admin tekshirib, tasdiqlaydi.');
+        // Get payment URL from response
+        const paymentUrl = response.data.data?.paymentUrl || response.data.data?.url || response.data.data?.payment_url;
+        
+        if (paymentUrl) {
+          // Redirect to InPay payment page
+          toast.success('To\'lov sahifasiga yo\'naltirilmoqda...');
+          window.location.href = paymentUrl;
+        } else {
+          // If no URL, show success message
+          setShowPaymentModal(false);
+          setPhoneNumber('');
+          toast.success('To\'lov yaratildi! InPay orqali to\'lang.');
+        }
       } else {
+        setPaymentError(response.data.message || 'To\'lov yaratishda xatolik');
         toast.error(response.data.message || 'Xatolik yuz berdi');
       }
     } catch (error) {
-      console.error('Payment submission error:', error);
-      toast.error('Xatolik yuz berdi. Qayta urinib ko\'ring.');
+      console.error('Payment creation error:', error);
+      const errorMsg = error.response?.data?.message || 'Server xatosi. Qayta urinib ko\'ring.';
+      setPaymentError(errorMsg);
+      toast.error(errorMsg);
     } finally {
-      setUploading(false);
+      setProcessing(false);
     }
-  }, [receiptFile, selectedPlan, billingCycle]);
+  }, [phoneNumber, selectedPlan, billingCycle]);
 
   // Get dynamic prices from settings
   const proMonthlyPrice = appSettings?.pro_monthly_price || 39000;
@@ -508,7 +539,7 @@ const Pricing = () => {
 
     
 
-      {/* Payment Modal */}
+      {/* Payment Modal - InPay Integration */}
       {showPaymentModal && selectedPlan && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6">
@@ -517,7 +548,11 @@ const Pricing = () => {
                 {selectedPlan.name} plan sotib olish
               </h3>
               <button
-                onClick={() => setShowPaymentModal(false)}
+                onClick={() => {
+                  setShowPaymentModal(false);
+                  setPhoneNumber('');
+                  setPaymentError('');
+                }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X className="w-6 h-6" />
@@ -525,19 +560,14 @@ const Pricing = () => {
             </div>
 
             <div className="space-y-4">
-              {/* Card Info */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center mb-2">
-                  <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
-                  <span className="font-medium text-blue-900 dark:text-blue-100">To'lov kartasi</span>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-mono font-bold text-blue-900 dark:text-blue-100 mb-1">
-                    {cardNumber}
-                  </p>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    {cardHolder}
-                  </p>
+              {/* InPay Logo/Info */}
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 rounded-xl text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-bold text-lg">InPay.uz</p>
+                    <p className="text-sm text-blue-100">Xavfsiz onlayn to'lov</p>
+                  </div>
+                  <CreditCard className="w-10 h-10 text-white/80" />
                 </div>
               </div>
 
@@ -549,74 +579,82 @@ const Pricing = () => {
                     {formatPrice(selectedPlan.price[billingCycle])}
                   </span>
                 </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">Davomiyligi:</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                    {billingCycle === 'yearly' ? '1 yil' : '1 oy'}
+                  </span>
+                </div>
               </div>
 
-              {/* Instructions */}
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl border border-yellow-200 dark:border-yellow-800">
+              {/* Phone Input */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <Phone className="w-4 h-4 inline mr-1" />
+                  Telefon raqamingiz
+                </label>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    setPhoneNumber(formatPhoneInput(e.target.value));
+                    setPaymentError('');
+                  }}
+                  placeholder="998901234567"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-lg"
+                  maxLength={12}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Format: 998XXXXXXXXX (12 raqam)
+                </p>
+              </div>
+
+              {/* Error Message */}
+              {paymentError && (
+                <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-xl border border-red-200 dark:border-red-800">
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {paymentError}
+                  </p>
+                </div>
+              )}
+
+              {/* Info */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-200 dark:border-blue-800">
                 <div className="flex items-start">
-                  <FileText className="w-5 h-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
+                  <Lock className="w-5 h-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
                   <div>
-                    <p className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">
-                      Eslatma:
+                    <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+                      Xavfsiz to'lov
                     </p>
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                      Yuqoridagi kartaga pul tashlab, chekni bu yerga yuklang. Admin tekshirib, tasdiqlaydi.
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      InPay.uz orqali xavfsiz to'lov. Click, PayMe, Uzum va boshqa kartalar qabul qilinadi.
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* File Upload */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Chek yuklash
-                </label>
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center">
-                  {receiptFile ? (
-                    <div className="space-y-2">
-                      <FileText className="w-8 h-8 text-green-500 mx-auto" />
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {receiptFile.name}
-                      </p>
-                      <button
-                        onClick={() => setReceiptFile(null)}
-                        className="text-xs text-red-600 hover:text-red-700"
-                      >
-                        O'chirish
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Chek rasmini tanlang
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setReceiptFile(e.target.files[0])}
-                        className="hidden"
-                        id="receipt-upload"
-                      />
-                      <label
-                        htmlFor="receipt-upload"
-                        className="inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 cursor-pointer"
-                      >
-                        Fayl tanlash
-                      </label>
-                    </div>
-                  )}
-                </div>
-              </div>
-
               {/* Submit Button */}
-                <button
-                  onClick={() => handlePaymentSubmit()}
-                  disabled={!receiptFile || uploading}
-                  className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-xl transition-colors duration-200 disabled:cursor-not-allowed"
-                >
-                  {uploading ? 'Yuborilmoqda...' : 'To\'lovni yuborish'}
-                </button>
+              <button
+                onClick={() => handlePaymentSubmit()}
+                disabled={!phoneNumber || processing}
+                className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-xl transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {processing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Yuklanmoqda...
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className="w-5 h-5" />
+                    To'lovga o'tish
+                  </>
+                )}
+              </button>
+
+              <p className="text-xs text-center text-gray-500 dark:text-gray-400">
+                "To'lovga o'tish" tugmasini bosish orqali siz InPay.uz to'lov sahifasiga yo'naltirilasiz
+              </p>
             </div>
           </div>
         </div>
