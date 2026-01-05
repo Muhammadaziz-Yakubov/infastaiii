@@ -128,8 +128,8 @@ const Pricing = () => {
       if (response.data.success) {
         console.log('🔍 InPay response:', JSON.stringify(response.data, null, 2));
         
-        // Get payment URL from response
-        const paymentUrl = response.data.data?.pay_url || response.data.data?.paymentUrl || response.data.data?.url || response.data.data?.payment_url;
+        // Get payment URL from response (InPay returns pay_url)
+        const paymentUrl = response.data.data?.pay_url;
         
         console.log('🔍 Payment URL:', paymentUrl);
         

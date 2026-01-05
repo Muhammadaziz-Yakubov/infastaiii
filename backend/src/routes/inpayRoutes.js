@@ -111,8 +111,10 @@ router.post('/create', authMiddleware, async (req, res) => {
       data: {
         orderId,
         paymentId: payment._id,
-        paymentUrl: paymentResult.data?.payment_url || paymentResult.data?.url || paymentResult.data?.pay_url,
-        ...paymentResult.data
+        pay_url: paymentResult.data?.pay_url, // InPay returns pay_url
+        order_id: paymentResult.data?.order_id,
+        phone: paymentResult.data?.phone,
+        message: paymentResult.data?.message
       }
     });
 
