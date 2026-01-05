@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { challengeService } from '../services/challengeService';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -33,6 +34,7 @@ const DURATIONS = [
 const Challenges = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);

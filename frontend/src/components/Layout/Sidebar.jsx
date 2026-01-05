@@ -30,17 +30,19 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 /* ================= MOBILE BOTTOM BAR ================= */
 const MobileBottomBar = () => {
   const location = useLocation();
+  const { t } = useLanguage();
 
   const navigation = [
-    { name: 'Home', href: '/dashboard', icon: LayoutDashboard, label: 'Bosh' },
-    { name: 'Tasks', href: '/tasks', icon: CheckSquare, label: 'Vazifalar' },
-    { name: 'Finance', href: '/finance', icon: Wallet, label: 'Moliya' },
-    { name: 'Goals', href: '/goals', icon: Goal, label: 'Maqsad' },
-    { name: 'More', href: '/more', icon: MoreHorizontal, label: 'Ko\'proq' },
+    { name: 'Home', href: '/dashboard', icon: LayoutDashboard, labelKey: 'sidebar.dashboard' },
+    { name: 'Tasks', href: '/tasks', icon: CheckSquare, labelKey: 'sidebar.tasks' },
+    { name: 'Finance', href: '/finance', icon: Wallet, labelKey: 'sidebar.finance' },
+    { name: 'Goals', href: '/goals', icon: Goal, labelKey: 'sidebar.goals' },
+    { name: 'More', href: '/more', icon: MoreHorizontal, labelKey: 'sidebar.more' },
   ];
 
   return (
@@ -90,7 +92,7 @@ const MobileBottomBar = () => {
                       : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
               </NavLink>
             );
@@ -108,6 +110,7 @@ const MobileBottomBar = () => {
 const Sidebar = () => {
   const { isDark, toggleTheme } = useTheme();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [showSearch, setShowSearch] = useState(false);
@@ -141,11 +144,11 @@ const Sidebar = () => {
   }, []);
 
   const navigation = [
-    { name: 'Boshqaruv Paneli', href: '/dashboard', icon: LayoutDashboard, badge: null },
-    { name: 'Vazifalar', href: '/tasks', icon: CheckSquare, badge: null },
-    { name: 'Moliya', href: '/finance', icon: Wallet, badge: null },
-    { name: 'Maqsad', href: '/goals', icon: Goal, badge: null },
-    { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' }
+    { name: 'sidebar.dashboard', href: '/dashboard', icon: LayoutDashboard, badge: null },
+    { name: 'sidebar.tasks', href: '/tasks', icon: CheckSquare, badge: null },
+    { name: 'sidebar.finance', href: '/finance', icon: Wallet, badge: null },
+    { name: 'sidebar.goals', href: '/goals', icon: Goal, badge: null },
+    { name: 'sidebar.challenges', href: '/challenges', icon: Trophy, badge: null }
   ];
 
   // Click outside handlers
@@ -249,7 +252,7 @@ const Sidebar = () => {
                 <NavLink
                   key={item.name}
                   to={item.href}
-                  title={isCollapsed ? item.name : ''}
+                  title={isCollapsed ? t(item.name) : ''}
                   className={`group flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 relative ${
                     isCollapsed ? 'justify-center px-3' : ''
                   } ${
@@ -277,7 +280,7 @@ const Sidebar = () => {
                       <span className={`flex-1 font-semibold text-sm transition-colors ${
                         isActive ? 'text-white' : 'text-gray-700 dark:text-gray-300'
                       }`}>
-                        {item.name}
+                        {t(item.name)}
                       </span>
                       {item.badge && (
                         <span className="px-2.5 py-1 bg-red-500 text-white text-xs rounded-full font-bold shadow-lg">
@@ -299,7 +302,7 @@ const Sidebar = () => {
             {/* Settings */}
             <button
               onClick={() => navigate('/settings')}
-              title={isCollapsed ? 'Sozlamalar' : ''}
+              title={isCollapsed ? t('sidebar.settings') : ''}
               className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 transition-all duration-300 group shadow-sm hover:shadow-md ${
                 isCollapsed ? 'justify-center px-3' : ''
               }`}
@@ -307,13 +310,13 @@ const Sidebar = () => {
               <div className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
                 <Settings className="w-5 h-5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
               </div>
-              {!isCollapsed && <span className="flex-1 font-semibold text-sm text-left">Sozlamalar</span>}
+              {!isCollapsed && <span className="flex-1 font-semibold text-sm text-left">{t('sidebar.settings')}</span>}
             </button>
 
             {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              title={isCollapsed ? (isDark ? 'Light Mode' : 'Dark Mode') : ''}
+              title={isCollapsed ? (isDark ? t('common.lightMode') : t('common.darkMode')) : ''}
               className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 transition-all duration-300 group shadow-sm hover:shadow-md ${
                 isCollapsed ? 'justify-center px-3' : ''
               }`}
@@ -327,7 +330,7 @@ const Sidebar = () => {
               </div>
               {!isCollapsed && (
                 <span className="flex-1 font-semibold text-sm text-left">
-                  {isDark ? 'Light Mode' : 'Dark Mode'}
+                  {isDark ? t('common.lightMode') : t('common.darkMode')}
                 </span>
               )}
             </button>
@@ -335,7 +338,7 @@ const Sidebar = () => {
             {/* Logout */}
             <button
               onClick={() => setShowLogoutModal(true)}
-              title={isCollapsed ? 'Chiqish' : ''}
+              title={isCollapsed ? t('common.logout') : ''}
               className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-all duration-300 group shadow-sm hover:shadow-md ${
                 isCollapsed ? 'justify-center px-3' : ''
               }`}
@@ -343,7 +346,7 @@ const Sidebar = () => {
               <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/30 group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition-colors">
                 <LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </div>
-              {!isCollapsed && <span className="flex-1 font-semibold text-sm text-left">Chiqish</span>}
+              {!isCollapsed && <span className="flex-1 font-semibold text-sm text-left">{t('common.logout')}</span>}
             </button>
           </div>
         </div>

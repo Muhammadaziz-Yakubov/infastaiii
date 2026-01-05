@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Archive as ArchiveIcon, Trash2, RefreshCw, Calendar, Flag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { archiveService } from '../services/archiveService';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Archive = () => {
+  const { t } = useLanguage();
   const [archives, setArchives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0); // Yangilash uchun

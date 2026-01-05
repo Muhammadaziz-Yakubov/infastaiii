@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { User, Mail, Shield, Lock, AlertTriangle, CheckCircle, Eye, EyeOff, Edit3, Camera, X, Upload, Phone, Zap, Crown, Calendar } from 'lucide-react';
 import { userService } from '../services/userService';
+import { useLanguage } from '../contexts/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -405,7 +407,7 @@ const Profile = () => {
                 <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                   <Edit3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Shaxsiy ma'lumotlar</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('profile.title')}</h2>
               </div>
               {!isEditing && (
                 <button
@@ -413,7 +415,7 @@ const Profile = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
                 >
                   <Edit3 className="w-4 h-4" />
-                  Tahrirlash
+                  {t('common.edit')}
                 </button>
               )}
             </div>
@@ -423,7 +425,7 @@ const Profile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Ism
+                      {t('profile.firstName')}
                     </label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -442,7 +444,7 @@ const Profile = () => {
 
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Familiya
+                      {t('profile.lastName')}
                     </label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -477,9 +479,9 @@ const Profile = () => {
 
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Telefon raqam
+                      {t('profile.phone')}
                       {user?.authProvider === 'phone' && (
-                        <span className="ml-2 text-xs text-gray-500">(o'zgartirib bo'lmaydi)</span>
+                        <span className="ml-2 text-xs text-gray-500">({t('common.cannotChange')})</span>
                       )}
                     </label>
                     <div className="relative">
@@ -506,7 +508,7 @@ const Profile = () => {
                     onClick={handleCancel}
                     className="px-6 py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
-                    Bekor qilish
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
@@ -516,12 +518,12 @@ const Profile = () => {
                     {loading ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Saqlanmoqda...
+                        {t('common.saving')}
                       </>
                     ) : (
                       <>
                         <CheckCircle className="w-4 h-4" />
-                        Saqlash
+                        {t('common.save')}
                       </>
                     )}
                   </button>
@@ -532,7 +534,7 @@ const Profile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                      Ism
+                      {t('profile.firstName')}
                     </label>
                     <p className="text-lg text-gray-900 dark:text-white font-medium">
                       {user?.firstName || '-'}
@@ -541,7 +543,7 @@ const Profile = () => {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                      Familiya
+                      {t('profile.lastName')}
                     </label>
                     <p className="text-lg text-gray-900 dark:text-white font-medium">
                       {user?.lastName || '-'}
@@ -564,7 +566,7 @@ const Profile = () => {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-500 dark:text-gray-400 mb-2">
-                      Telefon raqam
+                      {t('profile.phone')}
                     </label>
                     <p className="text-lg text-gray-900 dark:text-white font-medium flex items-center gap-2">
                       {user?.phone || '-'}
@@ -582,7 +584,7 @@ const Profile = () => {
               <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                 <Lock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Parolni o'zgartirish</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('profile.changePassword')}</h2>
             </div>
 
             <div className="space-y-6">

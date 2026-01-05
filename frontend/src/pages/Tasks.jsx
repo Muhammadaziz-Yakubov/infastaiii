@@ -11,11 +11,13 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { taskService } from '../services/taskService';
+import { useLanguage } from '../contexts/LanguageContext';
 import PomodoroTimer from '../components/PomodoroTimer';
 import { saveToOffline, getFromOffline, addToPendingSync, STORES } from '../utils/offlineStorage';
 
 const Tasks = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -614,8 +616,8 @@ const Tasks = () => {
           </div>
         </div>
         <div className="text-center">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Vazifalar yuklanmoqda</h3>
-          <p className="text-gray-600">Iltimos, kuting...</p>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">{t('common.loading')}</h3>
+          <p className="text-gray-600">{t('common.pleaseWait')}</p>
         </div>
       </div>
     );
@@ -635,7 +637,7 @@ const Tasks = () => {
             </div>
             <div className="flex-1">
               <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white">
-                Vazifalar
+                {t('tasks.title')}
               </h1>
               <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400">
                 {stats.total} ta faol
@@ -650,8 +652,8 @@ const Tasks = () => {
               className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 lg:px-6 lg:py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg"
             >
               <Archive className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-              <span className="hidden sm:inline">Bajarilganlar</span>
-              <span className="sm:hidden">Arxiv</span>
+              <span className="hidden sm:inline">{t('tasks.completed')}</span>
+              <span className="sm:hidden">{t('sidebar.archive')}</span>
             </button>
 
             <button
@@ -670,8 +672,8 @@ const Tasks = () => {
               className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 lg:px-6 lg:py-3.5 rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg"
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-              <span className="hidden sm:inline">Yangi Vazifa</span>
-              <span className="sm:hidden">Qo'shish</span>
+              <span className="hidden sm:inline">{t('tasks.addTask')}</span>
+              <span className="sm:hidden">{t('common.add')}</span>
             </button>
           </div>
         </div>

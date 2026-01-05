@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme, platformColors } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   Settings as SettingsIcon,
   Moon, 
@@ -12,7 +13,9 @@ import {
   Trash2,
   Mail,
   AlertTriangle,
-  X
+  X,
+  Globe,
+  ChevronDown
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DeleteAccount from '../components/Profile/DeleteAccount';
@@ -21,6 +24,8 @@ import { userService } from '../services/userService';
 const Settings = () => {
   const { isDark, toggleTheme, primaryColor, setColor, colorConfig } = useTheme();
   const { logout } = useAuth();
+  const { language, languages, changeLanguage, getCurrentLanguage, t } = useLanguage();
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [activeSessions, setActiveSessions] = useState([
     {
@@ -89,8 +94,8 @@ const Settings = () => {
             <SettingsIcon className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Sozlamalar</h1>
-            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">Ilovani shaxsiylashtiring</p>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{t('settings.title')}</h1>
+            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">{t('settings.customize')}</p>
           </div>
         </div>
       </div>
@@ -102,8 +107,8 @@ const Settings = () => {
             {isDark ? <Moon className="w-5 h-5 lg:w-6 lg:h-6 text-indigo-500" /> : <Sun className="w-5 h-5 lg:w-6 lg:h-6 text-yellow-500" />}
           </div>
           <div>
-            <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white">Tema</h3>
-            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">Och yoki qora rejim</p>
+            <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white">{t('settings.theme')}</h3>
+            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">{t('settings.themeDesc')}</p>
           </div>
         </div>
         
@@ -119,7 +124,7 @@ const Settings = () => {
             <div className="w-12 h-12 lg:w-14 lg:h-14 bg-white rounded-xl shadow-md flex items-center justify-center">
               <Sun className="w-6 h-6 lg:w-7 lg:h-7 text-yellow-500" />
             </div>
-            <span className="text-sm lg:text-base font-medium text-gray-900 dark:text-white">Och</span>
+            <span className="text-sm lg:text-base font-medium text-gray-900 dark:text-white">{t('common.lightMode')}</span>
             {!isDark && <Check className="w-4 h-4 text-blue-500" />}
           </button>
           
@@ -134,11 +139,63 @@ const Settings = () => {
             <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gray-800 rounded-xl shadow-md flex items-center justify-center">
               <Moon className="w-6 h-6 lg:w-7 lg:h-7 text-indigo-400" />
             </div>
-            <span className="text-sm lg:text-base font-medium text-gray-900 dark:text-white">Qora</span>
+            <span className="text-sm lg:text-base font-medium text-gray-900 dark:text-white">{t('common.darkMode')}</span>
             {isDark && <Check className="w-4 h-4 text-blue-500" />}
           </button>
         </div>
       </div>
+
+      {/* Til sozlamalari */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 dark:bg-green-900/30 rounded-xl lg:rounded-2xl flex items-center justify-center">
+            <Globe className="w-5 h-5 lg:w-6 lg:h-6 text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white">{t('settings.language')}</h3>
+            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">{t('settings.selectLanguage')}</p>
+          </div>
+        </div>
+        
+        <div className="relative">
+          <button
+            onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{getCurrentLanguage().flag}</span>
+              <span className="font-medium text-gray-900 dark:text-white">{getCurrentLanguage().name}</span>
+            </div>
+            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${showLanguageDropdown ? 'rotate-180' : ''}`} />
+          </button>
+          
+          {showLanguageDropdown && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg z-10 overflow-hidden">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    changeLanguage(lang.code);
+                    setShowLanguageDropdown(false);
+                  }}
+                  className={`w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                    language === lang.code ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{lang.flag}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{lang.name}</span>
+                  </div>
+                  {language === lang.code && (
+                    <Check className="w-5 h-5 text-blue-500" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Active Sessions */}
       {/* <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3 mb-4">
@@ -205,8 +262,8 @@ const Settings = () => {
             <Trash2 className="w-5 h-5 lg:w-6 lg:h-6 text-red-600 dark:text-red-400" />
           </div>
           <div>
-            <h3 className="text-base lg:text-lg font-bold text-red-600 dark:text-red-400">Hisobni O'chirish</h3>
-            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+            <h3 className="text-base lg:text-lg font-bold text-red-600 dark:text-red-400">{t('settings.deleteAccount')}</h3>
+            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">{t('settings.deleteAccountDesc')}</p>
           </div>
         </div>
 

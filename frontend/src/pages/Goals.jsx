@@ -18,6 +18,7 @@ import { taskService } from '../services/taskService';
 import { formatCurrency, formatCurrencyShort } from '../utils/currency';
 import GoalProgressChart from '../components/GoalProgressChart';
 import { saveToOffline, getFromOffline, STORES } from '../utils/offlineStorage';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Icon mapping for goals
 const goalIconMap = {
@@ -28,6 +29,7 @@ const goalIconMap = {
 
 const Goals = () => {
     const navigate = useNavigate();
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [goals, setGoals] = useState([]);
     const [transactions, setTransactions] = useState([]);
@@ -746,7 +748,7 @@ const Goals = () => {
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Maqsadlar yuklanmoqda...</p>
+                    <p className="text-gray-600 dark:text-gray-400">{t('common.loading')}</p>
                 </div>
             </div>
         );
@@ -762,8 +764,8 @@ const Goals = () => {
                             <Target className="w-7 h-7 lg:w-10 lg:h-10" />
                         </div>
                         <div>
-                            <h1 className="text-2xl lg:text-4xl font-bold">Maqsadlar</h1>
-                            <p className="text-white/80 text-sm lg:text-base">O'z maqsadlaringizga erishing</p>
+                            <h1 className="text-2xl lg:text-4xl font-bold">{t('goals.title')}</h1>
+                            <p className="text-white/80 text-sm lg:text-base">{t('goals.achieveDesc')}</p>
                         </div>
                     </div>
 
@@ -773,8 +775,8 @@ const Goals = () => {
                             className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-semibold transition-all text-sm sm:text-base lg:text-lg shadow-lg"
                         >
                             <Award className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                            <span className="hidden sm:inline">Erishilganlar</span>
-                            <span className="sm:hidden">Erishilganlar</span>
+                            <span className="hidden sm:inline">{t('goals.completed')}</span>
+                            <span className="sm:hidden">{t('goals.completed')}</span>
                         </button>
                         <button
                             onClick={() => {
@@ -784,8 +786,8 @@ const Goals = () => {
                             className="flex items-center justify-center gap-2 bg-white text-blue-600 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/90 transition-all text-sm sm:text-base lg:text-lg"
                         >
                             <Plus className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
-                            <span className="hidden sm:inline">Yangi Maqsad</span>
-                            <span className="sm:hidden">Qo'shish</span>
+                            <span className="hidden sm:inline">{t('goals.addGoal')}</span>
+                            <span className="sm:hidden">{t('common.add')}</span>
                         </button>
                     </div>
                 </div>
@@ -793,7 +795,7 @@ const Goals = () => {
                 {/* Stats Grid - 4 columns on desktop */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 lg:p-6 border border-white/20">
-                        <p className="text-white/80 text-sm lg:text-base mb-2">Jami</p>
+                        <p className="text-white/80 text-sm lg:text-base mb-2">{t('common.total')}</p>
                         <p className="text-2xl lg:text-3xl font-bold">{goalsStats.total}</p>
                     </div>
 
@@ -803,12 +805,12 @@ const Goals = () => {
                     </div>
 
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 lg:p-6 border border-white/20">
-                        <p className="text-white/80 text-sm lg:text-base mb-2">Maqsad</p>
+                        <p className="text-white/80 text-sm lg:text-base mb-2">{t('goals.target')}</p>
                         <p className="text-xl lg:text-3xl font-bold">{formatCurrencyShort(goalsStats.totalTarget)}</p>
                     </div>
 
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 lg:p-6 border border-white/20">
-                        <p className="text-white/80 text-sm lg:text-base mb-2">Yig'ilgan</p>
+                        <p className="text-white/80 text-sm lg:text-base mb-2">{t('goals.saved')}</p>
                         <p className="text-xl lg:text-3xl font-bold">{formatCurrencyShort(goalsStats.totalSaved)}</p>
                     </div>
                 </div>

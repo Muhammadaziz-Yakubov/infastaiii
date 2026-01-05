@@ -30,11 +30,13 @@ import { goalsService } from '../services/goalsService';
 import { taskService } from '../services/taskService';
 import { financeService } from '../services/financeService';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { userService } from '../services/userService';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     tasks: { total: 0, completed: 0, pending: 0, overdue: 0 },
@@ -167,9 +169,9 @@ const Dashboard = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Xayrli tong';
-    if (hour < 18) return 'Xayrli kun';
-    return 'Xayrli kech';
+    if (hour < 12) return t('dashboard.goodMorning');
+    if (hour < 18) return t('dashboard.goodAfternoon');
+    return t('dashboard.goodEvening');
   };
 
   return (
@@ -206,12 +208,12 @@ const Dashboard = () => {
             </div>
             <div className="sm:text-right">
               <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.tasks.total}</p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Vazifalar</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{t('tasks.title')}</p>
             </div>
           </div>
           <div className="space-y-1 sm:space-y-2 hidden sm:block">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Bajarildi</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('tasks.completed')}</span>
               <span className="font-semibold text-green-600 dark:text-green-400">{stats.tasks.completed}</span>
             </div>
             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -223,7 +225,7 @@ const Dashboard = () => {
             {stats.tasks.overdue > 0 && (
               <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
                 <AlertCircle className="w-3 h-3" />
-                <span>{stats.tasks.overdue} muddati o'tgan</span>
+                <span>{stats.tasks.overdue} {t('tasks.overdue')}</span>
               </div>
             )}
           </div>
@@ -247,12 +249,12 @@ const Dashboard = () => {
             </div>
             <div className="sm:text-right">
               <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.goals.total}</p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Maqsadlar</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{t('goals.title')}</p>
             </div>
           </div>
           <div className="space-y-2 hidden sm:block">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Yakunlandi</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('goals.completed')}</span>
               <span className="font-semibold text-blue-600 dark:text-blue-400">{stats.goals.completed}</span>
             </div>
             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -264,7 +266,7 @@ const Dashboard = () => {
             {stats.goals.inProgress > 0 && (
               <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
                 <Rocket className="w-3 h-3" />
-                <span>{stats.goals.inProgress} jarayonda</span>
+                <span>{stats.goals.inProgress} {t('goals.inProgress')}</span>
               </div>
             )}
           </div>
@@ -290,7 +292,7 @@ const Dashboard = () => {
               <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
                 {stats.finance.balance >= 0 ? '+' : ''}{(stats.finance.balance / 1000).toFixed(0)}k
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Balans</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{t('finance.balance')}</p>
             </div>
           </div>
           <div className="space-y-2 hidden sm:block">
@@ -322,7 +324,7 @@ const Dashboard = () => {
                   ? Math.round((taskCompletionRate + goalCompletionRate) / 2)
                   : 0}%
               </p>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">Samaradorlik</p>
+              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{t('dashboard.productivity')}</p>
             </div>
           </div>
         </div>
@@ -337,13 +339,13 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-4 sm:mb-6">
               <h2 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
-                So'nggi vazifalar
+                {t('dashboard.recentTasks')}
               </h2>
               <Link
                 to="/tasks"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1 text-sm font-semibold transition-colors"
               >
-                Barchasi
+                {t('common.all')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -353,13 +355,13 @@ const Dashboard = () => {
                 <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <CheckSquare className="w-10 h-10 text-blue-500" />
                 </div>
-                <p className="text-gray-500 dark:text-gray-400 mb-4 font-medium">Hozircha vazifalar yo'q</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-4 font-medium">{t('tasks.noTasks')}</p>
                 <Link
                   to="/tasks"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold"
                 >
                   <Plus className="w-5 h-5" />
-                  Vazifa qo'shish
+                  {t('tasks.addTask')}
                 </Link>
               </div>
             ) : (
@@ -407,7 +409,7 @@ const Dashboard = () => {
             <div className="bg-red-50 dark:bg-red-900/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg border border-red-100 dark:border-red-900/30">
               <h2 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-3 sm:mb-4">
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
-                Yaqin muddatlar
+                {t('tasks.deadline')}
               </h2>
               <div className="space-y-2">
                 {stats.upcomingDeadlines.map((task, index) => (
@@ -430,13 +432,13 @@ const Dashboard = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Award className="w-5 h-5 text-blue-500" />
-                Maqsadlar
+                {t('goals.title')}
               </h2>
               <Link
                 to="/goals"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-semibold transition-colors"
               >
-                Barchasi
+                {t('common.all')}
               </Link>
             </div>
 
@@ -445,13 +447,13 @@ const Dashboard = () => {
                 <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mx-auto mb-3">
                   <Target className="w-8 h-8 text-blue-500" />
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Maqsadlar yo'q</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('goals.noGoals')}</p>
                 <Link
                   to="/goals"
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all text-sm font-semibold"
                 >
                   <Plus className="w-4 h-4" />
-                  Maqsad qo'shish
+                  {t('goals.addGoal')}
                 </Link>
               </div>
             ) : (
@@ -484,7 +486,7 @@ const Dashboard = () => {
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              Tezkor amallar
+              {t('dashboard.quickActions')}
             </h2>
             <div className="space-y-2">
               <Link
@@ -492,21 +494,21 @@ const Dashboard = () => {
                 className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all text-gray-700 dark:text-gray-300 group"
               >
                 <CheckSquare className="w-5 h-5" />
-                <span className="font-medium">Vazifa qo'shish</span>
+                <span className="font-medium">{t('tasks.addTask')}</span>
               </Link>
               <Link
                 to="/finance"
                 className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all text-gray-700 dark:text-gray-300 group"
               >
                 <Wallet className="w-5 h-5" />
-                <span className="font-medium">Tranzaksiya</span>
+                <span className="font-medium">{t('finance.addTransaction')}</span>
               </Link>
               <Link
                 to="/goals"
                 className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all text-gray-700 dark:text-gray-300 group"
               >
                 <Target className="w-5 h-5" />
-                <span className="font-medium">Maqsad qo'shish</span>
+                <span className="font-medium">{t('goals.addGoal')}</span>
               </Link>
             </div>
           </div>

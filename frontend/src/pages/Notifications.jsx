@@ -5,11 +5,13 @@ import {
   Filter, Search, X
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const Notifications = () => {
   const { isDark } = useTheme();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, unread, read
@@ -170,10 +172,10 @@ const Notifications = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              Bildirishnomalar
+              {t('notifications.title')}
             </h1>
             <p className={`mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {unreadCount > 0 ? `${unreadCount} ta o'qilmagan xabar` : 'Barcha xabarlar o\'qilgan'}
+              {unreadCount > 0 ? `${unreadCount} ${t('notifications.unread')}` : t('notifications.allRead')}
             </p>
           </div>
           <button
@@ -199,7 +201,7 @@ const Notifications = () => {
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
-                {f === 'all' ? 'Barchasi' : f === 'unread' ? 'O\'qilmagan' : 'O\'qilgan'}
+                {f === 'all' ? t('common.all') : f === 'unread' ? t('notifications.unread') : t('notifications.read')}
               </button>
             ))}
           </div>
@@ -210,7 +212,7 @@ const Notifications = () => {
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
               >
                 <CheckCircle className="w-4 h-4" />
-                Barchasini o'qish
+                {t('notifications.markAllRead')}
               </button>
             )}
             {notifications.some(n => n.status === 'read') && (
@@ -219,7 +221,7 @@ const Notifications = () => {
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition-colors flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
-                O'qilganlarni o'chirish
+                {t('notifications.deleteRead')}
               </button>
             )}
           </div>
@@ -230,7 +232,7 @@ const Notifications = () => {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <RefreshCw className={`w-10 h-10 animate-spin mx-auto mb-4 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
-              <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>Yuklanmoqda...</p>
+              <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>{t('common.loading')}</p>
             </div>
           </div>
         ) : filteredNotifications.length === 0 ? (

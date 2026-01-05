@@ -14,7 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { financeService } from '../services/financeService';
 import { formatCurrency, formatCurrencyInput, parseCurrencyInput, formatCurrencyShort } from '../utils/currency';
 import { saveToOffline, getFromOffline, STORES } from '../utils/offlineStorage';
-// BudgetPlanner va RecurringTransactions olib tashlandi
+import { useLanguage } from '../contexts/LanguageContext';
 
 const iconMap = {
     Car, ShoppingCart, Home, Coffee, Film, HeartPulse,
@@ -25,6 +25,7 @@ const iconMap = {
 
 const Finance = () => {
     const navigate = useNavigate();
+    const { t } = useLanguage();
 
     const [loading, setLoading] = useState(true);
     const [transactions, setTransactions] = useState([]);
@@ -522,7 +523,7 @@ const Finance = () => {
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="w-16 h-16 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Yuklanmoqda...</p>
+                    <p className="text-gray-600 dark:text-gray-400">{t('common.loading')}</p>
                 </div>
             </div>
         );
@@ -539,8 +540,8 @@ const Finance = () => {
                             <Wallet className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Moliya</h1>
-                            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">Daromad va xarajatlarni boshqaring</p>
+                            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{t('finance.title')}</h1>
+            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">{t('finance.manageDesc')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 lg:gap-3">
@@ -565,7 +566,7 @@ const Finance = () => {
                     {/* Balans - Left side on desktop */}
                     <div className="lg:col-span-1 mb-4 lg:mb-0">
                         <div className="h-full flex flex-col justify-center py-4 lg:py-6 px-4 lg:px-6 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl lg:rounded-2xl shadow-lg">
-                            <p className="text-white/80 text-xs lg:text-sm mb-1 lg:mb-2">Umumiy balans</p>
+                            <p className="text-white/80 text-xs lg:text-sm mb-1 lg:mb-2">{t('finance.totalBalance')}</p>
                             <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
                                 {showBalance ? formatCurrency(statistics.balance) : '••••••••'}
                             </p>
@@ -582,7 +583,7 @@ const Finance = () => {
                                 <div className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 bg-green-100 dark:bg-green-800/30 rounded-xl lg:rounded-2xl flex items-center justify-center">
                                     <TrendingUp className="w-4 h-4 lg:w-6 lg:h-6 text-green-500" />
                                 </div>
-                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">Daromad</p>
+                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">{t('finance.income')}</p>
                                 <p className="text-sm sm:text-base lg:text-xl font-bold text-green-600 dark:text-green-400">
                                     +{formatShortCurrency(statistics.totalIncome)}
                                 </p>
@@ -591,7 +592,7 @@ const Finance = () => {
                                 <div className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 bg-red-100 dark:bg-red-800/30 rounded-xl lg:rounded-2xl flex items-center justify-center">
                                     <TrendingDown className="w-4 h-4 lg:w-6 lg:h-6 text-red-500" />
                                 </div>
-                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">Xarajat</p>
+                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">{t('finance.expense')}</p>
                                 <p className="text-sm sm:text-base lg:text-xl font-bold text-red-600 dark:text-red-400">
                                     -{formatShortCurrency(statistics.totalExpense)}
                                 </p>
@@ -600,7 +601,7 @@ const Finance = () => {
                                 <div className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 bg-purple-100 dark:bg-purple-800/30 rounded-xl lg:rounded-2xl flex items-center justify-center">
                                     <CreditCard className="w-4 h-4 lg:w-6 lg:h-6 text-purple-500" />
                                 </div>
-                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">Qarz</p>
+                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">{t('finance.debt')}</p>
                                 <p className="text-sm sm:text-base lg:text-xl font-bold text-purple-600 dark:text-purple-400">
                                     {formatShortCurrency(Math.abs(debtStatistics.netDebt))}
                                 </p>
@@ -624,7 +625,7 @@ const Finance = () => {
                         className="w-full lg:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 lg:px-8 py-3 lg:py-3.5 rounded-xl lg:rounded-2xl font-medium transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                     >
                         <Plus className="w-5 h-5" />
-                        {activeTab === 'transactions' ? 'Yangi tranzaksiya' : 'Yangi qarz'}
+                        {activeTab === 'transactions' ? t('finance.addTransaction') : t('finance.addDebt')}
                     </button>
                 </div>
             </div>

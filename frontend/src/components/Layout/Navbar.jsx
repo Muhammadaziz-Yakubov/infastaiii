@@ -3,6 +3,7 @@ import { Bell, Search, X, Clock, CheckSquare, User, MessageSquare, Loader, Menu,
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearch } from '../../contexts/SearchContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { getGreeting, getInitials, formatDate, formatTimeAgo } from '../../utils/helpers';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
@@ -11,6 +12,7 @@ import toast from 'react-hot-toast';
 const Navbar = ({ onMenuClick, sidebarOpen }) => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { 
     searchQuery, 
@@ -534,13 +536,13 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
               <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden z-50 max-h-[80vh] overflow-y-auto">
                 <div className="px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Bildirishnomalar</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{t('notifications.title')}</h3>
                     {unreadCount > 0 && (
                       <button 
                         onClick={markAllAsRead}
                         className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400"
                       >
-                        Barchasini o'qilgan deb belgilash
+                        {t('notifications.markAllRead')}
                       </button>
                     )}
                   </div>
@@ -549,12 +551,12 @@ const Navbar = ({ onMenuClick, sidebarOpen }) => {
                 {loadingNotifications ? (
                   <div className="p-8 text-center">
                     <Loader className="w-6 h-6 animate-spin text-primary-500 mx-auto mb-3" />
-                    <p className="text-gray-600 dark:text-gray-400">Yuklanmoqda...</p>
+                    <p className="text-gray-600 dark:text-gray-400">{t('common.loading')}</p>
                   </div>
                 ) : notifications.length === 0 ? (
                   <div className="p-8 text-center">
                     <Bell className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-600 dark:text-gray-400">Bildirishnomalar yo'q</p>
+                    <p className="text-gray-600 dark:text-gray-400">{t('notifications.noNotifications')}</p>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       Yangi xabarlar shu yerda paydo bo'ladi
                     </p>

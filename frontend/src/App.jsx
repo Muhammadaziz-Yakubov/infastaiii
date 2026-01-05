@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminProtectedRoute from './components/Admin/AdminProtectedRoute';
 import Layout from './components/Layout';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 // Loading component
 const PageLoader = () => (
@@ -42,9 +43,10 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 // App komponenti
 function App() {
   return (
-    <Router>
-      <Toaster position="top-right" />
-      <Suspense fallback={<PageLoader />}>
+    <LanguageProvider>
+      <Router>
+        <Toaster position="top-right" />
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
@@ -82,8 +84,9 @@ function App() {
           {/* 404 - Not found */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </Suspense>
-    </Router>
+        </Suspense>
+      </Router>
+    </LanguageProvider>
   );
 }
 
