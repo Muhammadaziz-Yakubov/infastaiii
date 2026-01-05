@@ -152,10 +152,7 @@ const Sidebar = () => {
     { name: 'Challengelar', href: '/challenges', icon: Trophy, badge: 'Yangi' },
     ...(appSettings?.pro_subscription_enabled ? [
       { name: 'Narxlar', href: '/pricing', icon: DollarSign, badge: null }
-    ] : []),
-    ...(appSettings?.pro_subscription_enabled && user?.subscriptionType !== 'premium' ? [
-      { name: 'Pro Obuna', href: '/pricing', icon: Zap, badge: 'Pro' }
-    ] : []),
+    ] : [])
   ];
 
   // Click outside handlers
