@@ -127,6 +127,44 @@ const userSchema = new mongoose.Schema({
   subscriptionEndDate: {
     type: Date,
     default: null
+  },
+
+  // Telegram InFast AI Bot integration
+  telegramChatId: {
+    type: String,
+    sparse: true,
+    index: true
+  },
+  telegramUsername: {
+    type: String,
+    default: null
+  },
+  telegramFirstName: {
+    type: String,
+    default: null
+  },
+  telegramLinkedAt: {
+    type: Date,
+    default: null
+  },
+  telegramLinkCode: {
+    type: String,
+    default: null
+  },
+  telegramLinkExpiry: {
+    type: Date,
+    default: null
+  },
+  telegramNotifications: {
+    enabled: { type: Boolean, default: true },
+    debts: { type: Boolean, default: true },
+    tasks: { type: Boolean, default: true },
+    goals: { type: Boolean, default: true },
+    dailyReport: { type: Boolean, default: false }
+  },
+  lastReminderDate: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true

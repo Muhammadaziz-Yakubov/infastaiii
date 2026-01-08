@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const http = require('http');
+const socketIo = require('socket.io');
 
 // Import routes
 const authRoutes = require('./src/routes/authRoutes');
@@ -21,8 +23,11 @@ const challengeRoutes = require('./src/routes/challengeRoutes');
 const appSettingsRoutes = require('./src/routes/appSettingsRoutes');
 const supportRoutes = require('./src/routes/supportRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
+const chatRoutes = require('./src/routes/chatRoutes');
+const infastAIRoutes = require('./src/routes/infastAIRoutes');
 const telegramService = require('./src/services/telegramService');
 const supportBotService = require('./src/services/supportBotService');
+const infastAIBotService = require('./src/services/infastAIBotService');
 const AppSettings = require('./src/models/AppSettings');
 const { checkBanStatus } = require('./src/middleware/adminMiddleware');
 
@@ -30,6 +35,7 @@ const cleanup = () => {
   console.log('🧹 Cleaning up services...');
   telegramService.stop();
   supportBotService.stop();
+  infastAIBotService.stop();
   process.exit(0);
 };
 
@@ -42,6 +48,151 @@ const app = express();
 app.set('trust proxy', 1);
 
 const PORT = process.env.PORT || 5000;
+
+// 🔹 WEBSOCKET SERVER
+const httpServer = http.createServer(app);
+const io = socketIo(httpServer, {
+  cors: {
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// WebSocket connection handling
+io.on('connection', (socket) => {
+  console.log(`🔗 WebSocket client connected: ${socket.id}`);
+
+  // Join user to their personal room
+  socket.on('join_user', (userId) => {
+    socket.userId = userId;
+    socket.join(`user_${userId}`);
+    console.log(`👤 User ${userId} joined their room`);
+  });
+
+  // Handle chat messages
+  socket.on('chat_message', (data) => {
+    const { groupId, text, timestamp, senderId, senderName, messageType, fileUrl } = data;
+    const message = {
+      id: Date.now().toString(),
+      senderId: senderId || socket.userId,
+      senderName: senderName || data.senderName || 'Anonymous',
+      text,
+      timestamp: timestamp || new Date(),
+      groupId,
+      messageType: messageType || 'text',
+      fileUrl: fileUrl || null
+    };
+
+    // Broadcast to group members (including sender for confirmation)
+    io.to(`group_${groupId}`).emit('chat_message', {
+      groupId,
+      message
+    });
+
+    // Save to database (async)
+    saveChatMessage(message);
+  });
+
+  // Handle group joining
+  socket.on('join_group', (data) => {
+    const { groupId } = data;
+    socket.join(`group_${groupId}`);
+    console.log(`👥 User ${socket.userId} joined group ${groupId}`);
+
+    // Notify others in group
+    socket.to(`group_${groupId}`).emit('user_joined', {
+      userId: socket.userId,
+      groupId
+    });
+  });
+
+  // Handle group leaving
+  socket.on('leave_group', (data) => {
+    const { groupId } = data;
+    socket.leave(`group_${groupId}`);
+    console.log(`👋 User ${socket.userId} left group ${groupId}`);
+
+    // Notify others in group
+    socket.to(`group_${groupId}`).emit('user_left', {
+      userId: socket.userId,
+      groupId
+    });
+  });
+
+  // Handle typing indicators
+  socket.on('typing', (data) => {
+    const { groupId, isTyping, userName } = data;
+
+    socket.to(`group_${groupId}`).emit('typing', {
+      groupId,
+      isTyping,
+      userName,
+      userId: socket.userId
+    });
+  });
+
+  // Handle message deletion
+  socket.on('delete_message', (data) => {
+    const { groupId, messageId } = data;
+    
+    // Broadcast to all group members
+    io.to(`group_${groupId}`).emit('message_deleted', {
+      groupId,
+      messageId
+    });
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log(`🔌 WebSocket client disconnected: ${socket.id}`);
+
+    // Notify all groups user was in
+    socket.rooms.forEach(room => {
+      if (room.startsWith('group_')) {
+        socket.to(room).emit('user_offline', {
+          userId: socket.userId,
+          groupId: room.replace('group_', '')
+        });
+      }
+    });
+  });
+});
+
+// Save chat message to database
+async function saveChatMessage(message) {
+  try {
+    const ChatMessage = require('./src/models/ChatMessage');
+    const ChatGroup = require('./src/models/ChatGroup');
+
+    // Log full message for debugging
+    console.log('💾 Saving message:', JSON.stringify(message, null, 2));
+
+    // Save message to database
+    const newMessage = new ChatMessage({
+      groupId: message.groupId,
+      senderId: message.senderId,
+      senderName: message.senderName,
+      text: message.text,
+      timestamp: message.timestamp,
+      messageType: message.messageType || 'text',
+      fileUrl: message.fileUrl || null
+    });
+    await newMessage.save();
+
+    // Update group's last message
+    await ChatGroup.updateLastMessage(message.groupId, {
+      text: message.text,
+      senderId: message.senderId,
+      senderName: message.senderName,
+      timestamp: message.timestamp
+    });
+
+    console.log('✅ Message saved successfully:', message.text, 'Type:', message.messageType, 'FileUrl:', message.fileUrl);
+  } catch (error) {
+    console.error('❌ Error saving message:', error);
+  }
+}
 
 // =============================================
 // 🎯 PROFESSIONAL RATE LIMITING
@@ -164,10 +315,10 @@ app.use(cors({
 
     if (process.env.NODE_ENV !== 'production') {
       if (origin.startsWith('http://localhost:') ||
-          origin.startsWith('http://127.0.0.1:') ||
-          origin.startsWith('http://0.0.0.0:') ||
-          origin.includes('.vercel.app') ||
-          origin.includes('vercel.sh')) {
+        origin.startsWith('http://127.0.0.1:') ||
+        origin.startsWith('http://0.0.0.0:') ||
+        origin.includes('.vercel.app') ||
+        origin.includes('vercel.sh')) {
         return callback(null, true);
       }
     }
@@ -199,10 +350,12 @@ const fs = require('fs');
 const uploadsDir = path.join(__dirname, 'uploads');
 const avatarsDir = path.join(uploadsDir, 'avatars');
 const receiptsDir = path.join(uploadsDir, 'receipts');
+const chatDir = path.join(uploadsDir, 'chat');
 
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
 if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir);
 if (!fs.existsSync(receiptsDir)) fs.mkdirSync(receiptsDir);
+if (!fs.existsSync(chatDir)) fs.mkdirSync(chatDir);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   setHeaders: (res, filePath) => {
@@ -280,6 +433,8 @@ app.use('/api/challenges', challengeRoutes);
 app.use('/api/app-settings', appSettingsRoutes);
 app.use('/api/support', supportRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/infast-ai', infastAIRoutes);
 
 // 404 handler
 app.use('/api/*', (req, res) => {
@@ -345,7 +500,7 @@ const startServer = async () => {
   try {
     await connectDB();
 
-    server = app.listen(PORT, () => {
+    server = httpServer.listen(PORT, () => {
       console.log('🚀 InFast AI Authentication Server');
       console.log(`Port: ${PORT}`);
       console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'Not configured'}`);
@@ -359,8 +514,9 @@ const startServer = async () => {
       console.log('  - Auth Login: 20 req/15min');
       console.log('  - Password Reset: 5 req/15min');
       console.log('  - Google OAuth: 100 req/15min');
+      console.log('WebSocket: ✅ Real-time chat enabled');
       console.log('Security: ✅ Helmet enabled');
-      
+
       // Initialize default app settings
       AppSettings.initializeDefaults().then(() => {
         console.log('✅ App settings initialized');
@@ -378,6 +534,12 @@ const startServer = async () => {
         console.log('✅ Support bot initialized');
       }).catch((error) => {
         console.error('❌ Support bot initialization failed:', error);
+      });
+
+      infastAIBotService.init().then(() => {
+        console.log('✅ InFast AI bot initialized');
+      }).catch((error) => {
+        console.error('❌ InFast AI bot initialization failed:', error);
       });
     });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     DollarSign, TrendingUp, TrendingDown, Plus, Calendar,
     PieChart, BarChart3, ArrowUpRight, ArrowDownRight, Search,
@@ -6,15 +6,24 @@ import {
     Home, Car, ShoppingCart, Coffee, Film, HeartPulse,
     Dumbbell, BookOpen, Briefcase, Gift, Phone,
     ShoppingBag, Eye, EyeOff, CreditCard, Clock,
-    AlertCircle, User, ChevronRight, ExternalLink, FileText, WifiOff
+    AlertCircle, User, ChevronRight, ExternalLink, FileText, WifiOff,
+    Sparkles, Brain, Lightbulb, Target, ChevronDown, ChevronUp, Info
 } from 'lucide-react';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement } from 'chart.js';
+import { Pie, Bar, Line } from 'react-chartjs-2';
+
 import toast from 'react-hot-toast';
+
 import CurrencyInput from '../components/CurrencyInput';
+
 import { useNavigate } from 'react-router-dom';
 import { financeService } from '../services/financeService';
 import { formatCurrency, formatCurrencyInput, parseCurrencyInput, formatCurrencyShort } from '../utils/currency';
 import { saveToOffline, getFromOffline, STORES } from '../utils/offlineStorage';
 import { useLanguage } from '../contexts/LanguageContext';
+
+// Chart.js registratsiya
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement);
 
 const iconMap = {
     Car, ShoppingCart, Home, Coffee, Film, HeartPulse,
@@ -52,7 +61,7 @@ const Finance = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('month');
     const [selectedType, setSelectedType] = useState('all');
     const [selectedCategory, setSelectedCategory] = useState('all');
-    const [activeTab, setActiveTab] = useState('transactions'); // 'transactions' yoki 'debts'
+    const [activeTab, setActiveTab] = useState('transactions'); // 'transactions', 'debts', 'analytics'
 
     // Modal state'lar
     const [showAddModal, setShowAddModal] = useState(false);
@@ -66,6 +75,10 @@ const Finance = () => {
     const [selectedDebt, setSelectedDebt] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showBalance, setShowBalance] = useState(true);
+    
+    // AI Tahlil state'lar
+    const [showAIAnalysis, setShowAIAnalysis] = useState(false);
+    const [aiAnalysisExpanded, setAiAnalysisExpanded] = useState(true);
 
     // Form data
     const [formData, setFormData] = useState({
@@ -262,6 +275,217 @@ const Finance = () => {
 
     const filteredTransactions = getFilteredTransactions();
     const filteredDebts = getFilteredDebts();
+
+    // AI Moliyaviy Tahlil - useMemo bilan
+    const aiAnalysis = useMemo(() => {
+        if (transactions.length === 0) return null;
+
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        
+        // So'nggi 30 kun tranzaksiyalari
+        const recentTransactions = transactions.filter(t => new Date(t.date) >= thirtyDaysAgo);
+        
+        // Kategoriya bo'yicha xarajatlar
+        const expensesByCategory = {};
+        const incomeByCategory = {};
+        let totalExpense = 0;
+        let totalIncome = 0;
+
+        recentTransactions.forEach(t => {
+            if (t.type === 'expense') {
+                expensesByCategory[t.category] = (expensesByCategory[t.category] || 0) + t.amount;
+                totalExpense += t.amount;
+            } else {
+                incomeByCategory[t.category] = (incomeByCategory[t.category] || 0) + t.amount;
+                totalIncome += t.amount;
+            }
+        });
+
+        // Eng ko'p xarajat kategoriyalari
+        const topExpenseCategories = Object.entries(expensesByCategory)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5)
+            .map(([category, amount]) => ({
+                category,
+                amount,
+                percentage: totalExpense > 0 ? Math.round((amount / totalExpense) * 100) : 0
+            }));
+
+        // Tejash imkoniyatlari
+        const savingsOpportunities = [];
+        
+        // Eng katta xarajat kategoriyasini tahlil qilish
+        if (topExpenseCategories.length > 0) {
+            const topCategory = topExpenseCategories[0];
+            if (topCategory.percentage > 25) {
+                const potentialSavings = Math.round(topCategory.amount * 0.1);
+                savingsOpportunities.push({
+                    category: topCategory.category,
+                    currentSpend: topCategory.amount,
+                    percentage: topCategory.percentage,
+                    suggestion: `${topCategory.category} kategoriyasida daromadingizning ${topCategory.percentage}% sarflanmoqda. 10% qisqartirsangiz, oyiga ${formatCurrencyShort(potentialSavings)} tejaysiz.`,
+                    potentialSavings
+                });
+            }
+        }
+
+        // Haftalik xarajat trendi
+        const weeklyExpenses = [];
+        for (let i = 3; i >= 0; i--) {
+            const weekStart = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
+            const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+            
+            const weekExpense = recentTransactions
+                .filter(t => t.type === 'expense' && new Date(t.date) >= weekStart && new Date(t.date) < weekEnd)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            weeklyExpenses.push({
+                week: `${i === 0 ? 'Bu hafta' : i === 1 ? 'O\'tgan hafta' : `${i + 1} hafta oldin`}`,
+                amount: weekExpense
+            });
+        }
+
+        // Daromad vs Xarajat nisbati
+        const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
+        
+        // AI tavsiyalar
+        const recommendations = [];
+        
+        if (savingsRate < 20 && totalIncome > 0) {
+            recommendations.push({
+                type: 'warning',
+                icon: '⚠️',
+                title: 'Tejamkorlik past',
+                message: `Daromadingizning faqat ${savingsRate}% tejalmoqda. Ideal ko'rsatkich 20% dan yuqori bo'lishi kerak.`
+            });
+        } else if (savingsRate >= 20) {
+            recommendations.push({
+                type: 'success',
+                icon: '✅',
+                title: 'Yaxshi tejamkorlik',
+                message: `Ajoyib! Daromadingizning ${savingsRate}% tejalmoqda. Shunday davom eting!`
+            });
+        }
+
+        if (totalExpense > totalIncome && totalIncome > 0) {
+            recommendations.push({
+                type: 'danger',
+                icon: '🚨',
+                title: 'Xarajat daromaddan oshib ketdi',
+                message: `Bu oy xarajatingiz daromaddan ${formatCurrencyShort(totalExpense - totalIncome)} ga ko'p. Xarajatlarni qisqartiring.`
+            });
+        }
+
+        // Kunlik o'rtacha xarajat
+        const daysInPeriod = Math.max(1, Math.ceil((now - thirtyDaysAgo) / (1000 * 60 * 60 * 24)));
+        const dailyAverage = totalExpense / daysInPeriod;
+
+        return {
+            totalExpense,
+            totalIncome,
+            savingsRate,
+            topExpenseCategories,
+            savingsOpportunities,
+            weeklyExpenses,
+            recommendations,
+            dailyAverage,
+            expensesByCategory,
+            incomeByCategory
+        };
+    }, [transactions]);
+
+    // Pie Chart ma'lumotlari
+    const pieChartData = useMemo(() => {
+        if (!aiAnalysis || aiAnalysis.topExpenseCategories.length === 0) return null;
+
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#FF6384', '#C9CBCF', '#7BC225', '#E7E9ED'
+        ];
+
+        return {
+            labels: aiAnalysis.topExpenseCategories.map(c => c.category),
+            datasets: [{
+                data: aiAnalysis.topExpenseCategories.map(c => c.amount),
+                backgroundColor: colors.slice(0, aiAnalysis.topExpenseCategories.length),
+                borderColor: colors.slice(0, aiAnalysis.topExpenseCategories.length).map(c => c),
+                borderWidth: 2
+            }]
+        };
+    }, [aiAnalysis]);
+
+    // Bar Chart - Haftalik xarajatlar
+    const barChartData = useMemo(() => {
+        if (!aiAnalysis) return null;
+
+        return {
+            labels: aiAnalysis.weeklyExpenses.map(w => w.week),
+            datasets: [{
+                label: 'Xarajatlar',
+                data: aiAnalysis.weeklyExpenses.map(w => w.amount),
+                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                borderColor: 'rgb(239, 68, 68)',
+                borderWidth: 1,
+                borderRadius: 8
+            }]
+        };
+    }, [aiAnalysis]);
+
+    // Daromad vs Xarajat Line Chart
+    const incomeExpenseChartData = useMemo(() => {
+        if (transactions.length === 0) return null;
+
+        const now = new Date();
+        const labels = [];
+        const incomeData = [];
+        const expenseData = [];
+
+        // So'nggi 6 oy
+        for (let i = 5; i >= 0; i--) {
+            const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const monthName = monthDate.toLocaleDateString('uz-UZ', { month: 'short' });
+            labels.push(monthName);
+
+            const monthTransactions = transactions.filter(t => {
+                const tDate = new Date(t.date);
+                return tDate.getMonth() === monthDate.getMonth() && tDate.getFullYear() === monthDate.getFullYear();
+            });
+
+            const monthIncome = monthTransactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const monthExpense = monthTransactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            incomeData.push(monthIncome);
+            expenseData.push(monthExpense);
+        }
+
+        return {
+            labels,
+            datasets: [
+                {
+                    label: 'Daromad',
+                    data: incomeData,
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                },
+                {
+                    label: 'Xarajat',
+                    data: expenseData,
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        };
+    }, [transactions]);
 
     // Tranzaksiya qo'shish/yangilash
     const handleSubmit = async (e) => {
@@ -655,13 +879,311 @@ const Finance = () => {
                             <span className="text-xs sm:text-sm">({debts.length})</span>
                         </div>
                     </button>
+                    <button
+                        onClick={() => setActiveTab('analytics')}
+                        className={`flex-1 py-2.5 sm:py-3 lg:py-3.5 px-2 sm:px-4 lg:px-6 rounded-lg lg:rounded-xl font-medium sm:font-semibold transition-all text-sm sm:text-base lg:text-lg ${activeTab === 'analytics' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                    >
+                        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                            <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="hidden sm:inline">AI Tahlil</span>
+                            <span className="sm:hidden">Tahlil</span>
+                        </div>
+                    </button>
                 </div>
             </div>
 
           
 
             {/* Kontent */}
-            {activeTab === 'transactions' ? (
+            {activeTab === 'analytics' ? (
+                /* AI Tahlil bo'limi */
+                <div className="space-y-4 lg:space-y-6">
+                    {/* AI Tavsiyalar */}
+                    {aiAnalysis && aiAnalysis.recommendations.length > 0 && (
+                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-emerald-200 dark:border-emerald-800/50">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2.5 bg-emerald-500 rounded-xl">
+                                    <Brain className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">AI Moliyaviy Tahlil</h3>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">So'nggi 30 kun asosida</p>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                {aiAnalysis.recommendations.map((rec, index) => (
+                                    <div 
+                                        key={index}
+                                        className={`p-4 rounded-xl ${
+                                            rec.type === 'success' ? 'bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800' :
+                                            rec.type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800' :
+                                            'bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
+                                        }`}
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <span className="text-2xl">{rec.icon}</span>
+                                            <div>
+                                                <h4 className="font-semibold text-gray-900 dark:text-white">{rec.title}</h4>
+                                                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{rec.message}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Tejash imkoniyatlari */}
+                            {aiAnalysis.savingsOpportunities.length > 0 && (
+                                <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Lightbulb className="w-5 h-5 text-yellow-500" />
+                                        <h4 className="font-semibold text-gray-900 dark:text-white">Tejash imkoniyati</h4>
+                                    </div>
+                                    {aiAnalysis.savingsOpportunities.map((opp, index) => (
+                                        <div key={index} className="text-sm text-gray-700 dark:text-gray-300">
+                                            <p>{opp.suggestion}</p>
+                                            <div className="mt-2 flex items-center gap-2">
+                                                <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-medium">
+                                                    💰 Potensial tejam: {formatCurrencyShort(opp.potentialSavings)}/oy
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Statistika kartalar */}
+                    {aiAnalysis && (
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <TrendingUp className="w-4 h-4 text-green-500" />
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Daromad (30 kun)</span>
+                                </div>
+                                <p className="text-lg lg:text-xl font-bold text-green-600 dark:text-green-400">
+                                    +{formatCurrencyShort(aiAnalysis.totalIncome)}
+                                </p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <TrendingDown className="w-4 h-4 text-red-500" />
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Xarajat (30 kun)</span>
+                                </div>
+                                <p className="text-lg lg:text-xl font-bold text-red-600 dark:text-red-400">
+                                    -{formatCurrencyShort(aiAnalysis.totalExpense)}
+                                </p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Target className="w-4 h-4 text-blue-500" />
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Tejamkorlik</span>
+                                </div>
+                                <p className={`text-lg lg:text-xl font-bold ${aiAnalysis.savingsRate >= 20 ? 'text-green-600 dark:text-green-400' : aiAnalysis.savingsRate >= 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
+                                    {aiAnalysis.savingsRate}%
+                                </p>
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Calendar className="w-4 h-4 text-purple-500" />
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">Kunlik o'rtacha</span>
+                                </div>
+                                <p className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
+                                    {formatCurrencyShort(aiAnalysis.dailyAverage)}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Grafiklar */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                        {/* Pie Chart - Kategoriya bo'yicha xarajatlar */}
+                        {pieChartData && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
+                                <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <PieChart className="w-5 h-5 text-blue-500" />
+                                    Xarajatlar taqsimoti
+                                </h3>
+                                <div className="h-64 lg:h-72">
+                                    <Pie 
+                                        data={pieChartData} 
+                                        options={{
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: {
+                                                    position: 'bottom',
+                                                    labels: {
+                                                        padding: 15,
+                                                        usePointStyle: true,
+                                                        font: { size: 11 }
+                                                    }
+                                                },
+                                                tooltip: {
+                                                    callbacks: {
+                                                        label: (context) => {
+                                                            const value = context.raw;
+                                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                            const percentage = Math.round((value / total) * 100);
+                                                            return `${context.label}: ${formatCurrencyShort(value)} (${percentage}%)`;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Bar Chart - Haftalik xarajatlar */}
+                        {barChartData && (
+                            <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
+                                <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                    <BarChart3 className="w-5 h-5 text-red-500" />
+                                    Haftalik xarajatlar
+                                </h3>
+                                <div className="h-64 lg:h-72">
+                                    <Bar 
+                                        data={barChartData}
+                                        options={{
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: false },
+                                                tooltip: {
+                                                    callbacks: {
+                                                        label: (context) => formatCurrencyShort(context.raw)
+                                                    }
+                                                }
+                                            },
+                                            scales: {
+                                                y: {
+                                                    beginAtZero: true,
+                                                    ticks: {
+                                                        callback: (value) => formatCurrencyShort(value)
+                                                    }
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Daromad vs Xarajat Line Chart */}
+                    {incomeExpenseChartData && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
+                            <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-emerald-500" />
+                                Daromad vs Xarajat (6 oy)
+                            </h3>
+                            <div className="h-64 lg:h-80">
+                                <Line 
+                                    data={incomeExpenseChartData}
+                                    options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                position: 'top',
+                                                labels: {
+                                                    usePointStyle: true,
+                                                    padding: 20
+                                                }
+                                            },
+                                            tooltip: {
+                                                callbacks: {
+                                                    label: (context) => `${context.dataset.label}: ${formatCurrencyShort(context.raw)}`
+                                                }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: {
+                                                    callback: (value) => formatCurrencyShort(value)
+                                                }
+                                            }
+                                        }
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Top kategoriyalar ro'yxati */}
+                    {aiAnalysis && aiAnalysis.topExpenseCategories.length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
+                            <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <BarChart3 className="w-5 h-5 text-purple-500" />
+                                Eng ko'p xarajat kategoriyalari
+                            </h3>
+                            <div className="space-y-3">
+                                {aiAnalysis.topExpenseCategories.map((cat, index) => {
+                                    const categoryData = categories.find(c => c.name === cat.category);
+                                    const Icon = getCategoryIcon(categoryData?.icon || 'DollarSign');
+                                    
+                                    return (
+                                        <div key={index} className="flex items-center gap-3">
+                                            <div 
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                                style={{ backgroundColor: (categoryData?.color || '#6366f1') + '20' }}
+                                            >
+                                                <Icon className="w-5 h-5" style={{ color: categoryData?.color || '#6366f1' }} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="font-medium text-gray-900 dark:text-white text-sm">{cat.category}</span>
+                                                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrencyShort(cat.amount)}</span>
+                                                </div>
+                                                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full rounded-full transition-all duration-500"
+                                                        style={{ 
+                                                            width: `${cat.percentage}%`,
+                                                            backgroundColor: categoryData?.color || '#6366f1'
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-10 text-right">
+                                                {cat.percentage}%
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Ma'lumot yo'q */}
+                    {!aiAnalysis && (
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center shadow-md">
+                            <Brain className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                                Tahlil uchun ma'lumot yetarli emas
+                            </h3>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                                AI tahlil uchun kamida bir nechta tranzaksiya kerak
+                            </p>
+                            <button
+                                onClick={() => {
+                                    setActiveTab('transactions');
+                                    resetForm();
+                                    setShowAddModal(true);
+                                }}
+                                className="bg-emerald-500 text-white px-6 py-2.5 rounded-lg hover:bg-emerald-600 transition-colors inline-flex items-center gap-2"
+                            >
+                                <Plus className="w-5 h-5" />
+                                Tranzaksiya qo'shish
+                            </button>
+                        </div>
+                    )}
+                </div>
+            ) : activeTab === 'transactions' ? (
                 /* Tranzaksiyalar ro'yxati */
                 filteredTransactions.length === 0 ? (
                     <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center shadow-md">
@@ -945,7 +1467,7 @@ const Finance = () => {
 
             {/* Delete Transaction Confirmation Modal */}
             {showDeleteTransactionModal && itemToDelete && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
@@ -984,7 +1506,7 @@ const Finance = () => {
 
             {/* Delete Debt Confirmation Modal */}
             {showDeleteDebtModal && itemToDelete && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
@@ -1027,7 +1549,7 @@ const Finance = () => {
 
 // Transaction Modal Komponenti - Mobile optimized
 const TransactionModal = ({ formData, setFormData, categories, editingTransaction, handleSubmit, onClose, getCategoryIcon }) => (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
@@ -1140,7 +1662,7 @@ const TransactionModal = ({ formData, setFormData, categories, editingTransactio
 
 // Debt Modal Komponenti - Mobile optimized
 const DebtModal = ({ debtFormData, setDebtFormData, editingDebt, handleDebtSubmit, onClose }) => (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
@@ -1241,7 +1763,7 @@ const DebtModal = ({ debtFormData, setDebtFormData, editingDebt, handleDebtSubmi
 
 // Payment Modal Komponenti
 const PaymentModal = ({ selectedDebt, paymentAmount, setPaymentAmount, handlePayment, formatCurrency, onClose }) => (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-[60] overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen px-4 py-6">
             <div
                 className="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm"

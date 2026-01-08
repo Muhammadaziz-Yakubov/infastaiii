@@ -7,7 +7,7 @@ const challengeSchema = new mongoose.Schema({
     type: String,
     unique: true
   },
-  
+
   // Creator
   creatorId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -15,7 +15,7 @@ const challengeSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  
+
   // Basic Info
   title: {
     type: String,
@@ -23,34 +23,36 @@ const challengeSchema = new mongoose.Schema({
     trim: true,
     maxlength: 100
   },
-  
+
   description: {
     type: String,
     trim: true,
     maxlength: 500
   },
-  
+
   // Challenge Type
   type: {
     type: String,
     enum: ['daily', 'weekly', 'special'],
     default: 'daily'
   },
-  
+
   // Category
   category: {
     type: String,
     enum: ['sport', 'reading', 'water', 'meditation', 'language', 'finance', 'health', 'programming', 'custom'],
     default: 'custom'
   },
-  
+
   // Duration
   duration: {
     type: Number,
-    enum: [7, 14, 30],
+    required: true,
+    min: 1,
+    max: 1000,
     default: 30
   },
-  
+
   // Daily Goal
   dailyGoal: {
     value: {
@@ -68,14 +70,14 @@ const challengeSchema = new mongoose.Schema({
       maxlength: 20
     }
   },
-  
+
   // Tracking Type
   trackingType: {
     type: String,
     enum: ['manual', 'timer', 'quantity', 'photo'],
     default: 'manual'
   },
-  
+
   // Participants
   maxParticipants: {
     type: Number,
@@ -83,75 +85,205 @@ const challengeSchema = new mongoose.Schema({
     min: 2,
     max: 50
   },
-  
+
   currentParticipants: {
     type: Number,
     default: 1
   },
-  
+
+  // Participants array
+  participants: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    role: {
+      type: String,
+      enum: ['owner', 'admin', 'member'],
+      default: 'member'
+    },
+    joinedAt: {
+      type: Date,
+      default: Date.now
+    },
+    status: {
+      type: String,
+      enum: ['active', 'completed', 'left'],
+      default: 'active'
+    }
+  }],
+
   // Visibility
   isPublic: {
     type: Boolean,
     default: false
   },
-  
+
   // Dates
   startDate: {
     type: Date,
     required: true
   },
-  
+
   endDate: {
     type: Date
   },
-  
+
   // Status
   status: {
     type: String,
     enum: ['pending', 'active', 'completed', 'cancelled'],
     default: 'pending'
   },
-  
+
   // Invite Code (48 soat amal qiladi)
   inviteCode: {
     type: String,
     unique: true,
     sparse: true
   },
-  
+
   inviteCodeExpiry: {
     type: Date
   },
-  
+
   // Icon/Color
   icon: {
     type: String,
     default: '🎯'
   },
-  
+
   color: {
     type: String,
     default: '#3B82F6'
+  },
+
+  // Chat Group Reference
+  chatGroup: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ChatGroup'
   }
 }, {
   timestamps: true
 });
 
 // Generate unique challenge ID
-challengeSchema.pre('save', async function(next) {
+challengeSchema.pre('save', async function (next) {
   if (!this.challengeId) {
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     this.challengeId = `INF-CH-${randomNum}`;
   }
-  
+
   // Calculate end date
   if (this.startDate && this.duration && !this.endDate) {
     const endDate = new Date(this.startDate);
     endDate.setDate(endDate.getDate() + this.duration);
     this.endDate = endDate;
   }
-  
+
   next();
+});
+
+// Post-save middleware to create chat group when challenge is created
+challengeSchema.post('save', async function (doc, next) {
+  // Only create chat group for new challenges that don't have one yet
+  if (!doc.chatGroup && doc.status === 'active') {
+    const ChatGroup = require('./ChatGroup');
+    const User = require('./User');
+
+    try {
+      // Get creator info
+      const creator = await User.findById(doc.creatorId);
+      const creatorName = creator ? (creator.firstName || 'Creator') : 'Creator';
+
+      // Create chat group for the challenge
+      const chatGroup = new ChatGroup({
+        name: doc.title,
+        description: doc.description || `${doc.title} uchun guruh chat`,
+        challengeId: doc._id.toString(),
+        createdBy: doc.creatorId.toString(),
+        members: [{
+          userId: doc.creatorId.toString(),
+          name: creatorName,
+          role: 'owner',
+          joinedAt: new Date(),
+          isOnline: false
+        }]
+      });
+
+      await chatGroup.save();
+
+      // Update challenge with chat group reference (without triggering save again)
+      await this.constructor.findByIdAndUpdate(doc._id, {
+        chatGroup: chatGroup._id
+      }, {
+        new: false,
+        validateBeforeSave: false
+      });
+
+      console.log(`✅ Chat group created for challenge: ${doc.title}`);
+    } catch (error) {
+      console.error('❌ Error creating chat group:', error);
+    }
+  }
+
+  if (next) next();
+});
+
+// Post-save middleware to update chat group when participants change
+challengeSchema.post('save', async function () {
+  if (!this.isNew && this.chatGroup) {
+    const ChatGroup = require('./ChatGroup');
+    const User = require('./User');
+
+    try {
+      const chatGroup = await ChatGroup.findById(this.chatGroup);
+      if (chatGroup) {
+        // Sync participants with chat group members
+        const currentMemberIds = chatGroup.members.map(m => m.userId.toString());
+
+        // Add new participants
+        for (const participant of this.participants) {
+          if (!currentMemberIds.includes(participant.userId.toString())) {
+            const user = await User.findById(participant.userId);
+            if (user) {
+              await chatGroup.addMember(participant.userId, user.firstName || 'User');
+            }
+          }
+        }
+
+        // Remove participants who left the challenge
+        for (const member of chatGroup.members) {
+          const stillParticipant = this.participants.some(p => p.userId.toString() === member.userId.toString());
+          if (!stillParticipant) {
+            await chatGroup.removeMember(member.userId);
+          }
+        }
+
+        await chatGroup.save();
+      }
+    } catch (error) {
+      console.error('❌ Error syncing chat group participants:', error);
+    }
+  }
+});
+
+// Pre-remove middleware to delete chat group when challenge is deleted
+challengeSchema.pre('remove', async function () {
+  if (this.chatGroup) {
+    const ChatGroup = require('./ChatGroup');
+    try {
+      await ChatGroup.findByIdAndDelete(this.chatGroup);
+      console.log(`🗑️ Chat group deleted for challenge: ${this.title}`);
+    } catch (error) {
+      console.error('❌ Error deleting chat group:', error);
+    }
+  }
 });
 
 // Indexes

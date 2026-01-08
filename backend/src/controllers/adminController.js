@@ -52,7 +52,7 @@ exports.getDashboardStats = async (req, res) => {
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
+
     // Daily user registrations for last 30 days
     const userGrowth = await User.aggregate([
       {
@@ -112,13 +112,13 @@ exports.getDashboardStats = async (req, res) => {
     const lastWeekUsers = await User.countDocuments({
       createdAt: { $gte: sevenDaysAgo }
     });
-    
+
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
     const previousWeekUsers = await User.countDocuments({
       createdAt: { $gte: twoWeeksAgo, $lt: sevenDaysAgo }
     });
 
-    const weeklyGrowthPercent = previousWeekUsers > 0 
+    const weeklyGrowthPercent = previousWeekUsers > 0
       ? Math.round(((lastWeekUsers - previousWeekUsers) / previousWeekUsers) * 100)
       : lastWeekUsers > 0 ? 100 : 0;
 
@@ -444,7 +444,7 @@ exports.sendNotification = async (req, res) => {
     }
 
     let targetUsers = [];
-    
+
     if (userId) {
       // Send to specific user
       const user = await User.findById(userId);
@@ -560,7 +560,7 @@ exports.deleteUser = async (req, res) => {
 
     // Delete user's notifications
     await Notification.deleteMany({ userId: user._id });
-    
+
     // Delete user's tasks
     await Task.deleteMany({ userId: user._id });
 
@@ -587,7 +587,7 @@ exports.deleteUser = async (req, res) => {
 exports.getUserNotifications = async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     const notifications = await Notification.find({ userId })
       .sort({ createdAt: -1 })
       .limit(50)
@@ -603,6 +603,317 @@ exports.getUserNotifications = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Xabarlarni yuklashda xatolik'
+    });
+  }
+};
+
+// Get all tasks (admin)
+exports.getAllTasks = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const search = req.query.search || '';
+
+    let query = {};
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const tasks = await Task.find(query)
+      .populate('userId', 'firstName lastName email phone')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .lean();
+
+    const total = await Task.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        tasks,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get all tasks error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Vazifalarni yuklashda xatolik'
+    });
+  }
+};
+
+// Get all challenges (admin)
+exports.getAllChallenges = async (req, res) => {
+  try {
+    const Challenge = require('../models/Challenge');
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const search = req.query.search || '';
+
+    let query = {};
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { challengeId: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const challenges = await Challenge.find(query)
+      .populate('creatorId', 'firstName lastName email phone')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .lean();
+
+    const total = await Challenge.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        challenges,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get all challenges error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Challengelarni yuklashda xatolik'
+    });
+  }
+};
+
+// Get all goals (admin)
+exports.getAllGoals = async (req, res) => {
+  try {
+    const Goal = require('../models/Goal');
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const search = req.query.search || '';
+
+    let query = {};
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const goals = await Goal.find(query)
+      .populate('userId', 'firstName lastName email phone')
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .lean();
+
+    const total = await Goal.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: {
+        goals,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get all goals error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Maqsadlarni yuklashda xatolik'
+    });
+  }
+};
+
+// Get all finance transactions (admin)
+exports.getAllTransactions = async (req, res) => {
+  try {
+    const Finance = require('../models/Finance');
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const search = req.query.search || '';
+    const type = req.query.type; // 'income' or 'expense'
+
+    let query = {};
+    if (search) {
+      query.$or = [
+        { description: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (type) {
+      query.type = type;
+    }
+
+    const transactions = await Finance.find(query)
+      .populate('userId', 'firstName lastName email phone')
+      .sort({ date: -1 })
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .lean();
+
+    const total = await Finance.countDocuments(query);
+
+    // Calculate totals
+    const totalIncome = await Finance.aggregate([
+      { $match: { type: 'income' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+
+    const totalExpense = await Finance.aggregate([
+      { $match: { type: 'expense' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        transactions,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        },
+        summary: {
+          totalIncome: totalIncome[0]?.total || 0,
+          totalExpense: totalExpense[0]?.total || 0,
+          balance: (totalIncome[0]?.total || 0) - (totalExpense[0]?.total || 0)
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get all transactions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Tranziukatsiyalarni yuklashda xatolik'
+    });
+  }
+};
+
+// Delete task (admin)
+exports.deleteTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const task = await Task.findByIdAndDelete(taskId);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task topilmadi'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Task o\'chirildi'
+    });
+  } catch (error) {
+    console.error('Delete task error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Taskni o\'chirishda xatolik'
+    });
+  }
+};
+
+// Delete challenge (admin)
+exports.deleteChallenge = async (req, res) => {
+  try {
+    const Challenge = require('../models/Challenge');
+    const { challengeId } = req.params;
+    const challenge = await Challenge.findByIdAndDelete(challengeId);
+
+    if (!challenge) {
+      return res.status(404).json({
+        success: false,
+        message: 'Challenge topilmadi'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Challenge o\'chirildi'
+    });
+  } catch (error) {
+    console.error('Delete challenge error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Challengeni o\'chirishda xatolik'
+    });
+  }
+};
+
+// Delete goal (admin)
+exports.deleteGoal = async (req, res) => {
+  try {
+    const Goal = require('../models/Goal');
+    const { goalId } = req.params;
+    const goal = await Goal.findByIdAndDelete(goalId);
+
+    if (!goal) {
+      return res.status(404).json({
+        success: false,
+        message: 'Maqsad topilmadi'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Maqsad o\'chirildi'
+    });
+  } catch (error) {
+    console.error('Delete goal error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Maqsadni o\'chirishda xatolik'
+    });
+  }
+};
+
+// Delete transaction (admin)
+exports.deleteTransaction = async (req, res) => {
+  try {
+    const Finance = require('../models/Finance');
+    const { transactionId } = req.params;
+    const transaction = await Finance.findByIdAndDelete(transactionId);
+
+    if (!transaction) {
+      return res.status(404).json({
+        success: false,
+        message: 'Tranziukatsiya topilmadi'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Tranziukatsiya o\'chirildi'
+    });
+  } catch (error) {
+    console.error('Delete transaction error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Tranziukatsiyani o\'chirishda xatolik'
     });
   }
 };

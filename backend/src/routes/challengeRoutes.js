@@ -34,6 +34,9 @@ router.get('/:id/leaderboard', challengeController.getLeaderboard);
 // Leave challenge
 router.post('/:id/leave', challengeController.leaveChallenge);
 
+// Complete challenge
+router.post('/:id/complete', challengeController.completeChallenge);
+
 // Delete challenge
 router.delete('/:id', challengeController.deleteChallenge);
 

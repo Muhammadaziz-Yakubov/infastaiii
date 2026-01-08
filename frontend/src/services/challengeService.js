@@ -60,6 +60,12 @@ export const challengeService = {
   updateChallenge: async (id, data) => {
     const response = await api.put(`/api/challenges/${id}`, data);
     return response.data;
+  },
+
+  // Complete challenge
+  completeChallenge: async (id, reason) => {
+    const response = await api.post(`/api/challenges/${id}/complete`, { reason });
+    return response.data;
   }
 };
 

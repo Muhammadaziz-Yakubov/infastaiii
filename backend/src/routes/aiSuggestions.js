@@ -141,7 +141,7 @@ function generateAiSuggestions(goals, tasks, user) {
         });
     }
     
-    // Sort by priority (high first)
+     // Sort by priority (high first)
     const priorityOrder = { high: 3, medium: 2, low: 1 };
     suggestions.sort((a, b) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
     

@@ -36,4 +36,17 @@ router.post('/notifications/send', adminController.sendNotification);
 // Admin user creation (for setup)
 router.post('/create-admin', adminController.createAdminUser);
 
+// Data views - Tasks, Challenges, Goals, Transactions
+router.get('/tasks', adminController.getAllTasks);
+router.get('/challenges', adminController.getAllChallenges);
+router.get('/goals', adminController.getAllGoals);
+router.get('/transactions', adminController.getAllTransactions);
+
+// Delete operations
+router.delete('/tasks/:taskId', adminController.deleteTask);
+router.delete('/challenges/:challengeId', adminController.deleteChallenge);
+router.delete('/goals/:goalId', adminController.deleteGoal);
+router.delete('/transactions/:transactionId', adminController.deleteTransaction);
+
 module.exports = router;
+

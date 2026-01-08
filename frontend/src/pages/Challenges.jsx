@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Trophy, Plus, Users, Calendar, Target, Flame,
   Clock, CheckCircle, X, Copy, Share2, Crown,
-  Search, Eye, Trash2, LogOut, BookOpen, Droplets, Brain,
-  Dumbbell, Wallet, Heart, Check, RefreshCw, ChevronRight,
-  MoreVertical, Award, Zap, Star, Play, Pause
+  Search, Trash2, LogOut, Check, RefreshCw, ChevronRight,
+  MoreVertical
 } from 'lucide-react';
 import { challengeService } from '../services/challengeService';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,14 +23,9 @@ const CATEGORIES = [
   { id: 'custom', name: 'Boshqa', emoji: '🎯', color: '#6366F1' }
 ];
 
-const DURATIONS = [
-  { value: 7, label: '7 kun', desc: 'Qisqa' },
-  { value: 14, label: '14 kun', desc: 'O\'rta' },
-  { value: 30, label: '30 kun', desc: 'Uzun' }
-];
+
 
 const Challenges = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
   const [challenges, setChallenges] = useState([]);
@@ -50,7 +43,11 @@ const Challenges = () => {
   const [joinLoading, setJoinLoading] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [progressPage, setProgressPage] = useState(0); // For pagination
   const [editingChallenge, setEditingChallenge] = useState(null);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completionReason, setCompletionReason] = useState('');
+  const [completeLoading, setCompleteLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -204,6 +201,12 @@ const Challenges = () => {
     setSelectedChallenge(challenge);
     setShowDetailModal(true);
     loadChallengeDetails(challenge._id);
+
+    // Set progress page to today's page
+    const today = getTodayDayNumber(challenge.startDate);
+    const DAYS_PER_PAGE = 28;
+    const todayPage = Math.floor((today - 1) / DAYS_PER_PAGE);
+    setProgressPage(todayPage);
   };
 
   const handleDeleteChallenge = async (challengeId) => {
@@ -247,6 +250,7 @@ const Challenges = () => {
         title: formData.title,
         description: formData.description,
         category: formData.category,
+        duration: formData.duration,
         maxParticipants: formData.maxParticipants,
         dailyGoal: {
           value: formData.dailyGoal,
@@ -279,6 +283,24 @@ const Challenges = () => {
     }
   };
 
+  const handleCompleteChallenge = async () => {
+    try {
+      setCompleteLoading(true);
+      await challengeService.completeChallenge(selectedChallenge._id, completionReason);
+      toast.success('Challenge tugatildi! 🎉');
+      setShowCompleteModal(false);
+      setShowDetailModal(false);
+      setCompletionReason('');
+      setActiveMenu(null);
+      setActiveTab('completed'); // Switch to completed tab
+      loadChallenges();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Xatolik yuz berdi');
+    } finally {
+      setCompleteLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       title: '',
@@ -302,7 +324,9 @@ const Challenges = () => {
 
   const getProgress = (challenge) => {
     if (!challenge.participantData) return 0;
-    return Math.round((challenge.participantData.completedDays / challenge.duration) * 100);
+    // Cap progress at 100% for display, but allow completion beyond duration
+    const progress = (challenge.participantData.completedDays / challenge.duration) * 100;
+    return Math.min(Math.round(progress), 100);
   };
 
   const getDaysLeft = (endDate) => {
@@ -314,8 +338,11 @@ const Challenges = () => {
   const getCategory = (id) => CATEGORIES.find(c => c.id === id) || CATEGORIES[7];
 
   const getTodayStatus = (challenge) => {
+    if (!challenge.progress || challenge.progress.length === 0) {
+      return 'pending';
+    }
     const today = getTodayDayNumber(challenge.startDate);
-    const todayProgress = challenge.progress?.find(p => p.dayNumber === today);
+    const todayProgress = challenge.progress.find(p => p.dayNumber === today);
     return todayProgress?.status || 'pending';
   };
 
@@ -336,7 +363,7 @@ const Challenges = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Challengelar yuklanmoqda...</p>
         </div>
       </div>
@@ -346,7 +373,7 @@ const Challenges = () => {
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 lg:space-y-8 pb-24 sm:pb-8 px-4 sm:px-6 lg:px-8">
       {/* Header Section - Goals sahifasiga o'xshash */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-6 lg:p-10 text-white shadow-xl">
+      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 lg:p-10 text-white shadow-xl">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6 mb-6 lg:mb-8">
           <div className="flex items-center gap-4">
             <div className="p-3 lg:p-4 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -371,7 +398,7 @@ const Challenges = () => {
                 resetForm();
                 setShowCreateModal(true);
               }}
-              className="flex items-center justify-center gap-2 bg-white text-orange-600 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/90 transition-all text-sm sm:text-base lg:text-lg shadow-lg"
+              className="flex items-center justify-center gap-2 bg-white text-blue-600 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-semibold hover:bg-white/90 transition-all text-sm sm:text-base lg:text-lg shadow-lg"
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               <span>Yangi Challenge</span>
@@ -407,7 +434,7 @@ const Challenges = () => {
 
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 lg:p-6 border border-white/20">
             <div className="flex items-center gap-3 mb-2">
-              <Star className="w-5 h-5 text-white/80" />
+              <Trophy className="w-5 h-5 text-white/80" />
               <p className="text-white/80 text-sm lg:text-base">Jami ball</p>
             </div>
             <p className="text-2xl lg:text-3xl font-bold">{stats.totalPoints}</p>
@@ -426,11 +453,10 @@ const Challenges = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                activeTab === tab.id
-                  ? 'bg-white dark:bg-gray-700 text-orange-600 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${activeTab === tab.id
+                ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                }`}
             >
               {tab.label}
             </button>
@@ -445,7 +471,7 @@ const Challenges = () => {
               placeholder="Qidirish..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-orange-500 outline-none"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
           <button
@@ -478,7 +504,7 @@ const Challenges = () => {
             </button>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-orange-500 text-white px-6 py-3 lg:px-8 lg:py-4 rounded-xl hover:bg-orange-600 transition-colors inline-flex items-center justify-center gap-2 text-base lg:text-lg font-semibold shadow-lg"
+              className="bg-blue-500 text-white px-6 py-3 lg:px-8 lg:py-4 rounded-xl hover:bg-blue-600 transition-colors inline-flex items-center justify-center gap-2 text-base lg:text-lg font-semibold shadow-lg"
             >
               <Plus className="w-5 h-5 lg:w-6 lg:h-6" />
               Yangi Challenge
@@ -550,7 +576,7 @@ const Challenges = () => {
                             }}
                             className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Search className="w-4 h-4" />
                             Batafsil
                           </button>
                           <button
@@ -614,8 +640,8 @@ const Challenges = () => {
 
                   {/* Stats Row */}
                   <div className="grid grid-cols-3 gap-2 mb-3">
-                    <div className="text-center p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                      <div className="flex items-center justify-center gap-1 text-orange-600 dark:text-orange-400">
+                    <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <div className="flex items-center justify-center gap-1 text-blue-600 dark:text-blue-400">
                         <Flame className="w-4 h-4" />
                         <span className="font-bold">{challenge.participantData?.currentStreak || 0}</span>
                       </div>
@@ -628,12 +654,28 @@ const Challenges = () => {
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5">Kun</p>
                     </div>
-                    <div className="text-center p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="flex items-center justify-center gap-1 text-blue-600 dark:text-blue-400">
-                        <Clock className="w-4 h-4" />
-                        <span className="font-bold">{daysLeft}</span>
+                    <div className={`text-center p-2 rounded-lg ${daysLeft === 0 && challenge.status === 'active'
+                      ? 'bg-purple-50 dark:bg-purple-900/20'
+                      : 'bg-blue-50 dark:bg-blue-900/20'
+                      }`}>
+                      <div className={`flex items-center justify-center gap-1 ${daysLeft === 0 && challenge.status === 'active'
+                        ? 'text-purple-600 dark:text-purple-400'
+                        : 'text-blue-600 dark:text-blue-400'
+                        }`}>
+                        {daysLeft === 0 && challenge.status === 'active' ? (
+                          <>
+                            <span className="font-bold text-lg">∞</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-4 h-4" />
+                            <span className="font-bold">{daysLeft}</span>
+                          </>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">Qoldi</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {daysLeft === 0 && challenge.status === 'active' ? 'Davom' : 'Qoldi'}
+                      </p>
                     </div>
                   </div>
 
@@ -641,13 +683,23 @@ const Challenges = () => {
                   <div className="mb-4 p-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-xl">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white font-bold text-sm">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${getTodayDayNumber(challenge.startDate) > challenge.duration
+                          ? 'bg-gradient-to-br from-purple-400 to-pink-500'
+                          : 'bg-gradient-to-br from-blue-400 to-indigo-500'
+                          }`}>
                           {getTodayDayNumber(challenge.startDate)}
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 dark:text-gray-400">Hozirgi kun</p>
                           <p className="font-semibold text-gray-900 dark:text-white text-sm">
-                            {challenge.duration} kundan {getTodayDayNumber(challenge.startDate)}-kuni
+                            {getTodayDayNumber(challenge.startDate) > challenge.duration ? (
+                              <>
+                                <span className="text-purple-600 dark:text-purple-400">Davom etmoqda!</span>
+                                <span className="text-xs ml-1">({challenge.duration} kundan oshdi)</span>
+                              </>
+                            ) : (
+                              `${challenge.duration} kundan ${getTodayDayNumber(challenge.startDate)}-kuni`
+                            )}
                           </p>
                         </div>
                       </div>
@@ -664,7 +716,19 @@ const Challenges = () => {
                   <div className="flex gap-2">
                     {challenge.status === 'active' && (
                       <>
-                        {todayStatus === 'done' ? (
+                        {/* Check if all days completed */}
+                        {challenge.participantData?.completedDays >= challenge.duration ? (
+                          <button
+                            onClick={() => {
+                              setSelectedChallenge(challenge);
+                              setShowCompleteModal(true);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-600 transition-all shadow-md active:scale-[0.98]"
+                          >
+                            <Trophy className="w-5 h-5" />
+                            Tugatish
+                          </button>
+                        ) : todayStatus === 'done' ? (
                           <div className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl font-medium">
                             <CheckCircle className="w-5 h-5" />
                             Bajarildi ✅
@@ -684,7 +748,7 @@ const Challenges = () => {
                       onClick={() => openDetailModal(challenge)}
                       className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-[0.98]"
                     >
-                      <Eye className="w-4 h-4" />
+                      <Search className="w-4 h-4" />
                       Batafsil
                     </button>
                   </div>
@@ -700,7 +764,7 @@ const Challenges = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-hidden shadow-2xl">
             {/* Header */}
-            <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-5 text-white">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-5 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-white/20 rounded-xl">
@@ -724,81 +788,157 @@ const Challenges = () => {
               {/* Title */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Trophy className="w-4 h-4 inline mr-2" />
                   Challenge nomi *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Masalan: 30 kunlik sport"
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none"
+                  placeholder="Masalan: 30 kunlik sport challenge"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   required
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <Target className="w-4 h-4 inline mr-2" />
                   Kategoriya
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat.id}
                       type="button"
                       onClick={() => setFormData({ ...formData, category: cat.id })}
-                      className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
-                        formData.category === cat.id
-                          ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                      }`}
+                      className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 hover:scale-105 transform ${formData.category === cat.id
+                        ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 shadow-lg'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        }`}
                     >
                       <span className="text-2xl">{cat.emoji}</span>
-                      <span className="text-xs text-gray-600 dark:text-gray-400 truncate w-full text-center">{cat.name}</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-400 truncate w-full text-center font-medium">{cat.name}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Duration */}
+
+              {/* Duration - Custom Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <Calendar className="w-4 h-4 inline mr-2" />
+                  Challenge davomiyligi
+                </label>
+
+                {/* Main Duration Input */}
+                <div className="relative mb-3">
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={formData.duration}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      setFormData({ ...formData, duration: Math.min(Math.max(value, 1), 1000) });
+                    }}
+                    className="w-full px-6 py-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 border-2 border-blue-200 dark:border-blue-800 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-center font-bold text-3xl text-blue-600 dark:text-blue-400 transition-all"
+                    placeholder="30"
+                  />
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 text-blue-400 dark:text-blue-500 text-base font-semibold">
+                    kun
+                  </div>
+                </div>
+
+                {/* Info Text */}
+                <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 text-center">
+                    💡 Challenge tugagandan keyin avtomatik davom etadi
+                  </p>
+                </div>
+
+                {/* Range Info */}
+                <div className="mb-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-1">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    Min: 1 kun
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                    Max: 1000 kun
+                  </span>
+                </div>
+
+                {/* Quick Select Buttons */}
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 px-1">Tez tanlash:</p>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[7, 14, 30, 60, 90].map((days) => (
+                      <button
+                        key={days}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, duration: days })}
+                        className={`px-3 py-2.5 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${formData.duration === days
+                          ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                      >
+                        {days}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[100, 365, 1000].map((days) => (
+                      <button
+                        key={days}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, duration: days })}
+                        className={`px-3 py-2.5 rounded-xl text-sm font-bold transition-all transform hover:scale-105 ${formData.duration === days
+                          ? 'bg-gradient-to-br from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/30'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          }`}
+                      >
+                        {days === 365 ? '1 yil' : days === 1000 ? 'Max' : days}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+
+              {/* Description */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Davomiylik
+                  <Target className="w-4 h-4 inline mr-2" />
+                  Tavsif (ixtiyoriy)
                 </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {DURATIONS.map((d) => (
-                    <button
-                      key={d.value}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, duration: d.value })}
-                      className={`p-4 rounded-xl border-2 text-center transition-all ${
-                        formData.duration === d.value
-                          ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <p className={`font-bold text-lg ${formData.duration === d.value ? 'text-orange-600' : 'text-gray-900 dark:text-white'}`}>
-                        {d.label}
-                      </p>
-                      <p className="text-xs text-gray-500">{d.desc}</p>
-                    </button>
-                  ))}
-                </div>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Challenge haqida qisqacha ma'lumot..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 outline-none"
+                />
               </div>
 
               {/* Daily Goal */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <Target className="w-4 h-4 inline mr-2" />
                     Kunlik maqsad
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.dailyGoal}
-                    onChange={(e) => setFormData({ ...formData, dailyGoal: parseInt(e.target.value) || 1 })}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-center font-bold text-xl"
-                  />
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.dailyGoal}
+                      onChange={(e) => setFormData({ ...formData, dailyGoal: parseInt(e.target.value) || 1 })}
+                      className="w-full px-4 py-3 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-800 dark:to-gray-900 border-2 border-green-200 dark:border-green-800 rounded-xl text-center font-bold text-xl text-green-600 dark:text-green-400 focus:ring-2 focus:ring-green-500 outline-none"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -807,53 +947,59 @@ const Challenges = () => {
                   <select
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl"
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 outline-none"
                   >
-                    <option value="times">Marta</option>
-                    <option value="minutes">Daqiqa</option>
-                    <option value="pages">Sahifa</option>
-                    <option value="liters">Litr</option>
-                    <option value="steps">Qadam</option>
-                    <option value="custom">Boshqa</option>
+                    <option value="times">⚡ Marta</option>
+                    <option value="minutes">⏱️ Daqiqa</option>
+                    <option value="pages">📖 Sahifa</option>
+                    <option value="liters">💧 Litr</option>
+                    <option value="steps">👣 Qadam</option>
+                    <option value="custom">🎯 Boshqa</option>
                   </select>
                 </div>
               </div>
 
               {/* Max Participants */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  <Users className="w-4 h-4 inline mr-1" />
-                  Maksimal qatnashuvchilar soni
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                  <Users className="w-4 h-4 inline mr-2" />
+                  Maksimal qatnashuvchilar
                 </label>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <input
                     type="range"
                     min="2"
                     max="50"
                     value={formData.maxParticipants}
                     onChange={(e) => setFormData({ ...formData, maxParticipants: parseInt(e.target.value) })}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                    className="flex-1 h-3 bg-gradient-to-r from-blue-200 to-purple-200 dark:from-blue-900 dark:to-purple-900 rounded-full appearance-none cursor-pointer accent-blue-500"
+                    style={{
+                      background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${((formData.maxParticipants - 2) / 48) * 100}%, #E5E7EB ${((formData.maxParticipants - 2) / 48) * 100}%, #E5E7EB 100%)`
+                    }}
                   />
-                  <div className="w-16 px-3 py-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-center">
-                    <span className="font-bold text-orange-600">{formData.maxParticipants}</span>
+                  <div className="min-w-[80px] px-4 py-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl text-center shadow-lg">
+                    <span className="font-bold text-white text-lg">{formData.maxParticipants}</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">2 dan 50 gacha odam qatnashishi mumkin</p>
+                <div className="mt-2 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 px-1">
+                  <span>👥 2 kishi</span>
+                  <span>👥👥👥 50 kishi</span>
+                </div>
               </div>
 
               {/* Buttons */}
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
                   onClick={() => { setShowCreateModal(false); resetForm(); }}
-                  className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95"
                 >
                   Bekor qilish
                 </button>
                 <button
                   type="submit"
                   disabled={createLoading}
-                  className="flex-1 px-6 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-amber-600 transition-all shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
                 >
                   {createLoading ? (
                     <>
@@ -862,8 +1008,8 @@ const Challenges = () => {
                     </>
                   ) : (
                     <>
-                      <Zap className="w-5 h-5" />
-                      Yaratish
+                      <Trophy className="w-5 h-5" />
+                      Challenge Yaratish
                     </>
                   )}
                 </button>
@@ -1015,17 +1161,43 @@ const Challenges = () => {
                       key={cat.id}
                       type="button"
                       onClick={() => setFormData({ ...formData, category: cat.id })}
-                      className={`p-3 rounded-xl border-2 text-center transition-all ${
-                        formData.category === cat.id
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                      }`}
+                      className={`p-3 rounded-xl border-2 text-center transition-all ${formData.category === cat.id
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                        }`}
                     >
                       <span className="text-xl">{cat.emoji}</span>
                       <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">{cat.name}</p>
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Duration */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Calendar className="w-4 h-4 inline mr-2" />
+                  Challenge davomiyligi
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={formData.duration}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 1;
+                      setFormData({ ...formData, duration: Math.min(Math.max(value, 1), 1000) });
+                    }}
+                    className="w-full px-4 py-3 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 border-2 border-blue-200 dark:border-blue-800 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-xl text-blue-600 dark:text-blue-400"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-400 dark:text-blue-500 text-sm font-semibold">
+                    kun
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1 text-center">
+                  1-1000 kun oralig'ida
+                </p>
               </div>
 
               {/* Daily Goal */}
@@ -1167,8 +1339,8 @@ const Challenges = () => {
             <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-180px)]">
               {/* Stats */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
-                  <Flame className="w-6 h-6 text-orange-500 mx-auto mb-2" />
+                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                  <Flame className="w-6 h-6 text-blue-500 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {selectedChallenge.participantData?.currentStreak || 0}
                   </p>
@@ -1193,20 +1365,36 @@ const Challenges = () => {
               {/* Today's Action */}
               {selectedChallenge.status === 'active' && (
                 <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200 dark:border-green-800">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">📅 Bugungi vazifa ({getTodayDayNumber(selectedChallenge.startDate)}-kun):</p>
-                  {getTodayStatus(selectedChallenge) === 'done' ? (
-                    <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold text-lg">
-                      <CheckCircle className="w-6 h-6" />
-                      Bajarildi! Zo'r! 🎉
-                    </div>
+                  {/* Check if all days completed */}
+                  {selectedChallenge.participantData?.completedDays >= selectedChallenge.duration ? (
+                    <>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">🎉 Barcha kunlar bajarildi!</p>
+                      <button
+                        onClick={() => setShowCompleteModal(true)}
+                        className="w-full py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg text-lg active:scale-95"
+                      >
+                        <Trophy className="w-6 h-6" />
+                        Challengeni Tugatish
+                      </button>
+                    </>
                   ) : (
-                    <button
-                      onClick={() => handleUpdateProgress(selectedChallenge, 'done')}
-                      className="w-full py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg text-lg active:scale-95"
-                    >
-                      <Check className="w-6 h-6" />
-                      ✅ Bugun bajarildi!
-                    </button>
+                    <>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">📅 Bugungi vazifa ({getTodayDayNumber(selectedChallenge.startDate)}-kun):</p>
+                      {getTodayStatus(selectedChallenge) === 'done' ? (
+                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold text-lg">
+                          <CheckCircle className="w-6 h-6" />
+                          Bajarildi! Zo'r! 🎉
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleUpdateProgress(selectedChallenge, 'done')}
+                          className="w-full py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg text-lg active:scale-95"
+                        >
+                          <Check className="w-6 h-6" />
+                          ✅ Bugun bajarildi!
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -1228,49 +1416,117 @@ const Challenges = () => {
                       <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
                     </div>
                   ) : (
-                    <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-                      {Array.from({ length: selectedChallenge.duration }, (_, i) => {
-                        const dayNum = i + 1;
+                    <>
+                      {/* Progress Grid with Pagination */}
+                      {(() => {
                         const today = getTodayDayNumber(selectedChallenge.startDate);
-                        const dayProgress = challengeDetails?.progress?.find(p => p.dayNumber === dayNum);
-                        const status = dayProgress?.status || 'pending';
-                        const isToday = dayNum === today;
-                        const isPast = dayNum < today;
-                        const isFuture = dayNum > today;
+                        const totalDays = Math.max(selectedChallenge.duration, today);
+                        const DAYS_PER_PAGE = 28; // 4 weeks
+                        const totalPages = Math.ceil(totalDays / DAYS_PER_PAGE);
+                        const currentPage = progressPage;
+                        const startDay = currentPage * DAYS_PER_PAGE + 1;
+                        const endDay = Math.min((currentPage + 1) * DAYS_PER_PAGE, totalDays);
 
                         return (
-                          <button
-                            key={dayNum}
-                            onClick={() => {
-                              if (isToday && status !== 'done') {
-                                handleUpdateProgress(selectedChallenge, 'done');
-                              }
-                            }}
-                            disabled={isFuture || (isPast && status !== 'pending')}
-                            className={`
-                              aspect-square rounded-lg flex flex-col items-center justify-center text-xs sm:text-sm font-medium transition-all
-                              ${isToday ? 'ring-2 ring-orange-500 ring-offset-1' : ''}
-                              ${status === 'done' ? 'bg-green-500 text-white' : ''}
-                              ${status === 'missed' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : ''}
-                              ${status === 'skipped' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600' : ''}
-                              ${status === 'pending' && isPast ? 'bg-red-50 dark:bg-red-900/20 text-red-400' : ''}
-                              ${status === 'pending' && isToday ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 hover:bg-orange-200 cursor-pointer active:scale-95' : ''}
-                              ${status === 'pending' && isFuture ? 'bg-gray-100 dark:bg-gray-800 text-gray-400' : ''}
-                            `}
-                          >
-                            <span className="text-[10px] sm:text-xs opacity-70">{dayNum}</span>
-                            {status === 'done' && <span className="text-sm sm:text-base">✓</span>}
-                            {status === 'missed' && <span className="text-sm sm:text-base">✗</span>}
-                            {status === 'pending' && isToday && <span className="text-sm sm:text-base">!</span>}
-                          </button>
+                          <>
+                            {/* Pagination Controls - Top */}
+                            {totalPages > 1 && (
+                              <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                                <button
+                                  onClick={() => setProgressPage(Math.max(0, currentPage - 1))}
+                                  disabled={currentPage === 0}
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                >
+                                  <ChevronRight className="w-4 h-4 rotate-180" />
+                                  Oldingi
+                                </button>
+
+                                <div className="text-center">
+                                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                    {startDay}-{endDay} kunlar
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-500">
+                                    {currentPage + 1} / {totalPages} sahifa
+                                  </p>
+                                </div>
+
+                                <button
+                                  onClick={() => setProgressPage(Math.min(totalPages - 1, currentPage + 1))}
+                                  disabled={currentPage === totalPages - 1}
+                                  className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                                >
+                                  Keyingi
+                                  <ChevronRight className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Days Grid */}
+                            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                              {Array.from({ length: endDay - startDay + 1 }, (_, i) => {
+                                const dayNum = startDay + i;
+                                const dayProgress = challengeDetails?.progress?.find(p => p.dayNumber === dayNum);
+                                const status = dayProgress?.status || 'pending';
+                                const isToday = dayNum === today;
+                                const isPast = dayNum < today;
+                                const isFuture = dayNum > today;
+
+                                return (
+                                  <button
+                                    key={dayNum}
+                                    onClick={() => {
+                                      if (isToday && status !== 'done') {
+                                        handleUpdateProgress(selectedChallenge, 'done');
+                                      }
+                                    }}
+                                    disabled={isFuture || (isPast && status !== 'pending')}
+                                    title={`Kun ${dayNum}${isToday ? ' (Bugun)' : ''} - ${status === 'done' ? 'Bajarildi ✓' :
+                                      status === 'missed' ? 'O\'tkazildi ✗' :
+                                        status === 'pending' && isToday ? 'Bajaring!' :
+                                          status === 'pending' && isFuture ? 'Kelasi' : 'Kutilmoqda'
+                                      }`}
+                                    className={`
+                                      aspect-square rounded-lg flex flex-col items-center justify-center text-xs sm:text-sm font-medium transition-all
+                                      ${isToday ? 'ring-2 ring-blue-500 ring-offset-1 scale-110' : ''}
+                                      ${status === 'done' ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-md' : ''}
+                                      ${status === 'missed' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : ''}
+                                      ${status === 'skipped' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600' : ''}
+                                      ${status === 'pending' && isPast ? 'bg-red-50 dark:bg-red-900/20 text-red-400' : ''}
+                                      ${status === 'pending' && isToday ? 'bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-600 dark:text-blue-400 hover:from-blue-200 hover:to-indigo-200 cursor-pointer active:scale-95 animate-pulse' : ''}
+                                      ${status === 'pending' && isFuture ? 'bg-gray-100 dark:bg-gray-800 text-gray-400' : ''}
+                                    `}
+                                  >
+                                    <span className="text-[10px] sm:text-xs font-bold">{dayNum}</span>
+                                    {status === 'done' && <span className="text-sm sm:text-base">✓</span>}
+                                    {status === 'missed' && <span className="text-sm sm:text-base">✗</span>}
+                                    {status === 'pending' && isToday && <span className="text-sm sm:text-base">!</span>}
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Quick Jump to Today */}
+                            {totalPages > 1 && !Array.from({ length: endDay - startDay + 1 }, (_, i) => startDay + i).includes(today) && (
+                              <div className="mt-3 text-center">
+                                <button
+                                  onClick={() => setProgressPage(Math.floor((today - 1) / DAYS_PER_PAGE))}
+                                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all"
+                                >
+                                  <Target className="w-4 h-4" />
+                                  Bugungi kunga o'tish ({today}-kun)
+                                </button>
+                              </div>
+                            )}
+                          </>
                         );
-                      })}
-                    </div>
+                      })()}
+                    </>
                   )}
+
                   {/* Legend */}
-                  <div className="flex flex-wrap items-center justify-center gap-3 mt-4 text-xs text-gray-500">
+                  <div className="flex flex-wrap items-center justify-center gap-3 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded bg-green-500" />
+                      <div className="w-3 h-3 rounded bg-gradient-to-br from-green-500 to-emerald-600" />
                       <span>Bajarildi</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -1278,7 +1534,7 @@ const Challenges = () => {
                       <span>O'tkazildi</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded bg-orange-100 ring-2 ring-orange-500" />
+                      <div className="w-3 h-3 rounded bg-blue-100 ring-2 ring-blue-500" />
                       <span>Bugun</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -1305,25 +1561,22 @@ const Challenges = () => {
                     {challengeDetails.leaderboard.map((participant, index) => (
                       <div
                         key={participant.user?.id || index}
-                        className={`flex items-center gap-3 p-3 ${
-                          participant.user?.id === user?._id ? 'bg-orange-50 dark:bg-orange-900/20' : ''
-                        }`}
+                        className={`flex items-center gap-3 p-3 ${participant.user?.id === user?._id ? 'bg-orange-50 dark:bg-orange-900/20' : ''
+                          }`}
                       >
                         {/* Rank */}
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
-                          index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index === 0 ? 'bg-yellow-400 text-yellow-900' :
                           index === 1 ? 'bg-gray-300 text-gray-700' :
-                          index === 2 ? 'bg-orange-400 text-orange-900' :
-                          'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                        }`}>
+                            index === 2 ? 'bg-orange-400 text-orange-900' :
+                              'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                          }`}>
                           {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : participant.rank}
                         </div>
-                        
+
                         {/* Avatar & Name */}
                         <div className="flex-1 min-w-0">
-                          <p className={`font-medium truncate ${
-                            participant.user?.id === user?._id ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white'
-                          }`}>
+                          <p className={`font-medium truncate ${participant.user?.id === user?._id ? 'text-orange-600 dark:text-orange-400' : 'text-gray-900 dark:text-white'
+                            }`}>
                             {participant.user?.name || 'Foydalanuvchi'}
                             {participant.user?.id === user?._id && ' (Siz)'}
                           </p>
@@ -1338,7 +1591,7 @@ const Challenges = () => {
                             </span>
                           </div>
                         </div>
-                        
+
                         {/* Points */}
                         <div className="text-right">
                           <p className="font-bold text-gray-900 dark:text-white">{participant.totalPoints}</p>
@@ -1393,6 +1646,104 @@ const Challenges = () => {
                     Challengedan chiqish
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Challenge Modal */}
+      {showCompleteModal && selectedChallenge && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-6 py-5 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 rounded-xl">
+                    <CheckCircle className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold">Challengeni Tugatish</h2>
+                    <p className="text-white/80 text-sm">{selectedChallenge.title}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setShowCompleteModal(false); setCompletionReason(''); }}
+                  className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Info */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  💡 Challenge tugatilgandan keyin uni qayta boshlay olmaysiz. Barcha ma'lumotlar saqlanadi.
+                </p>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-xl text-center">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {selectedChallenge.participantData?.completedDays || 0}
+                  </p>
+                  <p className="text-xs text-gray-500">Bajarilgan kunlar</p>
+                </div>
+                <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-xl text-center">
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {selectedChallenge.participantData?.totalPoints || 0}
+                  </p>
+                  <p className="text-xs text-gray-500">Jami ball</p>
+                </div>
+              </div>
+
+              {/* Reason */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Tugatish sababi (ixtiyoriy)
+                </label>
+                <textarea
+                  value={completionReason}
+                  onChange={(e) => setCompletionReason(e.target.value)}
+                  placeholder="Masalan: Maqsadimga erishdim, yangi challengega o'tmoqchiman..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-green-500 outline-none"
+                  maxLength={500}
+                />
+                <p className="text-xs text-gray-500 mt-1 text-right">
+                  {completionReason.length}/500
+                </p>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-4 pt-2">
+                <button
+                  onClick={() => { setShowCompleteModal(false); setCompletionReason(''); }}
+                  className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95"
+                >
+                  Bekor qilish
+                </button>
+                <button
+                  onClick={handleCompleteChallenge}
+                  disabled={completeLoading}
+                  className="flex-1 px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
+                >
+                  {completeLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Tugatilmoqda...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5" />
+                      Tugatish
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>

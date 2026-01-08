@@ -20,8 +20,8 @@ export const adminService = {
       return response.data;
     } catch (error) {
       console.error('❌ getDashboardStats error:', error.response?.data || error.message);
-      return { 
-        success: false, 
+      return {
+        success: false,
         data: {
           totalUsers: 0,
           activeUsers: 0,
@@ -51,12 +51,12 @@ export const adminService = {
       return response.data;
     } catch (error) {
       console.error('❌ getUsers error:', error.response?.data || error.message);
-      return { 
-        success: false, 
-        data: { 
-          users: [], 
-          pagination: { page: 1, limit: 20, total: 0, pages: 0 } 
-        } 
+      return {
+        success: false,
+        data: {
+          users: [],
+          pagination: { page: 1, limit: 20, total: 0, pages: 0 }
+        }
       };
     }
   },
@@ -132,11 +132,11 @@ export const adminService = {
   // Send notification to users
   sendNotification: async (title, message, type = 'announcement', userId = null) => {
     try {
-      const response = await api.post('/api/admin/notifications/send', { 
-        title, 
-        message, 
+      const response = await api.post('/api/admin/notifications/send', {
+        title,
+        message,
         type,
-        userId 
+        userId
       });
       return response.data;
     } catch (error) {
@@ -175,6 +175,110 @@ export const adminService = {
     } catch (error) {
       console.error('getUserNotifications error:', error.response?.data || error.message);
       return { success: false, notifications: [] };
+    }
+  },
+
+  // Get all tasks
+  getAllTasks: async (page = 1, limit = 50, search = '') => {
+    try {
+      const params = new URLSearchParams({ page, limit });
+      if (search) params.append('search', search);
+      const response = await api.get(`/api/admin/tasks?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('getAllTasks error:', error.response?.data || error.message);
+      return { success: false, data: { tasks: [], pagination: { page: 1, limit: 50, total: 0, pages: 0 } } };
+    }
+  },
+
+  // Get all challenges
+  getAllChallenges: async (page = 1, limit = 50, search = '') => {
+    try {
+      const params = new URLSearchParams({ page, limit });
+      if (search) params.append('search', search);
+      const response = await api.get(`/api/admin/challenges?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('getAllChallenges error:', error.response?.data || error.message);
+      return { success: false, data: { challenges: [], pagination: { page: 1, limit: 50, total: 0, pages: 0 } } };
+    }
+  },
+
+  // Get all goals
+  getAllGoals: async (page = 1, limit = 50, search = '') => {
+    try {
+      const params = new URLSearchParams({ page, limit });
+      if (search) params.append('search', search);
+      const response = await api.get(`/api/admin/goals?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('getAllGoals error:', error.response?.data || error.message);
+      return { success: false, data: { goals: [], pagination: { page: 1, limit: 50, total: 0, pages: 0 } } };
+    }
+  },
+
+  // Get all transactions
+  getAllTransactions: async (page = 1, limit = 50, search = '', type = '') => {
+    try {
+      const params = new URLSearchParams({ page, limit });
+      if (search) params.append('search', search);
+      if (type) params.append('type', type);
+      const response = await api.get(`/api/admin/transactions?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('getAllTransactions error:', error.response?.data || error.message);
+      return {
+        success: false,
+        data: {
+          transactions: [],
+          pagination: { page: 1, limit: 50, total: 0, pages: 0 },
+          summary: { totalIncome: 0, totalExpense: 0, balance: 0 }
+        }
+      };
+    }
+  },
+
+  // Delete task
+  deleteTask: async (taskId) => {
+    try {
+      const response = await api.delete(`/api/admin/tasks/${taskId}`);
+      return response.data;
+    } catch (error) {
+      console.error('deleteTask error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Delete challenge
+  deleteChallenge: async (challengeId) => {
+    try {
+      const response = await api.delete(`/api/admin/challenges/${challengeId}`);
+      return response.data;
+    } catch (error) {
+      console.error('deleteChallenge error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Delete goal
+  deleteGoal: async (goalId) => {
+    try {
+      const response = await api.delete(`/api/admin/goals/${goalId}`);
+      return response.data;
+    } catch (error) {
+      console.error('deleteGoal error:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Delete transaction
+  deleteTransaction: async (transactionId) => {
+    try {
+      const response = await api.delete(`/api/admin/transactions/${transactionId}`);
+      return response.data;
+    } catch (error) {
+      console.error('deleteTransaction error:', error.response?.data || error.message);
+      throw error;
     }
   }
 };

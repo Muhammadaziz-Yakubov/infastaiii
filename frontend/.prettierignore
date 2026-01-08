@@ -6,4 +6,3 @@ coverage
 .idea
 *.log
 package-lock.json
-

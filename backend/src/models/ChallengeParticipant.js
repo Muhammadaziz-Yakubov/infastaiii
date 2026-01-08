@@ -9,65 +9,65 @@ const challengeParticipantSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  
+
   challengeId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Challenge',
     required: true,
     index: true
   },
-  
+
   // Role
   role: {
     type: String,
     enum: ['owner', 'participant'],
     default: 'participant'
   },
-  
+
   // Status
   status: {
     type: String,
     enum: ['active', 'completed', 'failed', 'left'],
     default: 'active'
   },
-  
+
   // Progress Stats
   completedDays: {
     type: Number,
     default: 0
   },
-  
+
   missedDays: {
     type: Number,
     default: 0
   },
-  
+
   skippedDays: {
     type: Number,
     default: 0
   },
-  
+
   // Streak
   currentStreak: {
     type: Number,
     default: 0
   },
-  
+
   maxStreak: {
     type: Number,
     default: 0
   },
-  
+
   lastCompletedDate: {
     type: Date
   },
-  
+
   // Points & Score
   totalPoints: {
     type: Number,
     default: 0
   },
-  
+
   // Badges earned
   badges: [{
     type: {
@@ -79,13 +79,23 @@ const challengeParticipantSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
-  
+
   // Completion percentage
   completionRate: {
     type: Number,
     default: 0
   },
-  
+
+  // Completion info
+  completionReason: {
+    type: String,
+    maxlength: 500
+  },
+
+  completedAt: {
+    type: Date
+  },
+
   // Joined date
   joinedAt: {
     type: Date,
@@ -99,7 +109,7 @@ const challengeParticipantSchema = new mongoose.Schema({
 challengeParticipantSchema.index({ userId: 1, challengeId: 1 }, { unique: true });
 
 // Calculate completion rate before save
-challengeParticipantSchema.pre('save', function(next) {
+challengeParticipantSchema.pre('save', function (next) {
   const totalDays = this.completedDays + this.missedDays + this.skippedDays;
   if (totalDays > 0) {
     this.completionRate = Math.round((this.completedDays / totalDays) * 100);

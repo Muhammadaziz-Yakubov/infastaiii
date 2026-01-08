@@ -4,7 +4,7 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL ||
                 (import.meta.env.PROD
                   ? 'https://infastaiii.onrender.com' // Your actual Render.com backend URL
-                  : 'http://localhost:5000');
+                  : 'http://localhost:5002');
 
 // Development rejimida API URL ni ko'rsatish
 if (import.meta.env.DEV) {

@@ -47,43 +47,43 @@ function App() {
       <Router>
         <Toaster position="top-right" />
         <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/home" element={<LandingPage />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/banned" element={<BannedPage />} />
-          <Route path="/download" element={<Download />} />
-          
-          {/* Protected routes with Layout */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/tasks" element={<Tasks />} />
-              <Route path="/archive" element={<Archive />} />
-              <Route path="/finance" element={<Finance />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/goals/completed" element={<CompletedGoals />} />
-              <Route path="/goals/:id/tracking" element={<GoalTracking />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-                            <Route path="/challenges" element={<Challenges />} />
-              <Route path="/more" element={<More />} />
-              <Route path="/notifications" element={<Notifications />} />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/home" element={<LandingPage />} />
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/banned" element={<BannedPage />} />
+            <Route path="/download" element={<Download />} />
+
+            {/* Protected routes with Layout */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/tasks" element={<Tasks />} />
+                <Route path="/archive" element={<Archive />} />
+                <Route path="/finance" element={<Finance />} />
+                <Route path="/goals" element={<Goals />} />
+                <Route path="/goals/completed" element={<CompletedGoals />} />
+                <Route path="/goals/:id/tracking" element={<GoalTracking />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/challenges" element={<Challenges />} />
+                <Route path="/more" element={<More />} />
+                <Route path="/notifications" element={<Notifications />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Admin routes */}
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route element={<AdminProtectedRoute />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          </Route>
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminLogin />} />
+            <Route element={<AdminProtectedRoute />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            </Route>
 
-          {/* 404 - Not found */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
+            {/* 404 - Not found */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
         </Suspense>
       </Router>
     </LanguageProvider>

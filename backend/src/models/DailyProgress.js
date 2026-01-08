@@ -9,75 +9,74 @@ const dailyProgressSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  
+
   challengeId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Challenge',
     required: true,
     index: true
   },
-  
+
   participantId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ChallengeParticipant',
     required: true
   },
-  
-  // Day number (1-30)
+
+  // Day number (can extend beyond initial duration)
   dayNumber: {
     type: Number,
     required: true,
-    min: 1,
-    max: 30
+    min: 1
   },
-  
+
   // Date
   date: {
     type: Date,
     required: true
   },
-  
+
   // Status
   status: {
     type: String,
     enum: ['pending', 'done', 'missed', 'skipped'],
     default: 'pending'
   },
-  
+
   // Progress value (for quantity-based tracking)
   progressValue: {
     type: Number,
     default: 0
   },
-  
+
   // Goal value for this day
   goalValue: {
     type: Number,
     required: true
   },
-  
+
   // Time spent (for timer-based tracking)
   timeSpent: {
     type: Number, // in minutes
     default: 0
   },
-  
+
   // Photo proof URL
   proofUrl: {
     type: String
   },
-  
+
   // Notes
   notes: {
     type: String,
     maxlength: 200
   },
-  
+
   // Completed at
   completedAt: {
     type: Date
   },
-  
+
   // Points earned for this day
   pointsEarned: {
     type: Number,
