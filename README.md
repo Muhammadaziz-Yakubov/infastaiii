@@ -1,2 +1,1 @@
-"# uzinfaz" 
-"# infastaiii" 
+# InFast AI - Platformasi

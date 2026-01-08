@@ -13,7 +13,8 @@ import {
   Target,
   CheckCircle2,
   AlertCircle,
-  Rocket
+  Rocket,
+  Timer
 } from 'lucide-react';
 import authService from '../services/authService';
 import { goalsService } from '../services/goalsService';
@@ -34,8 +35,10 @@ const Dashboard = () => {
     finance: { income: 0, expense: 0, balance: 0, thisMonth: 0 },
     recentTasks: [],
     recentGoals: [],
+    recentGoals: [],
     upcomingDeadlines: []
   });
+
 
   useEffect(() => {
     if (!authService.isAuthenticated()) {
@@ -184,12 +187,13 @@ const Dashboard = () => {
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.goals.total}</div>
               <div className="text-xs text-gray-500">Maqsadlar</div>
             </div>
+
           </div>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
         {/* Tasks Card */}
         <Link
           to="/tasks"
@@ -290,6 +294,26 @@ const Dashboard = () => {
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
               Bu oy: {stats.finance.thisMonth >= 0 ? '+' : ''}{(stats.finance.thisMonth / 1000).toFixed(0)}k UZS
+            </div>
+          </div>
+        </Link>
+          <Link
+          to="/pomodoro"
+          className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-white relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Timer className="w-24 h-24 transform rotate-12" />
+          </div>
+          <div className="flex flex-col h-full justify-between relative z-10">
+            <div className="bg-white/20 w-12 h-12 rounded-lg flex items-center justify-center backdrop-blur-sm mb-4">
+              <Timer className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-1">Focus Timer</h3>
+              <p className="text-indigo-100 text-sm">Diqqatni jamlash uchun</p>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/20 transition-colors">
+              Boshlash <ArrowRight className="w-4 h-4" />
             </div>
           </div>
         </Link>
@@ -431,7 +455,8 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-    </div>
+
+    </div >
   );
 };
 

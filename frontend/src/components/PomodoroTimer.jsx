@@ -1,256 +1,242 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Coffee, Timer, CheckCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { useTheme } from '../contexts/ThemeContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, RotateCcw, X, Coffee, Brain, Battery, Volume2, VolumeX, Minimize2, Maximize2 } from 'lucide-react';
 
-const PomodoroTimer = ({ taskId, taskTitle, onComplete }) => {
-  const { isDark } = useTheme();
-  const [minutes, setMinutes] = useState(25);
-  const [seconds, setSeconds] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [isBreak, setIsBreak] = useState(false);
-  const [completedPomodoros, setCompletedPomodoros] = useState(0);
-  const intervalRef = useRef(null);
-  const audioRef = useRef(null);
+const MODES = {
+  FOCUS: { id: 'focus', label: 'Diqqat', time: 25, color: 'text-blue-500', bg: 'bg-blue-500', icon: Brain },
+  SHORT_BREAK: { id: 'short', label: 'Qisqa tanaffus', time: 5, color: 'text-green-500', bg: 'bg-green-500', icon: Coffee },
+  LONG_BREAK: { id: 'long', label: 'Uzun tanaffus', time: 15, color: 'text-purple-500', bg: 'bg-purple-500', icon: Battery },
+};
 
-  const WORK_TIME = 25; // 25 daqiqa ishlash
-  const SHORT_BREAK = 5; // 5 daqiqa qisqa dam olish
-  const LONG_BREAK = 15; // 15 daqiqa uzoq dam olish
+const PomodoroTimer = ({ isOpen, onClose }) => {
+  const [mode, setMode] = useState(MODES.FOCUS);
+  const [timeLeft, setTimeLeft] = useState(mode.time * 60);
+  const [isActive, setIsActive] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [completedSessions, setCompletedSessions] = useState(0);
+
+  const timerRef = useRef(null);
+
+  // Audio for timer completion (simple beep)
+  const playSound = () => {
+    if (isMuted) return;
+    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+    audio.volume = 0.5;
+    audio.play().catch(e => console.log('Audio error:', e));
+  };
 
   useEffect(() => {
-    if (isRunning) {
-      intervalRef.current = setInterval(() => {
-        setSeconds((prev) => {
-          if (prev === 0) {
-            if (minutes === 0) {
-              handleTimerComplete();
-              return 0;
-            }
-            setMinutes((prevMin) => prevMin - 1);
-            return 59;
-          }
-          return prev - 1;
-        });
+    setTimeLeft(mode.time * 60);
+    setIsActive(false);
+  }, [mode]);
+
+  useEffect(() => {
+    if (isActive && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else {
-      clearInterval(intervalRef.current);
-    }
-
-    return () => clearInterval(intervalRef.current);
-  }, [isRunning, minutes]);
-
-  const handleTimerComplete = () => {
-    clearInterval(intervalRef.current);
-    setIsRunning(false);
-    
-    if (!isBreak) {
-      // Ishlash vaqti tugadi
-      setCompletedPomodoros((prev) => prev + 1);
-      toast.success('🎉 Pomodoro yakunlandi! Dam olish vaqti!', {
-        duration: 5000,
-        icon: '☕',
-      });
-      
-      // Qisqa yoki uzoq dam olish
-      const breakTime = completedPomodoros > 0 && completedPomodoros % 4 === 0 ? LONG_BREAK : SHORT_BREAK;
-      setIsBreak(true);
-      setMinutes(breakTime);
-      setSeconds(0);
-      
-      // Browser notification
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Pomodoro yakunlandi!', {
-          body: `${breakTime} daqiqa dam oling`,
-          icon: '/favicon.ico',
-        });
+    } else if (timeLeft === 0) {
+      if (isActive) {
+        playSound();
+        if (mode.id === 'focus') {
+          setCompletedSessions(prev => prev + 1);
+        }
+        setIsActive(false);
       }
-    } else {
-      // Dam olish vaqti tugadi
-      toast.success('✅ Dam olish yakunlandi! Ishga qaytish vaqti!', {
-        duration: 5000,
-        icon: '💪',
-      });
-      setIsBreak(false);
-      setMinutes(WORK_TIME);
-      setSeconds(0);
-      
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('Dam olish yakunlandi!', {
-          body: 'Ishga qaytish vaqti',
-          icon: '/favicon.ico',
-        });
-      }
+      clearInterval(timerRef.current);
     }
-  };
 
-  const toggleTimer = () => {
-    if (!isRunning && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-    setIsRunning(!isRunning);
-  };
+    return () => clearInterval(timerRef.current);
+  }, [isActive, timeLeft, mode, isMuted]);
+
+  const toggleTimer = () => setIsActive(!isActive);
 
   const resetTimer = () => {
-    clearInterval(intervalRef.current);
-    setIsRunning(false);
-    setIsBreak(false);
-    setMinutes(WORK_TIME);
-    setSeconds(0);
+    setIsActive(false);
+    setTimeLeft(mode.time * 60);
   };
 
-  const skipBreak = () => {
-    setIsBreak(false);
-    setMinutes(WORK_TIME);
-    setSeconds(0);
-    setIsRunning(false);
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const progress = isBreak 
-    ? ((WORK_TIME - minutes) / WORK_TIME) * 100
-    : ((WORK_TIME - minutes) / WORK_TIME) * 100;
-
-  const formatTime = (min, sec) => {
-    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+  const calculateProgress = () => {
+    const totalSeconds = mode.time * 60;
+    return ((totalSeconds - timeLeft) / totalSeconds) * 100;
   };
+
+  if (!isOpen) return null;
 
   return (
-    <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-2xl p-6 shadow-xl border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${isBreak ? 'bg-green-500/20 text-green-500' : 'bg-orange-500/20 text-orange-500'}`}>
-            {isBreak ? <Coffee className="w-5 h-5" /> : <Timer className="w-5 h-5" />}
-          </div>
-          <div>
-            <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {isBreak ? 'Dam Olish' : 'Pomodoro Timer'}
-            </h3>
-            {taskTitle && (
-              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                {taskTitle}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {completedPomodoros > 0 && (
-            <div className="flex items-center gap-1">
-              {[...Array(Math.min(completedPomodoros, 4))].map((_, i) => (
-                <CheckCircle key={i} className="w-4 h-4 text-green-500" />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 50 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          width: isMinimized ? 'auto' : '100%',
+          maxWidth: isMinimized ? '300px' : '480px'
+        }}
+        exit={{ opacity: 0, scale: 0.9, y: 50 }}
+        className={`fixed ${isMinimized ? 'bottom-24 right-6' : 'inset-0 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2'} z-50 flex items-center justify-center p-4 md:p-0 pointer-events-none`}
+      >
+        <div className={`pointer-events-auto w-full bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden relative ${isMinimized ? 'p-4' : 'p-8'}`}>
+          {/* Background Gradient Blur */}
+          <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500`}></div>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
 
-      {/* Circular Progress */}
-      <div className="relative w-48 h-48 mx-auto mb-6">
-        <svg className="transform -rotate-90 w-48 h-48">
-          <circle
-            cx="96"
-            cy="96"
-            r="88"
-            stroke={isDark ? '#374151' : '#e5e7eb'}
-            strokeWidth="8"
-            fill="none"
-          />
-          <circle
-            cx="96"
-            cy="96"
-            r="88"
-            stroke={isBreak ? '#10b981' : '#f97316'}
-            strokeWidth="8"
-            fill="none"
-            strokeDasharray={`${2 * Math.PI * 88}`}
-            strokeDashoffset={`${2 * Math.PI * 88 * (1 - progress / 100)}`}
-            strokeLinecap="round"
-            className="transition-all duration-1000"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className={`text-5xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {formatTime(minutes, seconds)}
+          {/* Header Controls */}
+          <div className="flex justify-between items-center mb-6 relative z-10">
+            <div className="flex items-center gap-2">
+              <div className={`p-2 rounded-xl ${mode.bg} bg-opacity-10`}>
+                <mode.icon className={`w-5 h-5 ${mode.color}`} />
+              </div>
+              {!isMinimized && <h3 className="font-bold text-gray-800 dark:text-white text-lg">{mode.label}</h3>}
             </div>
-            <p className={`text-sm mt-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {isBreak ? 'Dam oling' : 'Ishlash vaqti'}
-            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsMuted(!isMuted)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500"
+              >
+                {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+              </button>
+              <button
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500"
+              >
+                {isMinimized ? <Maximize2 size={18} /> : <Minimize2 size={18} />}
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 rounded-full transition-colors text-gray-500"
+              >
+                <X size={18} />
+              </button>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Controls */}
-      <div className="flex items-center justify-center gap-3">
-        <button
-          onClick={toggleTimer}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
-            isRunning
-              ? 'bg-red-500 hover:bg-red-600 text-white'
-              : `bg-gradient-to-r ${isBreak ? 'from-green-500 to-emerald-500' : 'from-orange-500 to-amber-500'} hover:from-orange-600 hover:to-amber-600 text-white`
-          } shadow-lg hover:shadow-xl`}
-        >
-          {isRunning ? (
-            <>
-              <Pause className="w-5 h-5" />
-              To'xtatish
-            </>
+          {!isMinimized ? (
+            /* Full View */
+            <div className="relative z-10">
+              {/* Mode Tabs */}
+              <div className="flex p-1 bg-gray-100 dark:bg-gray-700/50 rounded-xl mb-8">
+                {Object.values(MODES).map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => setMode(m)}
+                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${mode.id === m.id
+                        ? 'bg-white dark:bg-gray-600 text-gray-800 dark:text-white shadow-sm'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      }`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Timer Display */}
+              <div className="flex flex-col items-center justify-center mb-8 relative">
+                {/* Progress Ring */}
+                <svg className="w-64 h-64 transform -rotate-90">
+                  <circle
+                    cx="128"
+                    cy="128"
+                    r="120"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="transparent"
+                    className="text-gray-100 dark:text-gray-700"
+                  />
+                  <circle
+                    cx="128"
+                    cy="128"
+                    r="120"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="transparent"
+                    strokeDasharray={2 * Math.PI * 120}
+                    strokeDashoffset={2 * Math.PI * 120 * (1 - calculateProgress() / 100)}
+                    className={`transition-all duration-1000 ease-linear ${mode.color} drop-shadow-lg`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <motion.div
+                    key={timeLeft}
+                    initial={{ y: 10, opacity: 0.5 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className={`text-6xl font-bold tracking-tighter ${mode.color}`}
+                  >
+                    {formatTime(timeLeft)}
+                  </motion.div>
+                  <p className="text-gray-400 dark:text-gray-500 mt-2 font-medium tracking-widest uppercase text-xs">
+                    {isActive ? 'Jarayon' : 'Pauza'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center justify-center gap-6">
+                <button
+                  onClick={resetTimer}
+                  className="p-4 rounded-2xl bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <RotateCcw size={24} />
+                </button>
+
+                <button
+                  onClick={toggleTimer}
+                  className={`p-6 rounded-3xl ${mode.bg} text-white shadow-lg hover:opacity-90 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center`}
+                >
+                  {isActive ? (
+                    <Pause size={32} fill="currentColor" />
+                  ) : (
+                    <Play size={32} fill="currentColor" className="ml-1" />
+                  )}
+                </button>
+              </div>
+
+              {/* Stats Footer */}
+              <div className="mt-8 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Bugun <span className="font-bold text-gray-800 dark:text-white">{completedSessions}</span> ta pomodoro tugatildi
+                </p>
+              </div>
+            </div>
           ) : (
-            <>
-              <Play className="w-5 h-5" />
-              Boshlash
-            </>
+            /* Minimized View */
+            <div className="flex flex-col items-center z-10 relative">
+              <div className={`text-4xl font-bold tracking-tight ${mode.color} mb-2`}>
+                {formatTime(timeLeft)}
+              </div>
+              <div className="flex gap-3">
+                <button onClick={toggleTimer} className={`p-2 rounded-full ${mode.bg} text-white`}>
+                  {isActive ? <Pause size={16} /> : <Play size={16} />}
+                </button>
+                <button onClick={resetTimer} className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500">
+                  <RotateCcw size={16} />
+                </button>
+              </div>
+            </div>
           )}
-        </button>
-        
-        <button
-          onClick={resetTimer}
-          className="p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors"
-          title="Qayta boshlash"
-        >
-          <RotateCcw className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-        </button>
-
-        {isBreak && (
-          <button
-            onClick={skipBreak}
-            className="px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl font-medium text-gray-700 dark:text-gray-300 transition-colors"
-          >
-            O'tkazib yuborish
-          </button>
-        )}
-      </div>
-
-      {/* Stats */}
-      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {completedPomodoros}
-            </p>
-            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Bajarilgan
-            </p>
-          </div>
-          <div>
-            <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {Math.floor((completedPomodoros * WORK_TIME) / 60)}
-            </p>
-            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Soat ishlash
-            </p>
-          </div>
-          <div>
-            <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {isBreak ? 'Dam olish' : 'Ishlash'}
-            </p>
-            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Holat
-            </p>
-          </div>
         </div>
-      </div>
-    </div>
+
+        {/* Backdrop for mobile/desktop modal mode */}
+        {!isMinimized && (
+          <div
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm -z-10"
+            onClick={onClose}
+          ></div>
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
 export default PomodoroTimer;
-

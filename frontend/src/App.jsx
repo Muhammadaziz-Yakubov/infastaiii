@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminProtectedRoute from './components/Admin/AdminProtectedRoute';
 import Layout from './components/Layout';
+import PomodoroOverlay from './components/PomodoroOverlay';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 // Loading component
@@ -35,6 +36,7 @@ const Challenges = lazy(() => import('./pages/Challenges'));
 const More = lazy(() => import('./pages/More'));
 const Download = lazy(() => import('./pages/Download'));
 const Notifications = lazy(() => import('./pages/Notifications'));
+const Pomodoro = lazy(() => import('./pages/Pomodoro'));
 
 // Admin pages
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
@@ -46,6 +48,7 @@ function App() {
     <LanguageProvider>
       <Router>
         <Toaster position="top-right" />
+        <PomodoroOverlay />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public routes */}
@@ -58,6 +61,7 @@ function App() {
 
             {/* Protected routes with Layout */}
             <Route element={<ProtectedRoute />}>
+              <Route path="/pomodoro" element={<Pomodoro />} />
               <Route element={<Layout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -70,6 +74,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/challenges" element={<Challenges />} />
+                <Route path="/more" element={<More />} />
                 <Route path="/more" element={<More />} />
                 <Route path="/notifications" element={<Notifications />} />
               </Route>
