@@ -32,6 +32,14 @@ const financeSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  categoryIcon: {
+    type: String,
+    default: 'MoreHorizontal'
+  },
+  categoryColor: {
+    type: String,
+    default: '#64748b'
+  },
   description: {
     type: String,
     trim: true

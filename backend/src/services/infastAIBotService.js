@@ -649,6 +649,8 @@ class InFastAIBotService {
     
     let type = 'general';
     let category = 'other';
+    let categoryIcon = 'MoreHorizontal';
+    let categoryColor = '#64748b';
     let amount = 0;
     let financeType = 'expense'; // default
     let currency = 'so\'m'; // default
@@ -679,16 +681,28 @@ class InFastAIBotService {
       // Transport - eng aniq keywordlar birinchi
       if (lowerText.includes('taksi')) {
         category = 'transport';
+        categoryIcon = 'Car';
+        categoryColor = '#4ECDC4';
       } else if (lowerText.includes('marshrutka')) {
         category = 'transport';
+        categoryIcon = 'Car';
+        categoryColor = '#4ECDC4';
       } else if (lowerText.includes('avtobus')) {
         category = 'transport';
+        categoryIcon = 'Car';
+        categoryColor = '#4ECDC4';
       } else if (lowerText.includes('metro')) {
         category = 'transport';
+        categoryIcon = 'Car';
+        categoryColor = '#4ECDC4';
       } else if (lowerText.includes('yolovchi')) {
         category = 'transport';
+        categoryIcon = 'Car';
+        categoryColor = '#4ECDC4';
       } else if (lowerText.includes('transport')) {
         category = 'transport';
+        categoryIcon = 'Car';
+        categoryColor = '#4ECDC4';
       } 
       // Qimor o'yinlari - juda aniq keywordlar
       else if (lowerText.includes('tikib')) {
@@ -706,57 +720,57 @@ class InFastAIBotService {
       }
       // Taom
       else if (lowerText.includes('restoran')) {
-        category = 'food';
+        category = 'Food';
       } else if (lowerText.includes('kafé') || lowerText.includes('cafe')) {
-        category = 'food';
+        category = 'Food';
       } else if (lowerText.includes('oshxona')) {
-        category = 'food';
+        category = 'Food';
       } else if (lowerText.includes('ovqat')) {
-        category = 'food';
+        category = 'Food';
       } else if (lowerText.includes('taom')) {
-        category = 'food';
+        category = 'Food';
       } else if (lowerText.includes('market')) {
-        category = 'food';
+        category = 'Food';
       }
       // Shopping
       else if (lowerText.includes('magazin')) {
-        category = 'shopping';
+        category = 'Shopping';
       } else if (lowerText.includes('do\'kon')) {
-        category = 'shopping';
+        category = 'Shopping';
       } else if (lowerText.includes('sotib')) {
-        category = 'shopping';
+        category = 'Shopping';
       } else if (lowerText.includes('olish')) {
-        category = 'shopping';
+        category = 'Shopping';
       } else if (lowerText.includes('shopping')) {
-        category = 'shopping';
+        category = 'Shopping';
       } else if (lowerText.includes('savdo')) {
-        category = 'shopping';
+        category = 'Shopping';
       }
       // Xizmatlar
       else if (lowerText.includes('ekspert')) {
-        category = 'services';
+        category = 'Services';
       } else if (lowerText.includes('konsultatsiya')) {
-        category = 'services';
+        category = 'Services';
       } else if (lowerText.includes('yurist')) {
-        category = 'services';
+        category = 'Services';
       } else if (lowerText.includes('hisobchi')) {
-        category = 'services';
+        category = 'Services';
       } else if (lowerText.includes('xizmat')) {
-        category = 'services';
+        category = 'Services';
       }
       // Kommunal to'lovlar
       else if (lowerText.includes('kommunal')) {
-        category = 'utilities';
+        category = 'Utilities';
       } else if (lowerText.includes('internet')) {
-        category = 'utilities';
+        category = 'Utilities';
       } else if (lowerText.includes('telefon')) {
-        category = 'utilities';
+        category = 'Utilities';
       } else if (lowerText.includes('elektr')) {
-        category = 'utilities';
+        category = 'Utilities';
       } else if (lowerText.includes('gaz')) {
-        category = 'utilities';
+        category = 'Utilities';
       } else if (lowerText.includes('suv')) {
-        category = 'utilities';
+        category = 'Utilities';
       }
       // Uy-joy
       else if (lowerText.includes('ijara')) {
@@ -969,7 +983,10 @@ class InFastAIBotService {
       type: type,
       financeType: financeType,
       category: category,
+      categoryIcon: categoryIcon,
+      categoryColor: categoryColor,
       amount: amount,
+      currency: currency,
       text: text
     };
   }
@@ -984,6 +1001,8 @@ class InFastAIBotService {
         type: analysis.financeType,
         amount: Math.abs(analysis.amount),
         category: analysis.category,
+        categoryIcon: analysis.categoryIcon,
+        categoryColor: analysis.categoryColor,
         description: analysis.text,
         date: new Date()
       });

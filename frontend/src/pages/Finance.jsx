@@ -1226,8 +1226,9 @@ const Finance = () => {
                     <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl shadow-md lg:shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
                         <div className="divide-y divide-gray-100 dark:divide-gray-700">
                             {filteredTransactions.map((transaction) => {
-                                const categoryData = categories.find(c => c.name === transaction.category);
-                                const Icon = getCategoryIcon(categoryData?.icon || 'DollarSign');
+                                // Database dan olingan icon va color, agar bo'lmasa default
+                                const Icon = getCategoryIcon(transaction.categoryIcon || 'DollarSign');
+                                const categoryColor = transaction.categoryColor || '#64748b';
 
                                 return (
                                     <div
@@ -1240,8 +1241,8 @@ const Finance = () => {
                                             <div
                                                 className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105"
                                                 style={{
-                                                    backgroundColor: categoryData?.color + '20',
-                                                    color: categoryData?.color
+                                                    backgroundColor: categoryColor + '20',
+                                                    color: categoryColor
                                                 }}
                                             >
                                                 <Icon className="w-6 h-6 lg:w-7 lg:h-7" />
