@@ -675,48 +675,229 @@ class InFastAIBotService {
         currency = 'yevro';
       }
       
-      // Kategoriyani aniqlash - to'liq kategoriyalar ro'yxati
+      // Kategoriyani aniqlash - avtomatik tanlash (eng muhim keywordlar birinchi)
+      // Transport - eng aniq keywordlar birinchi
       if (lowerText.includes('taksi')) {
         category = 'transport';
-      } else if (lowerText.includes('transport') || lowerText.includes('avtobus') || lowerText.includes('metro') || lowerText.includes('marshrutka') || lowerText.includes('yolovchi')) {
+      } else if (lowerText.includes('marshrutka')) {
         category = 'transport';
-      } else if (lowerText.includes('market') || lowerText.includes('taom') || lowerText.includes('ovqat') || lowerText.includes('oshxona') || lowerText.includes('restoran') || lowerText.includes('kafé') || lowerText.includes('cafe')) {
-        category = 'food';
-      } else if (lowerText.includes('olish') || lowerText.includes('shopping') || lowerText.includes('sotib') || lowerText.includes('magazin') || lowerText.includes('do\'kon') || lowerText.includes('savdo')) {
-        category = 'shopping';
-      } else if (lowerText.includes('kommunal') || lowerText.includes('internet') || lowerText.includes('telefon') || lowerText.includes('elektr') || lowerText.includes('gaz') || lowerText.includes('suv')) {
-        category = 'utilities';
-      } else if (lowerText.includes('tikib') || lowerText.includes('yutqizib') || lowerText.includes('qimor') || lowerText.includes('kazino') || lowerText.includes('bukmeker') || lowerText.includes('lotereya')) {
+      } else if (lowerText.includes('avtobus')) {
+        category = 'transport';
+      } else if (lowerText.includes('metro')) {
+        category = 'transport';
+      } else if (lowerText.includes('yolovchi')) {
+        category = 'transport';
+      } else if (lowerText.includes('transport')) {
+        category = 'transport';
+      } 
+      // Qimor o'yinlari - juda aniq keywordlar
+      else if (lowerText.includes('tikib')) {
         category = 'gambling';
-      } else if (lowerText.includes('ekspert') || lowerText.includes('konsultatsiya') || lowerText.includes('xizmat') || lowerText.includes('yurist') || lowerText.includes('hisobchi')) {
+      } else if (lowerText.includes('yutqizib')) {
+        category = 'gambling';
+      } else if (lowerText.includes('kazino')) {
+        category = 'gambling';
+      } else if (lowerText.includes('bukmeker')) {
+        category = 'gambling';
+      } else if (lowerText.includes('lotereya')) {
+        category = 'gambling';
+      } else if (lowerText.includes('qimor')) {
+        category = 'gambling';
+      }
+      // Taom
+      else if (lowerText.includes('restoran')) {
+        category = 'food';
+      } else if (lowerText.includes('kafé') || lowerText.includes('cafe')) {
+        category = 'food';
+      } else if (lowerText.includes('oshxona')) {
+        category = 'food';
+      } else if (lowerText.includes('ovqat')) {
+        category = 'food';
+      } else if (lowerText.includes('taom')) {
+        category = 'food';
+      } else if (lowerText.includes('market')) {
+        category = 'food';
+      }
+      // Shopping
+      else if (lowerText.includes('magazin')) {
+        category = 'shopping';
+      } else if (lowerText.includes('do\'kon')) {
+        category = 'shopping';
+      } else if (lowerText.includes('sotib')) {
+        category = 'shopping';
+      } else if (lowerText.includes('olish')) {
+        category = 'shopping';
+      } else if (lowerText.includes('shopping')) {
+        category = 'shopping';
+      } else if (lowerText.includes('savdo')) {
+        category = 'shopping';
+      }
+      // Xizmatlar
+      else if (lowerText.includes('ekspert')) {
         category = 'services';
-      } else if (lowerText.includes('uy') || lowerText.includes('ijara') || lowerText.includes('kvartira') || lowerText.includes('uy-joy') || lowerText.includes('ipoteka')) {
+      } else if (lowerText.includes('konsultatsiya')) {
+        category = 'services';
+      } else if (lowerText.includes('yurist')) {
+        category = 'services';
+      } else if (lowerText.includes('hisobchi')) {
+        category = 'services';
+      } else if (lowerText.includes('xizmat')) {
+        category = 'services';
+      }
+      // Kommunal to'lovlar
+      else if (lowerText.includes('kommunal')) {
+        category = 'utilities';
+      } else if (lowerText.includes('internet')) {
+        category = 'utilities';
+      } else if (lowerText.includes('telefon')) {
+        category = 'utilities';
+      } else if (lowerText.includes('elektr')) {
+        category = 'utilities';
+      } else if (lowerText.includes('gaz')) {
+        category = 'utilities';
+      } else if (lowerText.includes('suv')) {
+        category = 'utilities';
+      }
+      // Uy-joy
+      else if (lowerText.includes('ijara')) {
         category = 'housing';
-      } else if (lowerText.includes('sog\'liq') || lowerText.includes('shifokor') || lowerText.includes('dorixona') || lowerText.includes('kasalxona') || lowerText.includes('tibbiyot')) {
+      } else if (lowerText.includes('kvartira')) {
+        category = 'housing';
+      } else if (lowerText.includes('ipoteka')) {
+        category = 'housing';
+      } else if (lowerText.includes('uy-joy')) {
+        category = 'housing';
+      } else if (lowerText.includes('uy')) {
+        category = 'housing';
+      }
+      // Sog'liq
+      else if (lowerText.includes('dorixona')) {
         category = 'health';
-      } else if (lowerText.includes('ta\'lim') || lowerText.includes('o\'qish') || lowerText.includes('kurs') || lowerText.includes('maktab') || lowerText.includes('universitet')) {
+      } else if (lowerText.includes('kasalxona')) {
+        category = 'health';
+      } else if (lowerText.includes('tibbiyot')) {
+        category = 'health';
+      } else if (lowerText.includes('shifokor')) {
+        category = 'health';
+      } else if (lowerText.includes('sog\'liq')) {
+        category = 'health';
+      }
+      // Ta'lim
+      else if (lowerText.includes('universitet')) {
         category = 'education';
-      } else if (lowerText.includes('kiyim') || lowerText.includes('poyabzal') || lowerText.includes('kurtka') || lowerText.includes('libos')) {
+      } else if (lowerText.includes('maktab')) {
+        category = 'education';
+      } else if (lowerText.includes('kurs')) {
+        category = 'education';
+      } else if (lowerText.includes('o\'qish')) {
+        category = 'education';
+      } else if (lowerText.includes('ta\'lim')) {
+        category = 'education';
+      }
+      // Kiyim-kechak
+      else if (lowerText.includes('poyabzal')) {
         category = 'clothing';
-      } else if (lowerText.includes('avtomobil') || lowerText.includes('mashina') || lowerText.includes('benzin') || lowerText.includes('yog\'') || lowerText.includes('tezlik')) {
+      } else if (lowerText.includes('kurtka')) {
+        category = 'clothing';
+      } else if (lowerText.includes('libos')) {
+        category = 'clothing';
+      } else if (lowerText.includes('kiyim')) {
+        category = 'clothing';
+      }
+      // Avtomobil
+      else if (lowerText.includes('benzin')) {
         category = 'vehicle';
-      } else if (lowerText.includes('sayohat') || lowerText.includes('dam olish') || lowerText.includes('mehmonxona') || lowerText.includes('aviachipta')) {
+      } else if (lowerText.includes('yog\'')) {
+        category = 'vehicle';
+      } else if (lowerText.includes('tezlik')) {
+        category = 'vehicle';
+      } else if (lowerText.includes('mashina')) {
+        category = 'vehicle';
+      } else if (lowerText.includes('avtomobil')) {
+        category = 'vehicle';
+      }
+      // Sayohat
+      else if (lowerText.includes('mehmonxona')) {
         category = 'travel';
-      } else if (lowerText.includes('sovg\'a') || lowerText.includes('bayram') || lowerText.includes('tug\'ilgan kun') || lowerText.includes('to\'y')) {
+      } else if (lowerText.includes('aviachipta')) {
+        category = 'travel';
+      } else if (lowerText.includes('dam olish')) {
+        category = 'travel';
+      } else if (lowerText.includes('sayohat')) {
+        category = 'travel';
+      }
+      // Sovg'alar
+      else if (lowerText.includes('tug\'ilgan kun')) {
         category = 'gifts';
-      } else if (lowerText.includes('sport') || lowerText.includes('fitnes') || lowerText.includes('zal') || lowerText.includes('badiy tana')) {
+      } else if (lowerText.includes('to\'y')) {
+        category = 'gifts';
+      } else if (lowerText.includes('bayram')) {
+        category = 'gifts';
+      } else if (lowerText.includes('sovg\'a')) {
+        category = 'gifts';
+      }
+      // Sport
+      else if (lowerText.includes('fitnes')) {
         category = 'sports';
-      } else if (lowerText.includes('maosh') || lowerText.includes('ish haqi') || lowerText.includes('oylik') || lowerText.includes('bonus') || lowerText.includes('premium')) {
+      } else if (lowerText.includes('zal')) {
+        category = 'sports';
+      } else if (lowerText.includes('badiy tana')) {
+        category = 'sports';
+      } else if (lowerText.includes('sport')) {
+        category = 'sports';
+      }
+      // Daromad kategoriyalari
+      else if (lowerText.includes('bonus')) {
         category = 'salary';
-      } else if (lowerText.includes('biznes') || lowerText.includes('tadbirkorlik') || lowerText.includes('savdo') || lowerText.includes('foyda')) {
+      } else if (lowerText.includes('premium')) {
+        category = 'salary';
+      } else if (lowerText.includes('oylik')) {
+        category = 'salary';
+      } else if (lowerText.includes('ish haqi')) {
+        category = 'salary';
+      } else if (lowerText.includes('maosh')) {
+        category = 'salary';
+      }
+      else if (lowerText.includes('tadbirkorlik')) {
         category = 'business';
-      } else if (lowerText.includes('investitsiya') || lowerText.includes('aksiya') || lowerText.includes('valyuta') || lowerText.includes('kripto')) {
+      } else if (lowerText.includes('foyda')) {
+        category = 'business';
+      } else if (lowerText.includes('savdo')) {
+        category = 'business';
+      } else if (lowerText.includes('biznes')) {
+        category = 'business';
+      }
+      else if (lowerText.includes('aksiya')) {
         category = 'investment';
-      } else if (lowerText.includes('qarz') || lowerText.includes('kredit') || lowerText.includes('foiz') || lowerText.includes('nasiya')) {
+      } else if (lowerText.includes('valyuta')) {
+        category = 'investment';
+      } else if (lowerText.includes('kripto')) {
+        category = 'investment';
+      } else if (lowerText.includes('investitsiya')) {
+        category = 'investment';
+      }
+      // Qarz kredit
+      else if (lowerText.includes('foiz')) {
         category = 'debt';
-      } else if (lowerText.includes('oilaviy') || lowerText.includes('oilaviya') || lowerText.includes('bola') || lowerText.includes('farzand')) {
+      } else if (lowerText.includes('nasiya')) {
+        category = 'debt';
+      } else if (lowerText.includes('kredit')) {
+        category = 'debt';
+      } else if (lowerText.includes('qarz')) {
+        category = 'debt';
+      }
+      // Oilaviy
+      else if (lowerText.includes('farzand')) {
         category = 'family';
-      } else {
+      } else if (lowerText.includes('bola')) {
+        category = 'family';
+      } else if (lowerText.includes('oilaviya')) {
+        category = 'family';
+      } else if (lowerText.includes('oilaviy')) {
+        category = 'family';
+      }
+      // Agar hech qaysi kategoriya topilmasa - "other"
+      else {
         category = 'other';
       }
       

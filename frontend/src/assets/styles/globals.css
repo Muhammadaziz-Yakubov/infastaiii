@@ -10,8 +10,6 @@
   --border: 215 20% 65%; /* Border color for light mode */
 }
 
-/* Global.css yoki index.css fayliga quyidagini qo'shing */
-
 /* ===== DARK MODE BASE STYLES ===== */
 :root {
   --bg-primary: #ffffff;
@@ -36,6 +34,7 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 /* ===== SIDEBAR DARK MODE ===== */
@@ -50,10 +49,7 @@ body {
   border-color: var(--border-color);
 }
 
-.dark .bg-white {
-  background-color: #1e293b !important;
-}
-
+/* ===== TEXT COLORS DARK MODE OVERRIDE ===== */
 .dark .text-gray-900 {
   color: #f8fafc !important;
 }
@@ -78,6 +74,11 @@ body {
   color: #94a3b8 !important;
 }
 
+/* ===== BACKGROUND COLORS DARK MODE OVERRIDE ===== */
+.dark .bg-white {
+  background-color: #1e293b !important;
+}
+
 .dark .bg-gray-50 {
   background-color: #0f172a !important;
 }
@@ -90,12 +91,177 @@ body {
   background-color: #334155 !important;
 }
 
+.dark .bg-gray-300 {
+  background-color: #475569 !important;
+}
+
+/* ===== BORDER COLORS DARK MODE OVERRIDE ===== */
 .dark .border-gray-200 {
   border-color: #334155 !important;
 }
 
 .dark .border-gray-300 {
   border-color: #475569 !important;
+}
+
+.dark .border-gray-400 {
+  border-color: #6b7280 !important;
+}
+
+/* ===== HOVER STATES ===== */
+.dark .hover\:bg-gray-100:hover {
+  background-color: #334155 !important;
+}
+
+.dark .hover\:bg-gray-200:hover {
+  background-color: #475569 !important;
+}
+
+.dark .hover\:bg-gray-50:hover {
+  background-color: #1e293b !important;
+}
+
+/* ===== INPUT FIELDS ===== */
+.dark input, .dark textarea {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+.dark input:focus, .dark textarea:focus {
+  border-color: #3b82f6 !important;
+}
+
+/* ===== BUTTONS ===== */
+.dark .bg-blue-500:hover {
+  background-color: #2563eb !important;
+}
+
+.dark .bg-green-500:hover {
+  background-color: #059669 !important;
+}
+
+.dark .bg-red-500:hover {
+  background-color: #dc2626 !important;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* ===== UTILITY CLASSES ===== */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .text-responsive {
+    font-size: 0.875rem;
+  }
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+}
+
+/* ===== LOADING STATES ===== */
+.loading-spinner {
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+.dark .loading-spinner {
+  border-color: #374151;
+  border-top-color: #3b82f6;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== ERROR STATES ===== */
+.error-text {
+  color: #ef4444;
+}
+
+.dark .error-text {
+  color: #f87171;
+}
+
+/* ===== SUCCESS STATES ===== */
+.success-text {
+  color: #10b981;
+}
+
+.dark .success-text {
+  color: #34d399;
 }
 
 .dark .border-gray-700 {
