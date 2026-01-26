@@ -88,7 +88,7 @@ const FAB = ({ onAddTask, onAddFinance, onAddDebt, onAddGoal }) => {
       </div>
 
 
-      <style jsx>{`
+      <style>{`
         @keyframes slideUp {
           from {
             opacity: 0;

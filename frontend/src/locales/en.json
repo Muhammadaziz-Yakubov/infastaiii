@@ -129,6 +129,7 @@
     "settings": "Settings",
     "profile": "Profile",
     "notifications": "Notifications",
+    "family": "Family Manager",
     "more": "More"
   },
   "settings": {
@@ -187,4 +188,3 @@
     "streak": "Streak"
   }
 }
-

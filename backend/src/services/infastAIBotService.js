@@ -29,6 +29,7 @@ class InFastAIBotService {
     return {
       keyboard: [
         [{ text: 'Statistika' }],
+        [{ text: '🎤 Ovozli komanda' }],
         [{ text: 'Ilovaga otish', web_app: { url: this.webAppUrl } }]
       ],
       resize_keyboard: true
@@ -75,11 +76,16 @@ class InFastAIBotService {
     
     const botInfo = await this.bot.getMe();
     console.log('InFast AI bot connected:', botInfo.username);
+    console.log('Bot mode:', process.env.NODE_ENV === 'production' ? 'webhook' : 'polling');
 
+    // Faqat production da webhook o'rnatish
     if (process.env.NODE_ENV === 'production') {
       const baseUrl = process.env.RENDER_EXTERNAL_URL || 'https://infastaiii.onrender.com';
       await this.bot.deleteWebHook();
       await this.bot.setWebHook(baseUrl + '/api/infast-ai/webhook');
+      console.log('Webhook set to:', baseUrl + '/api/infast-ai/webhook');
+    } else {
+      console.log('Using polling mode for development');
     }
 
     this.setupEventHandlers();
@@ -151,6 +157,67 @@ class InFastAIBotService {
           return;
         }
         await this.bot.sendMessage(chatId, 'Qaysi statistikani kormoqchisiz?', { reply_markup: this.getStatsKeyboard() });
+      } else if (text === '🎤 Ovozli komanda') {
+        if (!user) {
+          await this.bot.sendMessage(chatId, 'Avval hisobni ulang!', { reply_markup: this.getMainKeyboard(false) });
+          return;
+        }
+        await this.bot.sendMessage(chatId, 
+          '🎤 Iltimos, ovozli xabaringizni yuboring:\n\n' +
+          'Misol uchun:\n' +
+          '• "Bugun taksiga 25 ming so\'m sarfladim"\n' +
+          '• "Ertadan kotta vazifa qilishim kerak"\n' +
+          '• "Yil oxiriga qadar 1 million yig\'ishim kerak"\n\n' +
+          '📞 Mikrofon tugmasini bosib, gapiring!',
+          { reply_markup: { remove_keyboard: true } }
+        );
+        
+        // 5 soniyadan keyin asosiy keyboardni qaytarish
+        setTimeout(async () => {
+          await this.bot.sendMessage(chatId, 'Asosiy menyu:', { 
+            reply_markup: this.getMainKeyboard(true) 
+          });
+        }, 5000);
+      }
+    });
+
+    // Ovozli xabarlar handler
+    this.bot.on('voice', async (msg) => {
+      try {
+        console.log('🎤 Voice message received:', {
+          chatId: msg.chat.id,
+          voiceId: msg.voice.file_id,
+          duration: msg.voice.duration,
+          mimeType: msg.voice.mime_type
+        });
+        
+        const chatId = msg.chat.id;
+        const user = await User.findOne({ telegramChatId: chatId.toString() });
+        
+        if (!user) {
+          console.log('❌ User not found for chatId:', chatId);
+          await this.bot.sendMessage(chatId, 'Avval hisobni ulang!', { reply_markup: this.getMainKeyboard(false) });
+          return;
+        }
+
+        await this.bot.sendMessage(chatId, '🎤 Ovozli xabar qabul qilindi, tahlil qilinmoqda...');
+        
+        // Ovozli faylni yuklab olish
+        const voiceFile = await this.bot.getFile(msg.voice.file_id);
+        const voiceUrl = `https://api.telegram.org/file/bot${this.botToken}/${voiceFile.file_path}`;
+        
+        console.log('📁 Voice file URL:', voiceUrl);
+        
+        // Ovozni matnga aylantirish va tahlil qilish
+        const analysisResult = await this.processVoiceCommand(voiceUrl, user._id);
+        
+        await this.bot.sendMessage(chatId, analysisResult.message, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+        
+      } catch (error) {
+        console.error('❌ Voice command error:', error);
+        await this.bot.sendMessage(msg.chat.id, '❌ Ovozli xabarni tahlil qilishda xatolik yuz berdi.\n\nXatolik: ' + error.message);
       }
     });
 
@@ -523,13 +590,327 @@ class InFastAIBotService {
     }
   }
 
-  formatCurrency(amount) {
-    return new Intl.NumberFormat('uz-UZ').format(amount || 0) + ' som';
+  formatCurrency(amount, currency = 'so\'m') {
+    if (currency === 'dollar') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount || 0);
+    } else if (currency === 'yevro') {
+      return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount || 0);
+    } else {
+      return new Intl.NumberFormat('uz-UZ').format(amount || 0) + ' som';
+    }
   }
 
   getDaysRemaining(date) {
     if (!date) return Infinity;
     return Math.ceil((new Date(date) - new Date()) / (1000 * 60 * 60 * 24));
+  }
+
+  async processVoiceCommand(voiceUrl, userId) {
+    try {
+      // 1. Ovozni matnga aylantirish
+      const transcription = await this.transcribeAudio(voiceUrl);
+      
+      // 2. Matnni tahlil qilish
+      const analysis = await this.analyzeText(transcription);
+      
+      // 3. Moliyaga saqlash (agar moliya bo'lsa)
+      let result = null;
+      if (analysis.type === 'finance') {
+        result = await this.saveFinance(analysis, userId);
+      } else {
+        result = { type: 'General', details: 'Moliya emas' };
+      }
+      
+      return {
+        success: true,
+        message: `✅ Qabul qilindi!\n\n📝 Matn: "${transcription}"\n🎯 Turi: ${result.type}\n${result.details}`
+      };
+    } catch (error) {
+      console.error('Voice command processing error:', error);
+      return {
+        success: false,
+        message: '❌ Ovozli komandani qayta ishlashda xatolik yuz berdi.'
+      };
+    }
+  }
+
+  // Matn tahlili - faqat moliya uchun
+  async analyzeText(text) {
+    console.log('🧠 Analyzing text for finance...');
+    console.log('📝 Input text:', text);
+    
+    const lowerText = text.toLowerCase();
+    
+    // Moliya kalit so'zlari
+    const financeKeywords = ['so\'m', 'ming', 'pul', 'sarfladim', 'xarajat', 'taksi', 'market', 'olish', 'berdim', 'oldim', 'daromad', 'yigirma', 'besh', 'ellik', 'o\'ttiz', 'dollar', 'yuz'];
+      
+    // Daromad kalit so'zlari
+    const incomeKeywords = ['oldim', 'topdim', 'daromad', 'haqiqiladim', 'qildim', 'oylik', 'yutqizib qo\'ydim'];
+    
+    let type = 'general';
+    let category = 'other';
+    let amount = 0;
+    let financeType = 'expense'; // default
+    let currency = 'so\'m'; // default
+    
+    // Moliya kalit so'zlarni tekshirish
+    const financeMatches = financeKeywords.filter(keyword => lowerText.includes(keyword));
+    const incomeMatches = incomeKeywords.filter(keyword => lowerText.includes(keyword));
+    
+    console.log(`💰 Finance matches: ${financeMatches.length}`);
+    console.log(`💵 Income matches: ${incomeMatches.length}`);
+    
+    if (financeMatches.length > 0 || incomeMatches.length > 0) {
+      type = 'finance';
+      
+      // Daromad yoki xarajat
+      if (incomeMatches.length > 0) {
+        financeType = 'income';
+      }
+      
+      // Valyutani aniqlash
+      if (lowerText.includes('dollar')) {
+        currency = 'dollar';
+      } else if (lowerText.includes('yevro') || lowerText.includes('euro')) {
+        currency = 'yevro';
+      }
+      
+      // Kategoriyani aniqlash - to'liq kategoriyalar ro'yxati
+      if (lowerText.includes('taksi')) {
+        category = 'transport';
+      } else if (lowerText.includes('transport') || lowerText.includes('avtobus') || lowerText.includes('metro') || lowerText.includes('marshrutka') || lowerText.includes('yolovchi')) {
+        category = 'transport';
+      } else if (lowerText.includes('market') || lowerText.includes('taom') || lowerText.includes('ovqat') || lowerText.includes('oshxona') || lowerText.includes('restoran') || lowerText.includes('kafé') || lowerText.includes('cafe')) {
+        category = 'food';
+      } else if (lowerText.includes('olish') || lowerText.includes('shopping') || lowerText.includes('sotib') || lowerText.includes('magazin') || lowerText.includes('do\'kon') || lowerText.includes('savdo')) {
+        category = 'shopping';
+      } else if (lowerText.includes('kommunal') || lowerText.includes('internet') || lowerText.includes('telefon') || lowerText.includes('elektr') || lowerText.includes('gaz') || lowerText.includes('suv')) {
+        category = 'utilities';
+      } else if (lowerText.includes('tikib') || lowerText.includes('yutqizib') || lowerText.includes('qimor') || lowerText.includes('kazino') || lowerText.includes('bukmeker') || lowerText.includes('lotereya')) {
+        category = 'gambling';
+      } else if (lowerText.includes('ekspert') || lowerText.includes('konsultatsiya') || lowerText.includes('xizmat') || lowerText.includes('yurist') || lowerText.includes('hisobchi')) {
+        category = 'services';
+      } else if (lowerText.includes('uy') || lowerText.includes('ijara') || lowerText.includes('kvartira') || lowerText.includes('uy-joy') || lowerText.includes('ipoteka')) {
+        category = 'housing';
+      } else if (lowerText.includes('sog\'liq') || lowerText.includes('shifokor') || lowerText.includes('dorixona') || lowerText.includes('kasalxona') || lowerText.includes('tibbiyot')) {
+        category = 'health';
+      } else if (lowerText.includes('ta\'lim') || lowerText.includes('o\'qish') || lowerText.includes('kurs') || lowerText.includes('maktab') || lowerText.includes('universitet')) {
+        category = 'education';
+      } else if (lowerText.includes('kiyim') || lowerText.includes('poyabzal') || lowerText.includes('kurtka') || lowerText.includes('libos')) {
+        category = 'clothing';
+      } else if (lowerText.includes('avtomobil') || lowerText.includes('mashina') || lowerText.includes('benzin') || lowerText.includes('yog\'') || lowerText.includes('tezlik')) {
+        category = 'vehicle';
+      } else if (lowerText.includes('sayohat') || lowerText.includes('dam olish') || lowerText.includes('mehmonxona') || lowerText.includes('aviachipta')) {
+        category = 'travel';
+      } else if (lowerText.includes('sovg\'a') || lowerText.includes('bayram') || lowerText.includes('tug\'ilgan kun') || lowerText.includes('to\'y')) {
+        category = 'gifts';
+      } else if (lowerText.includes('sport') || lowerText.includes('fitnes') || lowerText.includes('zal') || lowerText.includes('badiy tana')) {
+        category = 'sports';
+      } else if (lowerText.includes('maosh') || lowerText.includes('ish haqi') || lowerText.includes('oylik') || lowerText.includes('bonus') || lowerText.includes('premium')) {
+        category = 'salary';
+      } else if (lowerText.includes('biznes') || lowerText.includes('tadbirkorlik') || lowerText.includes('savdo') || lowerText.includes('foyda')) {
+        category = 'business';
+      } else if (lowerText.includes('investitsiya') || lowerText.includes('aksiya') || lowerText.includes('valyuta') || lowerText.includes('kripto')) {
+        category = 'investment';
+      } else if (lowerText.includes('qarz') || lowerText.includes('kredit') || lowerText.includes('foiz') || lowerText.includes('nasiya')) {
+        category = 'debt';
+      } else if (lowerText.includes('oilaviy') || lowerText.includes('oilaviya') || lowerText.includes('bola') || lowerText.includes('farzand')) {
+        category = 'family';
+      } else {
+        category = 'other';
+      }
+      
+      // Raqamlarni ajratib olish - to'g'rilangan versiya
+      const numberWords = {
+        'bir': 1, 'ikki': 2, 'uch': 3, 'to\'rt': 4, 'besh': 5, 'olti': 6, 'yetti': 7, 'sakkiz': 8, 'to\'qqiz': 9, 'o\'n': 10,
+        'yigirma': 20, 'o\'ttiz': 30, 'qirq': 40, 'ellik': 50, 'oltmish': 60, 'yetmish': 70, 'sakson': 80, 'to\'qson': 90, 'yuz': 100
+      };
+      
+      let totalAmount = 0;
+      
+      // Matndan raqamlarni ajratib olish
+      const cleanText = text.replace(/[^0-9a-z'ʻ\s]/gi, ' ').toLowerCase();
+      
+      // O'zbek sonlarini raqamlarga aylantirish
+      let processedText = cleanText;
+      for (let [word, num] of Object.entries(numberWords)) {
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        processedText = processedText.replace(regex, num);
+      }
+      
+      console.log('🔍 Processed text:', processedText);
+      
+      // Raqamlarni topish - "ellik besh ming" -> "50 55 ming"
+      const words = processedText.split(/\s+/);
+      console.log('🔢 Words:', words);
+      
+      let i = 0;
+      while (i < words.length) {
+        const word = words[i];
+        
+        if (/^\d+$/.test(word)) {
+          const num = parseInt(word);
+          
+          // Keyingi so'z "ming" yoki "million" bo'lishini tekshirish
+          if (i + 1 < words.length) {
+            const nextWord = words[i + 1];
+            
+            if (nextWord === 'ming' || nextWord === '1000') {
+              totalAmount += num * 1000;
+              i += 2; // "ming" so'zini o'tkazib yuborish
+              console.log(`💰 ${num} ming -> ${num * 1000}`);
+            } else if (nextWord === 'million' || nextWord === '1000000') {
+              totalAmount += num * 1000000;
+              i += 2; // "million" so'zini o'tkazib yuborish
+              console.log(`💰 ${num} million -> ${num * 1000000}`);
+            } else {
+              totalAmount += num;
+              i++;
+              console.log(`💰 ${num} -> ${num}`);
+            }
+          } else {
+            totalAmount += num;
+            i++;
+            console.log(`💰 ${num} -> ${num}`);
+          }
+        } else {
+          i++;
+        }
+      }
+      
+      amount = totalAmount;
+      console.log(`💰 Final calculated amount: ${amount}`);
+      
+      console.log(`💰 Finance detected: ${financeType}, category: ${category}, amount: ${amount}`);
+    }
+    
+    return {
+      type: type,
+      financeType: financeType,
+      category: category,
+      amount: amount,
+      text: text
+    };
+  }
+
+  // Moliyani saqlash
+  async saveFinance(analysis, userId) {
+    const Finance = require('../models/Finance');
+    
+    try {
+      const finance = new Finance({
+        userId: userId,
+        type: analysis.financeType,
+        amount: Math.abs(analysis.amount),
+        category: analysis.category,
+        description: analysis.text,
+        date: new Date()
+      });
+      
+      await finance.save();
+      
+      return {
+        type: 'Moliya',
+        details: `💰 ${this.formatCurrency(analysis.amount, analysis.currency)} - ${analysis.category}\n📝 ${analysis.text}`
+      };
+    } catch (error) {
+      console.error('Error saving finance:', error);
+      throw error;
+    }
+  }
+
+  async transcribeWithMohirAI(audioPath) {
+    const FormData = require('form-data');
+    const fs = require('fs');
+    const axios = require('axios');
+    
+    try {
+      // FormData yaratish
+      const form = new FormData();
+      form.append('file', fs.createReadStream(audioPath));
+      form.append('language', 'uz');
+      form.append('blocking', 'true');
+      form.append('return_offsets', 'false');
+      form.append('run_diarization', 'false');
+      
+      console.log('🤖 Sending to Mohir AI STT API...');
+      
+      // Mohir AI API ga so'rov yuborish
+      const response = await axios.post(
+        'https://uzbekvoice.ai/api/v1/stt',
+        form,
+        {
+          headers: {
+            'Authorization': process.env.MOHIR_AI_API_KEY || '02ecec9f-8d33-4479-873b-68ac37897d64:2759153e-b632-42a5-af45-51ffa7fcfbed',
+            ...form.getHeaders()
+          },
+          timeout: 60000 // 60 sekund
+        }
+      );
+      
+      console.log('✅ Mohir AI response:', response.data);
+      
+      // Natijani olish
+      if (response.data && response.data.result && response.data.result.text) {
+        const transcription = response.data.result.text.trim();
+        console.log('🎯 Mohir AI transcription:', transcription);
+        return transcription;
+      } else {
+        throw new Error('Invalid response format from Mohir AI');
+      }
+      
+    } catch (error) {
+      console.error('Mohir AI API error:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  async transcribeAudio(audioUrl) {
+    console.log('🎵 Starting Mohir AI STT transcription...');
+    
+    // Audio faylni yuklab olish
+    const https = require('https');
+    const fs = require('fs');
+    const path = require('path');
+    const FormData = require('form-data');
+    const axios = require('axios');
+    
+    const audioPath = path.join(__dirname, '../../temp', `voice_${Date.now()}.ogg`);
+    
+    console.log('💾 Downloading audio to:', audioPath);
+    
+    // OGG faylni yuklab olish
+    const file = fs.createWriteStream(audioPath);
+    
+    await new Promise((resolve, reject) => {
+      https.get(audioUrl, (response) => {
+        console.log('📥 HTTP Status:', response.statusCode);
+        response.pipe(file);
+        file.on('finish', () => {
+          file.close();
+          resolve();
+        });
+      }).on('error', reject);
+    });
+    
+    try {
+      console.log('🔍 File exists after download:', fs.existsSync(audioPath));
+      console.log('📊 File size:', fs.statSync(audioPath).size, 'bytes');
+      
+      // Mohir AI STT API ga yuborish
+      const transcription = await this.transcribeWithMohirAI(audioPath);
+      
+      // Vaqtinchalik faylni o'chirish
+      if (fs.existsSync(audioPath)) fs.unlinkSync(audioPath);
+      
+      return transcription;
+    } catch (error) {
+      console.error('❌ Mohir AI STT error:', error);
+      // Vaqtinchalik faylni o'chirish (xatolik bo'lsa ham)
+      if (fs.existsSync(audioPath)) fs.unlinkSync(audioPath);
+      
+      throw error;
+    }
   }
 
   async sendMessage(chatId, message, options) {

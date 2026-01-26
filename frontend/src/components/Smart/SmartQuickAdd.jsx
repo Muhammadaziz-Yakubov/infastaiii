@@ -42,39 +42,129 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     }
   };
 
-  // Category mapping
+  // Category mapping - yangi kengaytirilgan ro'yxat
   const categoryMap = {
+    // Transport
     'taksi': 'Transport',
     'taxi': 'Transport',
     'benzin': 'Transport',
     'yoqilg\'i': 'Transport',
     'avtobus': 'Transport',
     'metro': 'Transport',
-    'ovqat': 'Food',
-    'osh': 'Food',
-    'lag\'mon': 'Food',
-    'kafe': 'Food',
-    'restoran': 'Food',
-    'kiyim': 'Shopping',
-    'ko\'ylak': 'Shopping',
-    'shim': 'Shopping',
-    'oyoq kiyim': 'Shopping',
-    'telefon': 'Electronics',
-    'kompyuter': 'Electronics',
-    'noutbuk': 'Electronics',
-    'internet': 'Utilities',
-    'kommunal': 'Utilities',
-    'svet': 'Utilities',
-    'gaz': 'Utilities',
-    'shifokor': 'Health',
-    'dori': 'Health',
-    'vitamin': 'Health',
-    'ta\'lim': 'Education',
-    'kitob': 'Education',
-    'kurs': 'Education',
-    'sayr': 'Entertainment',
-    'kino': 'Entertainment',
-    'teatr': 'Entertainment'
+    'marshrutka': 'Transport',
+    'yolovchi': 'Transport',
+    'mashina': 'Transport',
+    'avtomobil': 'Transport',
+    
+    // Taom
+    'ovqat': 'Taom',
+    'osh': 'Taom',
+    'lag\'mon': 'Taom',
+    'kafe': 'Taom',
+    'restoran': 'Taom',
+    'taom': 'Taom',
+    'market': 'Taom',
+    'do\'kon': 'Taom',
+    'savdo': 'Taom',
+    
+    // Shopping
+    'kiyim': 'Kiyim-kechak',
+    'ko\'ylak': 'Kiyim-kechak',
+    'shim': 'Kiyim-kechak',
+    'oyoq kiyim': 'Kiyim-kechak',
+    'poyabzal': 'Kiyim-kechak',
+    'kurtka': 'Kiyim-kechak',
+    'libos': 'Kiyim-kechak',
+    'shopping': 'Kiyim-kechak',
+    'magazin': 'Kiyim-kechak',
+    'sotib': 'Kiyim-kechak',
+    
+    // Electronics
+    'telefon': 'Kiyim-kechak',
+    'kompyuter': 'Kiyim-kechak',
+    'noutbuk': 'Kiyim-kechak',
+    
+    // Utilities
+    'internet': 'Kommunal to\'lovlar',
+    'kommunal': 'Kommunal to\'lovlar',
+    'svet': 'Kommunal to\'lovlar',
+    'elektr': 'Kommunal to\'lovlar',
+    'gaz': 'Kommunal to\'lovlar',
+    'suv': 'Kommunal to\'lovlar',
+    'telefon': 'Kommunal to\'lovlar',
+    
+    // Health
+    'shifokor': 'Sog\'liq',
+    'dori': 'Sog\'liq',
+    'vitamin': 'Sog\'liq',
+    'dorixona': 'Sog\'liq',
+    'kasalxona': 'Sog\'liq',
+    'tibbiyot': 'Sog\'liq',
+    
+    // Education
+    'ta\'lim': 'Ta\'lim',
+    'kitob': 'Ta\'lim',
+    'kurs': 'Ta\'lim',
+    'o\'qish': 'Ta\'lim',
+    'maktab': 'Ta\'lim',
+    'universitet': 'Ta\'lim',
+    
+    // Entertainment
+    'sayr': 'Ko\'ngilochar',
+    'kino': 'Ko\'ngilochar',
+    'teatr': 'Ko\'ngilochar',
+    'dam olish': 'Ko\'ngilochar',
+    
+    // Housing
+    'uy': 'Uy-joy',
+    'ijara': 'Uy-joy',
+    'kvartira': 'Uy-joy',
+    'uy-joy': 'Uy-joy',
+    'ipoteka': 'Uy-joy',
+    
+    // Services
+    'ekspert': 'Xizmatlar',
+    'konsultatsiya': 'Xizmatlar',
+    'xizmat': 'Xizmatlar',
+    'yurist': 'Xizmatlar',
+    'hisobchi': 'Xizmatlar',
+    
+    // Gambling
+    'tikib': 'Qimor o\'yinlari',
+    'yutqizib': 'Qimor o\'yinlari',
+    'qimor': 'Qimor o\'yinlari',
+    'kazino': 'Qimor o\'yinlari',
+    'bukmeker': 'Qimor o\'yinlari',
+    'lotereya': 'Qimor o\'yinlari',
+    
+    // Travel
+    'sayohat': 'Sayohat',
+    'mehmonxona': 'Sayohat',
+    'aviachipta': 'Sayohat',
+    
+    // Sports
+    'sport': 'Sport',
+    'fitnes': 'Sport',
+    'zal': 'Sport',
+    'badiy tana': 'Sport',
+    
+    // Gifts
+    'sovg\'a': 'Sovg\'alar',
+    'bayram': 'Sovg\'alar',
+    'tug\'ilgan kun': 'Sovg\'alar',
+    'to\'y': 'Sovg\'alar',
+    
+    // Debt
+    'qarz': 'Qarz kredit',
+    'kredit': 'Qarz kredit',
+    'foiz': 'Qarz kredit',
+    'nasiya': 'Qarz kredit',
+    
+    // Family
+    'oilaviy': 'Oilaviy',
+    'oilaviya': 'Oilaviy',
+    'bola': 'Oilaviy',
+    'farzand': 'Oilaviy'
   };
 
   const priorityKeywords = {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Sparkles, 
@@ -585,6 +585,7 @@ const LandingPage = () => {
                 <li><a href="#" className="hover:text-white transition-colors">Biz haqimizda</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Aloqa</a></li>
+                <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Maxfiylik Siyosati</Link></li>
               </ul>
             </div>
 
@@ -607,7 +608,7 @@ const LandingPage = () => {
         </div>
       </footer>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
           25% { transform: translate(20px, -50px) scale(1.1); }

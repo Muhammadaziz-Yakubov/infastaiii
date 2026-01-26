@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   // Authentication fields
   email: {
     type: String,
-    required: function() {
+    required: function () {
       return this.authProvider === 'email' || this.authProvider === 'google';
     },
     unique: true,
@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema({
   // Password - required only for email/phone auth
   password: {
     type: String,
-    required: function() {
+    required: function () {
       return this.authProvider === 'email' || this.authProvider === 'phone';
     }
   },
@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
   // Profile information
   firstName: {
     type: String,
-    required: function() {
+    required: function () {
       return this.authProvider !== 'phone'; // Required for email/google auth
     },
     trim: true,
@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
 
   lastName: {
     type: String,
-    required: function() {
+    required: function () {
       return this.authProvider !== 'phone'; // Required for email/google auth
     },
     trim: true,
@@ -69,7 +69,7 @@ const userSchema = new mongoose.Schema({
   // Verification status
   emailVerified: {
     type: Boolean,
-    default: function() {
+    default: function () {
       return this.authProvider === 'google'; // Google users are pre-verified
     }
   },
@@ -165,6 +165,16 @@ const userSchema = new mongoose.Schema({
   lastReminderDate: {
     type: Date,
     default: null
+  },
+  familyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Family',
+    default: null
+  },
+  familyRole: {
+    type: String,
+    enum: ['admin', 'member', 'child', null],
+    default: null
   }
 }, {
   timestamps: true
@@ -174,7 +184,7 @@ const userSchema = new mongoose.Schema({
 // Additional indexes can be added here if needed for compound queries
 
 // Parolni hash qilish
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
   try {
@@ -187,7 +197,7 @@ userSchema.pre('save', async function(next) {
 });
 
 // Parolni solishtirish
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   if (!this.password) return false;
   return await bcrypt.compare(candidatePassword, this.password);
 };

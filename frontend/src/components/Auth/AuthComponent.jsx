@@ -1,6 +1,6 @@
 // src/components/Auth/AuthComponent.jsx - Beautiful Modern Authentication Component
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import authService from '../../services/authService';
 import {
@@ -53,6 +53,7 @@ const AuthComponent = () => {
   });
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const fileInputRef = useRef(null);
 
   const otpRefs = useRef([]);
@@ -267,6 +268,10 @@ const AuthComponent = () => {
     }
     if (newPassword !== confirmPassword) {
       setError('Parollar mos kelmaydi');
+      return;
+    }
+    if (!privacyAccepted) {
+      setError('Maxfiylik Siyosatiga rozilik bildirishingiz shart');
       return;
     }
 
@@ -767,6 +772,30 @@ const AuthComponent = () => {
                       {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
+                </div>
+
+                {/* Privacy Policy Checkbox */}
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={privacyAccepted}
+                      onChange={(e) => setPrivacyAccepted(e.target.checked)}
+                      className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                      disabled={loading}
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Men InFast AI 
+                      <Link 
+                        to="/privacy-policy" 
+                        className="text-blue-600 dark:text-blue-400 hover:underline mx-1"
+                        target="_blank"
+                      >
+                        Maxfiylik Siyosatiga
+                      </Link>
+                      rozilik bildiraman
+                    </span>
+                  </label>
                 </div>
 
                 <button

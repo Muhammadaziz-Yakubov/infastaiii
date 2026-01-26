@@ -8,6 +8,16 @@ const financeSchema = new mongoose.Schema({
     required: true,
     index: true
   },
+  familyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Family',
+    index: true,
+    default: null
+  },
+  isFamilyExpense: {
+    type: Boolean,
+    default: false
+  },
   type: {
     type: String,
     enum: ['income', 'expense'],
@@ -60,7 +70,7 @@ const financeSchema = new mongoose.Schema({
 });
 
 // Update updatedAt before save
-financeSchema.pre('save', function(next) {
+financeSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });

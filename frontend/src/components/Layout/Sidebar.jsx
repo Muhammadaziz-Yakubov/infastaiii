@@ -26,6 +26,7 @@ import {
   ChevronLeft,
   Menu,
   Trophy,
+  Users,
   MoreHorizontal
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -42,6 +43,7 @@ const MobileBottomBar = () => {
     { name: 'Tasks', href: '/tasks', icon: CheckSquare, labelKey: 'sidebar.tasks' },
     { name: 'Finance', href: '/finance', icon: Wallet, labelKey: 'sidebar.finance' },
     { name: 'Goals', href: '/goals', icon: Goal, labelKey: 'sidebar.goals' },
+    { name: 'Family', href: '/family', icon: Users, labelKey: 'sidebar.family' },
     { name: 'More', href: '/more', icon: MoreHorizontal, labelKey: 'sidebar.more' },
   ];
 
@@ -59,8 +61,7 @@ const MobileBottomBar = () => {
                 key={item.name}
                 to={item.href}
                 className={({ isActive }) =>
-                  `flex flex-col items-center justify-center flex-1 h-full relative group transition-all duration-300 ${
-                    isActive ? 'scale-110' : 'scale-100'
+                  `flex flex-col items-center justify-center flex-1 h-full relative group transition-all duration-300 ${isActive ? 'scale-110' : 'scale-100'
                   }`
                 }
               >
@@ -68,29 +69,27 @@ const MobileBottomBar = () => {
                 {isActive && (
                   <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-blue-500 rounded-full" />
                 )}
-                
+
                 <div
-                  className={`relative w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 ${
-                    isActive
+                  className={`relative w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 ${isActive
                       ? 'bg-blue-500 text-white shadow-lg scale-110'
                       : 'text-gray-400 dark:text-gray-500 group-hover:bg-gray-100 dark:group-hover:bg-gray-800 group-hover:text-blue-500 dark:group-hover:text-blue-400'
-                  }`}
+                    }`}
                 >
                   <Icon className={`w-6 h-6 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} />
-                  
+
                   {/* Pulse animation for active */}
                   {isActive && (
                     <span className="absolute inset-0 rounded-2xl bg-blue-500 animate-ping opacity-20" />
                   )}
                 </div>
-                
+
                 {/* Label */}
                 <span
-                  className={`text-[10px] font-medium mt-1 transition-all duration-300 ${
-                    isActive
+                  className={`text-[10px] font-medium mt-1 transition-all duration-300 ${isActive
                       ? 'text-blue-600 dark:text-blue-400 font-semibold'
                       : 'text-gray-500 dark:text-gray-400'
-                  }`}
+                    }`}
                 >
                   {t(item.labelKey)}
                 </span>
@@ -148,6 +147,7 @@ const Sidebar = () => {
     { name: 'sidebar.tasks', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'sidebar.finance', href: '/finance', icon: Wallet, badge: null },
     { name: 'sidebar.goals', href: '/goals', icon: Goal, badge: null },
+    { name: 'sidebar.family', href: '/family', icon: Users, badge: null },
     { name: 'sidebar.challenges', href: '/challenges', icon: Trophy, badge: null }
   ];
 
@@ -184,9 +184,8 @@ const Sidebar = () => {
       <MobileBottomBar />
 
       {/* DESKTOP SIDEBAR */}
-      <aside className={`hidden lg:flex fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-2xl z-[60] transition-all duration-300 ${
-        isCollapsed ? 'w-24' : 'w-80'
-      }`}>
+      <aside className={`hidden lg:flex fixed top-0 left-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-2xl z-[60] transition-all duration-300 ${isCollapsed ? 'w-24' : 'w-80'
+        }`}>
         {/* Toggle Button on Edge */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -202,9 +201,8 @@ const Sidebar = () => {
 
         <div className="flex flex-col h-full w-full">
           {/* LOGO SECTION */}
-          <div className={`flex items-center gap-4 p-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 ${
-            isCollapsed ? 'justify-center' : ''
-          }`}>
+          <div className={`flex items-center gap-4 p-6 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 ${isCollapsed ? 'justify-center' : ''
+            }`}>
             <div className="w-14 h-14 bg-blue-500 rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-105 transition-transform duration-300">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
@@ -253,33 +251,28 @@ const Sidebar = () => {
                   key={item.name}
                   to={item.href}
                   title={isCollapsed ? t(item.name) : ''}
-                  className={`group flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 relative ${
-                    isCollapsed ? 'justify-center px-3' : ''
-                  } ${
-                    isActive
+                  className={`group flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all duration-300 relative ${isCollapsed ? 'justify-center px-3' : ''
+                    } ${isActive
                       ? 'bg-blue-500 text-white shadow-xl transform scale-[1.02]'
                       : 'text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 hover:shadow-md'
-                  }`}
+                    }`}
                 >
                   {isActive && !isCollapsed && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
                   )}
-                  <div className={`p-2.5 rounded-xl transition-all duration-300 ${
-                    isActive
+                  <div className={`p-2.5 rounded-xl transition-all duration-300 ${isActive
                       ? 'bg-white/20'
                       : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30'
-                  }`}>
-                    <item.icon className={`w-5 h-5 transition-all duration-300 ${
-                      isActive
+                    }`}>
+                    <item.icon className={`w-5 h-5 transition-all duration-300 ${isActive
                         ? 'scale-110 text-white'
                         : 'group-hover:scale-110 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
-                    }`} />
+                      }`} />
                   </div>
                   {!isCollapsed && (
                     <>
-                      <span className={`flex-1 font-semibold text-sm transition-colors ${
-                        isActive ? 'text-white' : 'text-gray-700 dark:text-gray-300'
-                      }`}>
+                      <span className={`flex-1 font-semibold text-sm transition-colors ${isActive ? 'text-white' : 'text-gray-700 dark:text-gray-300'
+                        }`}>
                         {t(item.name)}
                       </span>
                       {item.badge && (
@@ -303,9 +296,8 @@ const Sidebar = () => {
             <button
               onClick={() => navigate('/settings')}
               title={isCollapsed ? t('sidebar.settings') : ''}
-              className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 transition-all duration-300 group shadow-sm hover:shadow-md ${
-                isCollapsed ? 'justify-center px-3' : ''
-              }`}
+              className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 transition-all duration-300 group shadow-sm hover:shadow-md ${isCollapsed ? 'justify-center px-3' : ''
+                }`}
             >
               <div className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
                 <Settings className="w-5 h-5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
@@ -317,9 +309,8 @@ const Sidebar = () => {
             <button
               onClick={toggleTheme}
               title={isCollapsed ? (isDark ? t('common.lightMode') : t('common.darkMode')) : ''}
-              className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 transition-all duration-300 group shadow-sm hover:shadow-md ${
-                isCollapsed ? 'justify-center px-3' : ''
-              }`}
+              className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-700 dark:text-gray-300 transition-all duration-300 group shadow-sm hover:shadow-md ${isCollapsed ? 'justify-center px-3' : ''
+                }`}
             >
               <div className="p-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
                 {isDark ? (
@@ -339,9 +330,8 @@ const Sidebar = () => {
             <button
               onClick={() => setShowLogoutModal(true)}
               title={isCollapsed ? t('common.logout') : ''}
-              className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-all duration-300 group shadow-sm hover:shadow-md ${
-                isCollapsed ? 'justify-center px-3' : ''
-              }`}
+              className={`w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-all duration-300 group shadow-sm hover:shadow-md ${isCollapsed ? 'justify-center px-3' : ''
+                }`}
             >
               <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/30 group-hover:bg-red-200 dark:group-hover:bg-red-900/50 transition-colors">
                 <LogOut className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -365,7 +355,7 @@ const Sidebar = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400">Haqiqatan ham chiqmoqchimisiz?</p>
               </div>
             </div>
-            
+
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Barcha ma'lumotlaringiz saqlanadi va keyingi safar qayta kirishingiz mumkin.
             </p>

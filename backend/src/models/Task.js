@@ -21,8 +21,19 @@ const taskSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending'],
+    enum: ['pending', 'in-progress', 'completed'],
     default: 'pending'
+  },
+  familyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Family',
+    index: true,
+    default: null
+  },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
   },
   priority: {
     type: String,
@@ -53,7 +64,7 @@ const taskSchema = new mongoose.Schema({
 });
 
 // Update updatedAt before save
-taskSchema.pre('save', function(next) {
+taskSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });

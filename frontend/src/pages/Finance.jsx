@@ -171,16 +171,33 @@ const Finance = () => {
                 setCategories(catData.categories);
             } else {
                 setCategories([
-                    { _id: '1', name: 'Oziq-ovqat', type: 'expense', icon: 'Coffee', color: '#FF6B35' },
+                    // Xarajat kategoriyalari
+                    { _id: '1', name: 'Taom', type: 'expense', icon: 'Coffee', color: '#FF6B35' },
                     { _id: '2', name: 'Transport', type: 'expense', icon: 'Car', color: '#4ECDC4' },
-                    { _id: '3', name: 'Uy', type: 'expense', icon: 'Home', color: '#45B7D1' },
-                    { _id: '4', name: 'Kiyim', type: 'expense', icon: 'ShoppingBag', color: '#96CEB4' },
+                    { _id: '3', name: 'Uy-joy', type: 'expense', icon: 'Home', color: '#45B7D1' },
+                    { _id: '4', name: 'Kiyim-kechak', type: 'expense', icon: 'ShoppingBag', color: '#96CEB4' },
                     { _id: '5', name: 'Sog\'liq', type: 'expense', icon: 'HeartPulse', color: '#FECA57' },
                     { _id: '6', name: 'Ta\'lim', type: 'expense', icon: 'BookOpen', color: '#FF9FF3' },
                     { _id: '7', name: 'Ko\'ngilochar', type: 'expense', icon: 'Film', color: '#54A0FF' },
-                    { _id: '8', name: 'Maosh', type: 'income', icon: 'DollarSign', color: '#1DD1A1' },
-                    { _id: '9', name: 'Biznes', type: 'income', icon: 'Briefcase', color: '#FF9F43' },
-                    { _id: '10', name: 'Investitsiya', type: 'income', icon: 'TrendingUp', color: '#0ABDE3' }
+                    { _id: '8', name: 'Kommunal to\'lovlar', type: 'expense', icon: 'WifiOff', color: '#FF6B9D' },
+                    { _id: '9', name: 'Xizmatlar', type: 'expense', icon: 'Users', color: '#C44569' },
+                    { _id: '10', name: 'Qimor o\'yinlari', type: 'expense', icon: 'Target', color: '#F8B500' },
+                    { _id: '11', name: 'Avtomobil', type: 'expense', icon: 'Car', color: '#786FA6' },
+                    { _id: '12', name: 'Sayohat', type: 'expense', icon: 'ExternalLink', color: '#F19066' },
+                    { _id: '13', name: 'Sovg\'alar', type: 'expense', icon: 'Gift', color: '#F5CD79' },
+                    { _id: '14', name: 'Sport', type: 'expense', icon: 'Dumbbell', color: '#546DE5' },
+                    { _id: '15', name: 'Qarz kredit', type: 'expense', icon: 'CreditCard', color: '#E15F41' },
+                    { _id: '16', name: 'Oilaviy', type: 'expense', icon: 'Users', color: '#3DC1D3' },
+                    
+                    // Daromad kategoriyalari
+                    { _id: '17', name: 'Maosh', type: 'income', icon: 'DollarSign', color: '#1DD1A1' },
+                    { _id: '18', name: 'Biznes', type: 'income', icon: 'Briefcase', color: '#FF9F43' },
+                    { _id: '19', name: 'Investitsiya', type: 'income', icon: 'TrendingUp', color: '#0ABDE3' },
+                    { _id: '20', name: 'Bonus/Premium', type: 'income', icon: 'Sparkles', color: '#EE5A24' },
+                    { _id: '21', name: 'Ijara', type: 'income', icon: 'Home', color: '#00D2D3' },
+                    { _id: '22', name: 'Qo\'shimcha daromad', type: 'income', icon: 'Plus', color: '#10AC84' },
+                    { _id: '23', name: 'Sovg\'a', type: 'income', icon: 'Gift', color: '#FF6348' },
+                    { _id: '24', name: 'Yordam puli', type: 'income', icon: 'Users', color: '#5F27CD' }
                 ]);
             }
         } else {

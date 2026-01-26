@@ -60,7 +60,7 @@ exports.checkPhone = async (req, res) => {
         phone: normalizedPhone,
         type: 'phone_verification'
       });
-      
+
       // Create session marker (OTP will be created when user shares contact in Telegram)
       const { otp, code } = await VerificationCode.createOTP(normalizedPhone, 'phone_verification');
 
@@ -290,7 +290,7 @@ exports.createPassword = async (req, res) => {
       await user.save();
     } catch (saveError) {
       console.error('User save error:', saveError);
-      
+
       // Handle duplicate email error
       if (saveError.code === 11000) {
         return res.status(400).json({
@@ -298,7 +298,7 @@ exports.createPassword = async (req, res) => {
           message: 'Bu email allaqachon ro\'yxatdan o\'tgan'
         });
       }
-      
+
       // Handle validation errors
       if (saveError.name === 'ValidationError') {
         const errors = Object.values(saveError.errors).map(err => err.message);
@@ -307,7 +307,7 @@ exports.createPassword = async (req, res) => {
           message: errors.join(', ')
         });
       }
-      
+
       throw saveError; // Re-throw other errors
     }
 
@@ -332,7 +332,7 @@ exports.createPassword = async (req, res) => {
 
   } catch (error) {
     console.error('Create password error:', error);
-    
+
     // Log full error in development
     if (process.env.NODE_ENV === 'development') {
       console.error('Full error details:', {
@@ -341,10 +341,10 @@ exports.createPassword = async (req, res) => {
         name: error.name
       });
     }
-    
+
     res.status(500).json({
       success: false,
-      message: process.env.NODE_ENV === 'development' 
+      message: process.env.NODE_ENV === 'development'
         ? `Server xatosi: ${error.message}`
         : 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.'
     });
@@ -434,7 +434,7 @@ exports.loginWithPassword = async (req, res) => {
     console.error('Login with password error:', error);
     res.status(500).json({
       success: false,
-      message: process.env.NODE_ENV === 'development' 
+      message: process.env.NODE_ENV === 'development'
         ? `Server xatosi: ${error.message}`
         : 'Server xatosi. Iltimos, keyinroq urinib ko\'ring.'
     });
@@ -511,7 +511,7 @@ exports.login = async (req, res) => {
 exports.googleAuth = async (req, res) => {
   try {
     const callbackUrl = `${BACKEND_URL}/api/auth/google/callback`;
-    
+
     const authorizeUrl = googleClient.generateAuthUrl({
       access_type: 'offline',
       scope: ['https://www.googleapis.com/auth/userinfo.profile', 'https://www.googleapis.com/auth/userinfo.email'],
@@ -789,11 +789,14 @@ exports.loginWithPhone = async (req, res) => {
       });
     }
 
+    // Normalize phone number
+    const normalizedPhone = phone.trim().startsWith('+') ? phone.trim() : `+${phone.trim()}`;
+
     // If tempToken is provided, verify it (for OTP flow)
     let userId = null;
     if (tempToken) {
       try {
-        const decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
+        const decoded = jwt.verify(tempToken, process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production');
         userId = decoded.userId;
       } catch (tokenError) {
         return res.status(401).json({
@@ -807,7 +810,7 @@ exports.loginWithPhone = async (req, res) => {
     let user;
     if (userId) {
       user = await User.findById(userId);
-      if (user && user.phone !== phone) {
+      if (user && user.phone !== normalizedPhone) {
         return res.status(401).json({
           success: false,
           message: 'Telefon raqam noto\'g\'ri'
@@ -815,7 +818,7 @@ exports.loginWithPhone = async (req, res) => {
       }
     } else {
       // Direct login with phone and password (no tempToken)
-      user = await User.findOne({ phone });
+      user = await User.findOne({ phone: normalizedPhone });
     }
 
     if (!user) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, Link } from 'react-router-dom';
 import Sidebar from './Layout/Sidebar';
 import Navbar from './Layout/Navbar';
 import SmartQuickAdd from './Smart/SmartQuickAdd';

@@ -129,6 +129,7 @@
     "settings": "Sozlamalar",
     "profile": "Profil",
     "notifications": "Bildirishnomalar",
+    "family": "Oila boshqaruvi",
     "more": "Ko'proq"
   },
   "settings": {
@@ -187,4 +188,3 @@
     "streak": "Streak"
   }
 }
-

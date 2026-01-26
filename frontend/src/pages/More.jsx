@@ -31,6 +31,18 @@ const More = () => {
       ]
     },
     {
+      title: 'Qonuniy',
+      items: [
+        {
+          name: 'Maxfiylik Siyosati',
+          description: 'Shaxsiy ma\'lumotlarni himoya qilish',
+          icon: Shield,
+          href: '/privacy-policy',
+          color: 'bg-blue-500'
+        }
+      ]
+    },
+    {
       title: 'Hisob',
       items: [
         {

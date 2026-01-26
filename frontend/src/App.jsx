@@ -6,6 +6,8 @@ import AdminProtectedRoute from './components/Admin/AdminProtectedRoute';
 import Layout from './components/Layout';
 import PomodoroOverlay from './components/PomodoroOverlay';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { PrivacyConsentProvider, usePrivacyConsent } from './contexts/PrivacyConsentContext';
+import PrivacyConsentModal from './components/PrivacyConsentModal';
 
 // Loading component
 const PageLoader = () => (
@@ -37,61 +39,82 @@ const More = lazy(() => import('./pages/More'));
 const Download = lazy(() => import('./pages/Download'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const Pomodoro = lazy(() => import('./pages/Pomodoro'));
+const FamilyManager = lazy(() => import('./pages/FamilyManager'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
 // Admin pages
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 
+// App Content component to use context inside Router
+const AppContent = () => {
+  const { showConsentModal, handleConsent } = usePrivacyConsent();
+  
+  return (
+    <>
+      <Toaster position="top-right" />
+      <PomodoroOverlay />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/home" element={<LandingPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/banned" element={<BannedPage />} />
+          <Route path="/download" element={<Download />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
+          {/* Protected routes with Layout */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/pomodoro" element={<Pomodoro />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/tasks" element={<Tasks />} />
+              <Route path="/archive" element={<Archive />} />
+              <Route path="/finance" element={<Finance />} />
+              <Route path="/goals" element={<Goals />} />
+              <Route path="/goals/completed" element={<CompletedGoals />} />
+              <Route path="/goals/:id/tracking" element={<GoalTracking />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/challenges" element={<Challenges />} />
+              <Route path="/more" element={<More />} />
+              <Route path="/more" element={<More />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/family" element={<FamilyManager />} />
+            </Route>
+          </Route>
+
+          {/* Admin routes */}
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          </Route>
+
+          {/* 404 - Not found */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+      <PrivacyConsentModal 
+        showConsentModal={showConsentModal} 
+        onConsent={handleConsent}
+      />
+    </>
+  );
+};
+
 // App komponenti
 function App() {
   return (
-    <LanguageProvider>
-      <Router>
-        <Toaster position="top-right" />
-        <PomodoroOverlay />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/home" element={<LandingPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/banned" element={<BannedPage />} />
-            <Route path="/download" element={<Download />} />
-
-            {/* Protected routes with Layout */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/pomodoro" element={<Pomodoro />} />
-              <Route element={<Layout />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/tasks" element={<Tasks />} />
-                <Route path="/archive" element={<Archive />} />
-                <Route path="/finance" element={<Finance />} />
-                <Route path="/goals" element={<Goals />} />
-                <Route path="/goals/completed" element={<CompletedGoals />} />
-                <Route path="/goals/:id/tracking" element={<GoalTracking />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/challenges" element={<Challenges />} />
-                <Route path="/more" element={<More />} />
-                <Route path="/more" element={<More />} />
-                <Route path="/notifications" element={<Notifications />} />
-              </Route>
-            </Route>
-
-            {/* Admin routes */}
-            <Route path="/admin" element={<AdminLogin />} />
-            <Route element={<AdminProtectedRoute />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            </Route>
-
-            {/* 404 - Not found */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Suspense>
-      </Router>
-    </LanguageProvider>
+    <PrivacyConsentProvider>
+      <LanguageProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </LanguageProvider>
+    </PrivacyConsentProvider>
   );
 }
 

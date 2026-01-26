@@ -25,6 +25,7 @@ const supportRoutes = require('./src/routes/supportRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
 const chatRoutes = require('./src/routes/chatRoutes');
 const infastAIRoutes = require('./src/routes/infastAIRoutes');
+const familyRoutes = require('./src/routes/familyRoutes');
 const telegramService = require('./src/services/telegramService');
 const supportBotService = require('./src/services/supportBotService');
 const infastAIBotService = require('./src/services/infastAIBotService');
@@ -135,7 +136,7 @@ io.on('connection', (socket) => {
   // Handle message deletion
   socket.on('delete_message', (data) => {
     const { groupId, messageId } = data;
-    
+
     // Broadcast to all group members
     io.to(`group_${groupId}`).emit('message_deleted', {
       groupId,
@@ -435,6 +436,7 @@ app.use('/api/support', supportRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/infast-ai', infastAIRoutes);
+app.use('/api/family', familyRoutes);
 
 // 404 handler
 app.use('/api/*', (req, res) => {

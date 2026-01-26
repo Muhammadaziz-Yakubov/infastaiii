@@ -396,21 +396,33 @@ exports.createCategory = async (req, res) => {
 async function createDefaultCategories(userId) {
   const defaultCategories = [
     // Income categories
-    { name: 'Maosh', type: 'income', icon: 'Briefcase', color: '#10b981' },
-    { name: 'Biznes', type: 'income', icon: 'TrendingUp', color: '#3b82f6' },
-    { name: 'Investitsiya', type: 'income', icon: 'PieChart', color: '#8b5cf6' },
-    { name: 'Boshqa kirim', type: 'income', icon: 'Plus', color: '#06b6d4' },
-    
-    // Expense categories
-    { name: 'Oziq-ovqat', type: 'expense', icon: 'ShoppingCart', color: '#ef4444' },
-    { name: 'Transport', type: 'expense', icon: 'Car', color: '#f59e0b' },
-    { name: 'Uy-joy', type: 'expense', icon: 'Home', color: '#ec4899' },
-    { name: 'Kommunal', type: 'expense', icon: 'Zap', color: '#14b8a6' },
-    { name: 'Sog\'liq', type: 'expense', icon: 'Heart', color: '#f43f5e' },
-    { name: 'Ta\'lim', type: 'expense', icon: 'BookOpen', color: '#6366f1' },
-    { name: 'O\'yin-kulgi', type: 'expense', icon: 'Smile', color: '#a855f7' },
-    { name: 'Kiyim', type: 'expense', icon: 'ShoppingBag', color: '#ec4899' },
-    { name: 'Boshqa xarajat', type: 'expense', icon: 'MoreHorizontal', color: '#64748b' }
+  { name: 'Maosh', type: 'income', icon: 'DollarSign', color: '#1DD1A1' },
+  { name: 'Biznes', type: 'income', icon: 'Briefcase', color: '#FF9F43' },
+  { name: 'Investitsiya', type: 'income', icon: 'TrendingUp', color: '#0ABDE3' },
+  { name: 'Bonus/Premium', type: 'income', icon: 'Sparkles', color: '#EE5A24' },
+  { name: 'Ijara', type: 'income', icon: 'Home', color: '#00D2D3' },
+  { name: 'Qo\'shimcha daromad', type: 'income', icon: 'Plus', color: '#10AC84' },
+  { name: 'Sovg\'a', type: 'income', icon: 'Gift', color: '#FF6348' },
+  { name: 'Yordam puli', type: 'income', icon: 'Users', color: '#5F27CD' },
+  
+  // Expense categories
+  { name: 'Taom', type: 'expense', icon: 'Coffee', color: '#FF6B35' },
+  { name: 'Transport', type: 'expense', icon: 'Car', color: '#4ECDC4' },
+  { name: 'Uy-joy', type: 'expense', icon: 'Home', color: '#45B7D1' },
+  { name: 'Kiyim-kechak', type: 'expense', icon: 'ShoppingBag', color: '#96CEB4' },
+  { name: 'Sog\'liq', type: 'expense', icon: 'HeartPulse', color: '#FECA57' },
+  { name: 'Ta\'lim', type: 'expense', icon: 'BookOpen', color: '#FF9FF3' },
+  { name: 'Ko\'ngilochar', type: 'expense', icon: 'Film', color: '#54A0FF' },
+  { name: 'Kommunal to\'lovlar', type: 'expense', icon: 'WifiOff', color: '#FF6B9D' },
+  { name: 'Xizmatlar', type: 'expense', icon: 'Users', color: '#C44569' },
+  { name: 'Qimor o\'yinlari', type: 'expense', icon: 'Target', color: '#F8B500' },
+  { name: 'Avtomobil', type: 'expense', icon: 'Car', color: '#786FA6' },
+  { name: 'Sayohat', type: 'expense', icon: 'ExternalLink', color: '#F19066' },
+  { name: 'Sovg\'alar', type: 'expense', icon: 'Gift', color: '#F5CD79' },
+  { name: 'Sport', type: 'expense', icon: 'Dumbbell', color: '#546DE5' },
+  { name: 'Qarz kredit', type: 'expense', icon: 'CreditCard', color: '#E15F41' },
+  { name: 'Oilaviy', type: 'expense', icon: 'Users', color: '#3DC1D3' },
+  { name: 'Boshqa xarajat', type: 'expense', icon: 'MoreHorizontal', color: '#64748b' }
   ];
 
   const categories = await FinanceCategory.insertMany(
