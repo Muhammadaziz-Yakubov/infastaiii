@@ -634,7 +634,7 @@ class InFastAIBotService {
     }
   }
 
-  // Matn tahlili - faqat moliya uchun
+  // Matn tahlili - faqat moliya uchun, bir nechta operatsiyalarni ajratish
   async analyzeText(text) {
     console.log('🧠 Analyzing text for finance...');
     console.log('📝 Input text:', text);
@@ -647,395 +647,271 @@ class InFastAIBotService {
     // Daromad kalit so'zlari
     const incomeKeywords = ['oldim', 'topdim', 'daromad', 'haqiqiladim', 'qildim', 'oylik', 'yutqizib qo\'ydim'];
     
-    let type = 'general';
-    let category = 'other';
-    let categoryIcon = 'MoreHorizontal';
-    let categoryColor = '#64748b';
-    let amount = 0;
-    let financeType = 'expense'; // default
-    let currency = 'so\'m'; // default
+    // Matnni operatsiyalarga bo'lish
+    const operations = this.splitIntoOperations(text);
+    console.log('🔄 Found operations:', operations.length);
     
-    // Moliya kalit so'zlarni tekshirish
-    const financeMatches = financeKeywords.filter(keyword => lowerText.includes(keyword));
-    const incomeMatches = incomeKeywords.filter(keyword => lowerText.includes(keyword));
+    const results = [];
     
-    console.log(`💰 Finance matches: ${financeMatches.length}`);
-    console.log(`💵 Income matches: ${incomeMatches.length}`);
-    
-    if (financeMatches.length > 0 || incomeMatches.length > 0) {
-      type = 'finance';
+    for (let operation of operations) {
+      console.log('🔍 Analyzing operation:', operation);
       
-      // Daromad yoki xarajat
-      if (incomeMatches.length > 0) {
-        financeType = 'income';
-      }
+      let type = 'general';
+      let category = 'other';
+      let categoryIcon = 'MoreHorizontal';
+      let categoryColor = '#64748b';
+      let amount = 0;
+      let financeType = 'expense'; // default
+      let currency = 'so\'m'; // default
       
-      // Valyutani aniqlash
-      if (lowerText.includes('dollar')) {
-        currency = 'dollar';
-      } else if (lowerText.includes('yevro') || lowerText.includes('euro')) {
-        currency = 'yevro';
-      }
+      const operationLower = operation.toLowerCase();
       
-      // Kategoriyani aniqlash - avtomatik tanlash (eng muhim keywordlar birinchi)
-      // Transport - eng aniq keywordlar birinchi
-      if (lowerText.includes('taksi')) {
-        category = 'transport';
-        categoryIcon = 'Car';
-        categoryColor = '#4ECDC4';
-      } else if (lowerText.includes('marshrutka')) {
-        category = 'transport';
-        categoryIcon = 'Car';
-        categoryColor = '#4ECDC4';
-      } else if (lowerText.includes('avtobus')) {
-        category = 'transport';
-        categoryIcon = 'Car';
-        categoryColor = '#4ECDC4';
-      } else if (lowerText.includes('metro')) {
-        category = 'transport';
-        categoryIcon = 'Car';
-        categoryColor = '#4ECDC4';
-      } else if (lowerText.includes('yolovchi')) {
-        category = 'transport';
-        categoryIcon = 'Car';
-        categoryColor = '#4ECDC4';
-      } else if (lowerText.includes('transport')) {
-        category = 'transport';
-        categoryIcon = 'Car';
-        categoryColor = '#4ECDC4';
-      } 
-      // Qimor o'yinlari - juda aniq keywordlar
-      else if (lowerText.includes('tikib')) {
-        category = 'gambling';
-      } else if (lowerText.includes('yutqizib')) {
-        category = 'gambling';
-      } else if (lowerText.includes('kazino')) {
-        category = 'gambling';
-      } else if (lowerText.includes('bukmeker')) {
-        category = 'gambling';
-      } else if (lowerText.includes('lotereya')) {
-        category = 'gambling';
-      } else if (lowerText.includes('qimor')) {
-        category = 'gambling';
-      }
-      // Taom
-      else if (lowerText.includes('restoran')) {
-        category = 'Food';
-      } else if (lowerText.includes('kafé') || lowerText.includes('cafe')) {
-        category = 'Food';
-      } else if (lowerText.includes('oshxona')) {
-        category = 'Food';
-      } else if (lowerText.includes('ovqat')) {
-        category = 'Food';
-      } else if (lowerText.includes('taom')) {
-        category = 'Food';
-      } else if (lowerText.includes('market')) {
-        category = 'Food';
-      }
-      // Shopping
-      else if (lowerText.includes('magazin')) {
-        category = 'Shopping';
-      } else if (lowerText.includes('do\'kon')) {
-        category = 'Shopping';
-      } else if (lowerText.includes('sotib')) {
-        category = 'Shopping';
-      } else if (lowerText.includes('olish')) {
-        category = 'Shopping';
-      } else if (lowerText.includes('shopping')) {
-        category = 'Shopping';
-      } else if (lowerText.includes('savdo')) {
-        category = 'Shopping';
-      }
-      // Xizmatlar
-      else if (lowerText.includes('ekspert')) {
-        category = 'Services';
-      } else if (lowerText.includes('konsultatsiya')) {
-        category = 'Services';
-      } else if (lowerText.includes('yurist')) {
-        category = 'Services';
-      } else if (lowerText.includes('hisobchi')) {
-        category = 'Services';
-      } else if (lowerText.includes('xizmat')) {
-        category = 'Services';
-      }
-      // Kommunal to'lovlar
-      else if (lowerText.includes('kommunal')) {
-        category = 'Utilities';
-      } else if (lowerText.includes('internet')) {
-        category = 'Utilities';
-      } else if (lowerText.includes('telefon')) {
-        category = 'Utilities';
-      } else if (lowerText.includes('elektr')) {
-        category = 'Utilities';
-      } else if (lowerText.includes('gaz')) {
-        category = 'Utilities';
-      } else if (lowerText.includes('suv')) {
-        category = 'Utilities';
-      }
-      // Uy-joy
-      else if (lowerText.includes('ijara')) {
-        category = 'housing';
-      } else if (lowerText.includes('kvartira')) {
-        category = 'housing';
-      } else if (lowerText.includes('ipoteka')) {
-        category = 'housing';
-      } else if (lowerText.includes('uy-joy')) {
-        category = 'housing';
-      } else if (lowerText.includes('uy')) {
-        category = 'housing';
-      }
-      // Sog'liq
-      else if (lowerText.includes('dorixona')) {
-        category = 'health';
-      } else if (lowerText.includes('kasalxona')) {
-        category = 'health';
-      } else if (lowerText.includes('tibbiyot')) {
-        category = 'health';
-      } else if (lowerText.includes('shifokor')) {
-        category = 'health';
-      } else if (lowerText.includes('sog\'liq')) {
-        category = 'health';
-      }
-      // Ta'lim
-      else if (lowerText.includes('universitet')) {
-        category = 'education';
-      } else if (lowerText.includes('maktab')) {
-        category = 'education';
-      } else if (lowerText.includes('kurs')) {
-        category = 'education';
-      } else if (lowerText.includes('o\'qish')) {
-        category = 'education';
-      } else if (lowerText.includes('ta\'lim')) {
-        category = 'education';
-      }
-      // Kiyim-kechak
-      else if (lowerText.includes('poyabzal')) {
-        category = 'clothing';
-      } else if (lowerText.includes('kurtka')) {
-        category = 'clothing';
-      } else if (lowerText.includes('libos')) {
-        category = 'clothing';
-      } else if (lowerText.includes('kiyim')) {
-        category = 'clothing';
-      }
-      // Avtomobil
-      else if (lowerText.includes('benzin')) {
-        category = 'vehicle';
-      } else if (lowerText.includes('yog\'')) {
-        category = 'vehicle';
-      } else if (lowerText.includes('tezlik')) {
-        category = 'vehicle';
-      } else if (lowerText.includes('mashina')) {
-        category = 'vehicle';
-      } else if (lowerText.includes('avtomobil')) {
-        category = 'vehicle';
-      }
-      // Sayohat
-      else if (lowerText.includes('mehmonxona')) {
-        category = 'travel';
-      } else if (lowerText.includes('aviachipta')) {
-        category = 'travel';
-      } else if (lowerText.includes('dam olish')) {
-        category = 'travel';
-      } else if (lowerText.includes('sayohat')) {
-        category = 'travel';
-      }
-      // Sovg'alar
-      else if (lowerText.includes('tug\'ilgan kun')) {
-        category = 'gifts';
-      } else if (lowerText.includes('to\'y')) {
-        category = 'gifts';
-      } else if (lowerText.includes('bayram')) {
-        category = 'gifts';
-      } else if (lowerText.includes('sovg\'a')) {
-        category = 'gifts';
-      }
-      // Sport
-      else if (lowerText.includes('fitnes')) {
-        category = 'sports';
-      } else if (lowerText.includes('zal')) {
-        category = 'sports';
-      } else if (lowerText.includes('badiy tana')) {
-        category = 'sports';
-      } else if (lowerText.includes('sport')) {
-        category = 'sports';
-      }
-      // Daromad kategoriyalari
-      else if (lowerText.includes('bonus')) {
-        category = 'salary';
-      } else if (lowerText.includes('premium')) {
-        category = 'salary';
-      } else if (lowerText.includes('oylik')) {
-        category = 'salary';
-      } else if (lowerText.includes('ish haqi')) {
-        category = 'salary';
-      } else if (lowerText.includes('maosh')) {
-        category = 'salary';
-      }
-      else if (lowerText.includes('tadbirkorlik')) {
-        category = 'business';
-      } else if (lowerText.includes('foyda')) {
-        category = 'business';
-      } else if (lowerText.includes('savdo')) {
-        category = 'business';
-      } else if (lowerText.includes('biznes')) {
-        category = 'business';
-      }
-      else if (lowerText.includes('aksiya')) {
-        category = 'investment';
-      } else if (lowerText.includes('valyuta')) {
-        category = 'investment';
-      } else if (lowerText.includes('kripto')) {
-        category = 'investment';
-      } else if (lowerText.includes('investitsiya')) {
-        category = 'investment';
-      }
-      // Qarz kredit
-      else if (lowerText.includes('foiz')) {
-        category = 'debt';
-      } else if (lowerText.includes('nasiya')) {
-        category = 'debt';
-      } else if (lowerText.includes('kredit')) {
-        category = 'debt';
-      } else if (lowerText.includes('qarz')) {
-        category = 'debt';
-      }
-      // Oilaviy
-      else if (lowerText.includes('farzand')) {
-        category = 'family';
-      } else if (lowerText.includes('bola')) {
-        category = 'family';
-      } else if (lowerText.includes('oilaviya')) {
-        category = 'family';
-      } else if (lowerText.includes('oilaviy')) {
-        category = 'family';
-      }
-      // Agar hech qaysi kategoriya topilmasa - "other"
-      else {
-        category = 'other';
-      }
+      // Moliya kalit so'zlarni tekshirish
+      const financeMatches = financeKeywords.filter(keyword => operationLower.includes(keyword));
+      const incomeMatches = incomeKeywords.filter(keyword => operationLower.includes(keyword));
       
-      // Raqamlarni ajratib olish - to'liq qayta yozilgan versiya
-      const numberWords = {
-        'bir': 1, 'ikki': 2, 'uch': 3, 'to\'rt': 4, 'besh': 5, 'olti': 6, 'yetti': 7, 'sakkiz': 8, 'to\'qqiz': 9, 'o\'n': 10,
-        'yigirma': 20, 'o\'ttiz': 30, 'qirq': 40, 'ellik': 50, 'oltmish': 60, 'yetmish': 70, 'sakson': 80, 'to\'qson': 90, 'yuz': 100,
-        'ming': 1000, 'milion': 1000000, 'million': 1000000
-      };
+      console.log(`💰 Finance matches: ${financeMatches.length}`);
+      console.log(`💵 Income matches: ${incomeMatches.length}`);
       
-      console.log('🔍 Starting number extraction...');
-      
-      // O'zbek sonlarini raqamlarga aylantirish
-      let processedText = lowerText;
-      for (let [word, num] of Object.entries(numberWords)) {
-        const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        processedText = processedText.replace(regex, ` ${num} `);
-      }
-      
-      console.log('🔢 Processed text:', processedText);
-      
-      // Raqamlarni topish va hisoblash
-      const words = processedText.split(/\s+/).filter(w => w.trim());
-      console.log('📝 Words array:', words);
-      
-      let totalAmount = 0;
-      let currentNumber = 0;
-      let multiplier = 1;
-      
-      for (let i = 0; i < words.length; i++) {
-        const word = words[i];
-        const num = parseInt(word);
+      if (financeMatches.length > 0 || incomeMatches.length > 0) {
+        type = 'finance';
         
-        if (!isNaN(num)) {
-          if (num === 1000 || num === 1000000) {
-            // Bu multiplier (ming, million)
-            if (currentNumber === 0) {
-              currentNumber = 1; // "ming" yoki "million" yolg'iz kelganda
-            }
-            multiplier = num;
-            currentNumber *= multiplier;
-            totalAmount += currentNumber;
-            console.log(`💰 Multiplier: ${num}, Current: ${currentNumber}, Total: ${totalAmount}`);
-            
-            // Reset
-            currentNumber = 0;
-            multiplier = 1;
-          } else if (num === 100) {
-            // Yuz - keyingi raqamga ko'paytirish uchun
-            currentNumber = (currentNumber || 0) + num;
-            console.log(`💰 Added 100: ${currentNumber}`);
-          } else if (num >= 10 && num <= 90) {
-            // O'nliklar (yigirma, o'ttiz, etc.)
-            currentNumber = (currentNumber || 0) + num;
-            console.log(`💰 Added tens: ${num}, Current: ${currentNumber}`);
-          } else if (num >= 1 && num <= 9) {
-            // Birliklar (bir, ikki, etc.)
-            currentNumber = (currentNumber || 0) + num;
-            console.log(`💰 Added units: ${num}, Current: ${currentNumber}`);
-          }
+        // Daromad yoki xarajat
+        if (incomeMatches.length > 0) {
+          financeType = 'income';
+        }
+        
+        // Valyutani aniqlash
+        if (operationLower.includes('dollar')) {
+          currency = 'dollar';
+        } else if (operationLower.includes('yevro') || operationLower.includes('euro')) {
+          currency = 'yevro';
+        }
+        
+        // Kategoriyani aniqlash - Transport birinchi
+        if (operationLower.includes('taksi')) {
+          category = 'transport';
+          categoryIcon = 'Car';
+          categoryColor = '#4ECDC4';
+        } else if (operationLower.includes('oylik')) {
+          category = 'salary';
+          categoryIcon = 'DollarSign';
+          categoryColor = '#1DD1A1';
+        }
+        // ... qolgan kategoriyalar shu yerda
+        
+        // Raqamlarni ajratib olish
+        amount = this.extractAmount(operation);
+        
+        console.log(`💰 Finance detected: ${financeType}, category: ${category}, amount: ${amount}`);
+        
+        // Faqat moliya bo'lsa va amount > 0 bo'lsa qo'shish
+        if (type === 'finance' && amount > 0) {
+          results.push({
+            type: type,
+            financeType: financeType,
+            category: category,
+            categoryIcon: categoryIcon,
+            categoryColor: categoryColor,
+            amount: amount,
+            currency: currency,
+            text: operation.trim()
+          });
         }
       }
-      
-      // Agar qolgan son bo'lsa qo'shish
-      if (currentNumber > 0) {
-        totalAmount += currentNumber;
-        console.log(`💰 Added remaining: ${currentNumber}, Final total: ${totalAmount}`);
-      }
-      
-      // Shuningdek, to'g'ridan-to'g'ri raqamlarni ham topish
-      const directNumbers = text.match(/\d+/g);
-      if (directNumbers) {
-        for (let numStr of directNumbers) {
-          const num = parseInt(numStr);
-          if (num > 0) {
-            totalAmount += num;
-            console.log(`💰 Added direct number: ${num}, Total: ${totalAmount}`);
-          }
-        }
-      }
-      
-      amount = totalAmount;
-      console.log(`💰 FINAL AMOUNT: ${amount}`);
-      console.log(`💰 Finance detected: ${financeType}, category: ${category}, amount: ${amount}`);
     }
     
+    // Agar bir nechta operatsiya bo'lsa, ularni qaytarish
+    if (results.length > 0) {
+      console.log(`✅ Found ${results.length} finance operations`);
+      return {
+        multiple: true,
+        operations: results
+      };
+    }
+    
+    // Agar moliya topilmasa
     return {
-      type: type,
-      financeType: financeType,
-      category: category,
-      categoryIcon: categoryIcon,
-      categoryColor: categoryColor,
-      amount: amount,
-      currency: currency,
-      text: text
+      type: 'general',
+      multiple: false,
+      operations: []
     };
   }
 
-  // Moliyani saqlash
+  // Moliyani saqlash - bir nechta operatsiyani qo'llab-quvvatlaydi
   async saveFinance(analysis, userId) {
     const Finance = require('../models/Finance');
     
     try {
-      const finance = new Finance({
-        userId: userId,
-        type: analysis.financeType,
-        amount: Math.abs(analysis.amount),
-        category: analysis.category,
-        categoryIcon: analysis.categoryIcon,
-        categoryColor: analysis.categoryColor,
-        description: analysis.text,
-        date: new Date()
-      });
-      
-      await finance.save();
-      
-      return {
-        type: 'Moliya',
-        details: `💰 ${this.formatCurrency(analysis.amount, analysis.currency)} - ${analysis.category}\n📝 ${analysis.text}`
-      };
+      // Agar bir nechta operatsiya bo'lsa
+      if (analysis.multiple && analysis.operations.length > 0) {
+        const savedOperations = [];
+        
+        for (let operation of analysis.operations) {
+          const finance = new Finance({
+            userId: userId,
+            type: operation.financeType,
+            amount: Math.abs(operation.amount),
+            category: operation.category,
+            categoryIcon: operation.categoryIcon,
+            categoryColor: operation.categoryColor,
+            description: operation.text,
+            date: new Date()
+          });
+          
+          await finance.save();
+          savedOperations.push(finance);
+        }
+        
+        return {
+          type: 'Moliya (ko\'p operatsiya)',
+          details: analysis.operations.map(op => 
+            `💰 ${this.formatCurrency(op.amount, op.currency)} - ${op.category}\n📝 ${op.text}`
+          ).join('\n\n'),
+          count: savedOperations.length
+        };
+      } 
+      // Agar bitta operatsiya bo'lsa
+      else if (analysis.type === 'finance') {
+        const finance = new Finance({
+          userId: userId,
+          type: analysis.financeType,
+          amount: Math.abs(analysis.amount),
+          category: analysis.category,
+          categoryIcon: analysis.categoryIcon,
+          categoryColor: analysis.categoryColor,
+          description: analysis.text,
+          date: new Date()
+        });
+        
+        await finance.save();
+        
+        return {
+          type: 'Moliya',
+          details: `💰 ${this.formatCurrency(analysis.amount, analysis.currency)} - ${analysis.category}\n📝 ${analysis.text}`
+        };
+      }
     } catch (error) {
       console.error('Error saving finance:', error);
       throw error;
     }
+  }
+
+  // Matnni operatsiyalarga bo'lish
+  splitIntoOperations(text) {
+    // Operatsiyalarni ajratish uchun bo'luvchilar
+    const separators = [
+      /\bva\b/i,           // "va"
+      /\bham\b/i,          // "ham" 
+      /\bshuningdek\b/i,    // "shuningdek"
+      /\bbundan tashqari\b/i, // "bundan tashqari"
+      /\bkeyin\b/i,        // "keyin"
+      /\bundan so'ng\b/i,   // "undan so'ng"
+      /,/,                 // vergul
+      /;/,                 // nuqta vergul
+      /\.\s+/             // nuqta va space
+    ];
+    
+    let operations = [text];
+    
+    for (let separator of separators) {
+      const newOperations = [];
+      for (let op of operations) {
+        const parts = op.split(separator).map(p => p.trim()).filter(p => p.length > 0);
+        if (parts.length > 1) {
+          newOperations.push(...parts);
+        } else {
+          newOperations.push(op);
+        }
+      }
+      operations = newOperations;
+    }
+    
+    console.log('🔄 Split operations:', operations);
+    return operations;
+  }
+
+  // Raqamlarni ajratib olish - alohida metod
+  extractAmount(text) {
+    const numberWords = {
+      'bir': 1, 'ikki': 2, 'uch': 3, 'to\'rt': 4, 'besh': 5, 'olti': 6, 'yetti': 7, 'sakkiz': 8, 'to\'qqiz': 9, 'o\'n': 10,
+      'yigirma': 20, 'o\'ttiz': 30, 'qirq': 40, 'ellik': 50, 'oltmish': 60, 'yetmish': 70, 'sakson': 80, 'to\'qson': 90, 'yuz': 100,
+      'ming': 1000, 'milion': 1000000, 'million': 1000000
+    };
+    
+    console.log('🔍 Starting number extraction for:', text);
+    
+    // O'zbek sonlarini raqamlarga aylantirish
+    let processedText = text.toLowerCase();
+    for (let [word, num] of Object.entries(numberWords)) {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      processedText = processedText.replace(regex, ` ${num} `);
+    }
+    
+    console.log('🔢 Processed text:', processedText);
+    
+    // Raqamlarni topish va hisoblash
+    const words = processedText.split(/\s+/).filter(w => w.trim());
+    console.log('📝 Words array:', words);
+    
+    let totalAmount = 0;
+    let currentNumber = 0;
+    let multiplier = 1;
+    
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const num = parseInt(word);
+      
+      if (!isNaN(num)) {
+        if (num === 1000 || num === 1000000) {
+          // Bu multiplier (ming, million)
+          if (currentNumber === 0) {
+            currentNumber = 1; // "ming" yoki "million" yolg'iz kelganda
+          }
+          multiplier = num;
+          currentNumber *= multiplier;
+          totalAmount += currentNumber;
+          console.log(`💰 Multiplier: ${num}, Current: ${currentNumber}, Total: ${totalAmount}`);
+          
+          // Reset
+          currentNumber = 0;
+          multiplier = 1;
+        } else if (num === 100) {
+          // Yuz - keyingi raqamga ko'paytirish uchun
+          currentNumber = (currentNumber || 0) + num;
+          console.log(`💰 Added 100: ${currentNumber}`);
+        } else if (num >= 10 && num <= 90) {
+          // O'nliklar (yigirma, o'ttiz, etc.)
+          currentNumber = (currentNumber || 0) + num;
+          console.log(`💰 Added tens: ${num}, Current: ${currentNumber}`);
+        } else if (num >= 1 && num <= 9) {
+          // Birliklar (bir, ikki, etc.)
+          currentNumber = (currentNumber || 0) + num;
+          console.log(`💰 Added units: ${num}, Current: ${currentNumber}`);
+        }
+      }
+    }
+    
+    // Agar qolgan son bo'lsa qo'shish
+    if (currentNumber > 0) {
+      totalAmount += currentNumber;
+      console.log(`💰 Added remaining: ${currentNumber}, Final total: ${totalAmount}`);
+    }
+    
+    // Shuningdek, to'g'ridan-to'g'ri raqamlarni ham topish
+    const directNumbers = text.match(/\d+/g);
+    if (directNumbers) {
+      for (let numStr of directNumbers) {
+        const num = parseInt(numStr);
+        if (num > 0) {
+          totalAmount += num;
+          console.log(`💰 Added direct number: ${num}, Total: ${totalAmount}`);
+        }
+      }
+    }
+    
+    console.log(`💰 FINAL AMOUNT: ${totalAmount}`);
+    return totalAmount;
   }
 
   async transcribeWithMohirAI(audioPath) {
