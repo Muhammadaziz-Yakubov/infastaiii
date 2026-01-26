@@ -915,67 +915,86 @@ class InFastAIBotService {
         category = 'other';
       }
       
-      // Raqamlarni ajratib olish - to'g'rilangan versiya
+      // Raqamlarni ajratib olish - to'liq qayta yozilgan versiya
       const numberWords = {
         'bir': 1, 'ikki': 2, 'uch': 3, 'to\'rt': 4, 'besh': 5, 'olti': 6, 'yetti': 7, 'sakkiz': 8, 'to\'qqiz': 9, 'o\'n': 10,
-        'yigirma': 20, 'o\'ttiz': 30, 'qirq': 40, 'ellik': 50, 'oltmish': 60, 'yetmish': 70, 'sakson': 80, 'to\'qson': 90, 'yuz': 100
+        'yigirma': 20, 'o\'ttiz': 30, 'qirq': 40, 'ellik': 50, 'oltmish': 60, 'yetmish': 70, 'sakson': 80, 'to\'qson': 90, 'yuz': 100,
+        'ming': 1000, 'milion': 1000000, 'million': 1000000
       };
       
-      let totalAmount = 0;
-      
-      // Matndan raqamlarni ajratib olish
-      const cleanText = text.replace(/[^0-9a-z'ʻ\s]/gi, ' ').toLowerCase();
+      console.log('🔍 Starting number extraction...');
       
       // O'zbek sonlarini raqamlarga aylantirish
-      let processedText = cleanText;
+      let processedText = lowerText;
       for (let [word, num] of Object.entries(numberWords)) {
         const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        processedText = processedText.replace(regex, num);
+        processedText = processedText.replace(regex, ` ${num} `);
       }
       
-      console.log('🔍 Processed text:', processedText);
+      console.log('🔢 Processed text:', processedText);
       
-      // Raqamlarni topish - "ellik besh ming" -> "50 55 ming"
-      const words = processedText.split(/\s+/);
-      console.log('🔢 Words:', words);
+      // Raqamlarni topish va hisoblash
+      const words = processedText.split(/\s+/).filter(w => w.trim());
+      console.log('📝 Words array:', words);
       
-      let i = 0;
-      while (i < words.length) {
+      let totalAmount = 0;
+      let currentNumber = 0;
+      let multiplier = 1;
+      
+      for (let i = 0; i < words.length; i++) {
         const word = words[i];
+        const num = parseInt(word);
         
-        if (/^\d+$/.test(word)) {
-          const num = parseInt(word);
-          
-          // Keyingi so'z "ming" yoki "million" bo'lishini tekshirish
-          if (i + 1 < words.length) {
-            const nextWord = words[i + 1];
-            
-            if (nextWord === 'ming' || nextWord === '1000') {
-              totalAmount += num * 1000;
-              i += 2; // "ming" so'zini o'tkazib yuborish
-              console.log(`💰 ${num} ming -> ${num * 1000}`);
-            } else if (nextWord === 'million' || nextWord === '1000000') {
-              totalAmount += num * 1000000;
-              i += 2; // "million" so'zini o'tkazib yuborish
-              console.log(`💰 ${num} million -> ${num * 1000000}`);
-            } else {
-              totalAmount += num;
-              i++;
-              console.log(`💰 ${num} -> ${num}`);
+        if (!isNaN(num)) {
+          if (num === 1000 || num === 1000000) {
+            // Bu multiplier (ming, million)
+            if (currentNumber === 0) {
+              currentNumber = 1; // "ming" yoki "million" yolg'iz kelganda
             }
-          } else {
-            totalAmount += num;
-            i++;
-            console.log(`💰 ${num} -> ${num}`);
+            multiplier = num;
+            currentNumber *= multiplier;
+            totalAmount += currentNumber;
+            console.log(`💰 Multiplier: ${num}, Current: ${currentNumber}, Total: ${totalAmount}`);
+            
+            // Reset
+            currentNumber = 0;
+            multiplier = 1;
+          } else if (num === 100) {
+            // Yuz - keyingi raqamga ko'paytirish uchun
+            currentNumber = (currentNumber || 0) + num;
+            console.log(`💰 Added 100: ${currentNumber}`);
+          } else if (num >= 10 && num <= 90) {
+            // O'nliklar (yigirma, o'ttiz, etc.)
+            currentNumber = (currentNumber || 0) + num;
+            console.log(`💰 Added tens: ${num}, Current: ${currentNumber}`);
+          } else if (num >= 1 && num <= 9) {
+            // Birliklar (bir, ikki, etc.)
+            currentNumber = (currentNumber || 0) + num;
+            console.log(`💰 Added units: ${num}, Current: ${currentNumber}`);
           }
-        } else {
-          i++;
+        }
+      }
+      
+      // Agar qolgan son bo'lsa qo'shish
+      if (currentNumber > 0) {
+        totalAmount += currentNumber;
+        console.log(`💰 Added remaining: ${currentNumber}, Final total: ${totalAmount}`);
+      }
+      
+      // Shuningdek, to'g'ridan-to'g'ri raqamlarni ham topish
+      const directNumbers = text.match(/\d+/g);
+      if (directNumbers) {
+        for (let numStr of directNumbers) {
+          const num = parseInt(numStr);
+          if (num > 0) {
+            totalAmount += num;
+            console.log(`💰 Added direct number: ${num}, Total: ${totalAmount}`);
+          }
         }
       }
       
       amount = totalAmount;
-      console.log(`💰 Final calculated amount: ${amount}`);
-      
+      console.log(`💰 FINAL AMOUNT: ${amount}`);
       console.log(`💰 Finance detected: ${financeType}, category: ${category}, amount: ${amount}`);
     }
     
