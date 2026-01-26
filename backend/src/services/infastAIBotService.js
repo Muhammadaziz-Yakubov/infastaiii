@@ -20,20 +20,22 @@ class InFastAIBotService {
     if (!isLinked) {
       return {
         keyboard: [
-          [{ text: 'Hisobni ulash' }],
-          [{ text: 'Ilovaga otish', web_app: { url: this.webAppUrl } }]
+          [{ text: 'Hisobni ulash' }]
         ],
-        resize_keyboard: true
+        resize_keyboard: true,
+        one_time_keyboard: false
+      };
+    } else {
+      return {
+        keyboard: [
+          [{ text: '📊 Moliyaviy holat' }],
+          [{ text: '⚙️ Bildirishnomalar' }],
+          [{ text: '🌐 Ilovaga o\'tish' }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
       };
     }
-    return {
-      keyboard: [
-        [{ text: 'Statistika' }],
-        [{ text: '🎤 Ovozli komanda' }],
-        [{ text: 'Ilovaga otish', web_app: { url: this.webAppUrl } }]
-      ],
-      resize_keyboard: true
-    };
   }
 
   getStatsKeyboard() {
@@ -151,33 +153,41 @@ class InFastAIBotService {
 
       if (text === 'Hisobni ulash') {
         await this.sendLinkInstructions(chatId);
-      } else if (text === 'Statistika') {
+      } else if (text === '📊 Moliyaviy holat') {
         if (!user) {
           await this.bot.sendMessage(chatId, 'Avval hisobni ulang!', { reply_markup: this.getMainKeyboard(false) });
           return;
         }
-        await this.bot.sendMessage(chatId, 'Qaysi statistikani kormoqchisiz?', { reply_markup: this.getStatsKeyboard() });
-      } else if (text === '🎤 Ovozli komanda') {
+        await this.bot.sendMessage(chatId, '📊 Moliyaviy holatingiz hisoblanmoqda...');
+        const stats = await this.generateFinanceStats(user._id);
+        await this.bot.sendMessage(chatId, `📊 Moliyaviy holatingiz:\n\n${stats}`, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      } else if (text === '⚙️ Bildirishnomalar') {
         if (!user) {
           await this.bot.sendMessage(chatId, 'Avval hisobni ulang!', { reply_markup: this.getMainKeyboard(false) });
           return;
         }
+        await this.showNotificationSettings(chatId, user);
+      } else if (text === '🌐 Ilovaga o\'tish') {
         await this.bot.sendMessage(chatId, 
-          '🎤 Iltimos, ovozli xabaringizni yuboring:\n\n' +
-          'Misol uchun:\n' +
-          '• "Bugun taksiga 25 ming so\'m sarfladim"\n' +
-          '• "Ertadan kotta vazifa qilishim kerak"\n' +
-          '• "Yil oxiriga qadar 1 million yig\'ishim kerak"\n\n' +
-          '📞 Mikrofon tugmasini bosib, gapiring!',
-          { reply_markup: { remove_keyboard: true } }
+          '🌐 To\'liq boshqaruv uchun ilovamizga o\'ting:\n\n' +
+          '🔗 https://infastproject.uz\n\n' +
+          '📱 Ilovada siz:\n' +
+          '• Barcha statistikalarni ko\'rasiz\n' +
+          '• Grafiklar va diagrammalar\n' +
+          '• Moliya boshqaruvi\n' +
+          '• Task va maqsadlar\n' +
+          '• Va boshqa ko\'plab imkoniyatlar!\n\n' +
+          '🚀 Hozir o\'ting va boshqaruvni o\'zingiz qiling!',
+          { 
+            reply_markup: {
+              inline_keyboard: [[
+                { text: '🚀 Ilovaga o\'tish', url: 'https://infastproject.uz' }
+              ]]
+            }
+          }
         );
-        
-        // 5 soniyadan keyin asosiy keyboardni qaytarish
-        setTimeout(async () => {
-          await this.bot.sendMessage(chatId, 'Asosiy menyu:', { 
-            reply_markup: this.getMainKeyboard(true) 
-          });
-        }, 5000);
       }
     });
 
@@ -196,7 +206,11 @@ class InFastAIBotService {
         
         if (!user) {
           console.log('❌ User not found for chatId:', chatId);
-          await this.bot.sendMessage(chatId, 'Avval hisobni ulang!', { reply_markup: this.getMainKeyboard(false) });
+          await this.bot.sendMessage(chatId, 
+            '❌ Avval hisobni ulang!\n\n' +
+            '📋 Hisobni ulash uchun "Hisobni ulash" tugmasini bosing.',
+            { reply_markup: this.getMainKeyboard(false) }
+          );
           return;
         }
 
@@ -217,9 +231,16 @@ class InFastAIBotService {
         
       } catch (error) {
         console.error('❌ Voice command error:', error);
-        await this.bot.sendMessage(msg.chat.id, '❌ Ovozli xabarni tahlil qilishda xatolik yuz berdi.\n\nXatolik: ' + error.message);
+        await this.bot.sendMessage(msg.chat.id, 
+          '❌ Ovozli xabarni tahlil qilishda xatolik yuz berdi.\n\n' +
+          'Iltimos, qayta urinib ko\'ring.\n' +
+          'Xatolik: ' + error.message
+        );
       }
     });
+
+    // Foydalanuvchiga ovoz yuborishni eslatish (har 2 soatda bir marta)
+    this.sendVoiceReminder();
 
     this.bot.on('callback_query', async (query) => {
       const chatId = query.message.chat.id;
@@ -232,17 +253,60 @@ class InFastAIBotService {
         return;
       }
 
-      var msgId = query.message.message_id;
-      if (data === 'stats_debts') await this.sendDebtStats(chatId, user, msgId);
-      else if (data === 'stats_tasks') await this.sendTaskStats(chatId, user, msgId);
-      else if (data === 'stats_goals') await this.sendGoalStats(chatId, user, msgId);
-      else if (data === 'stats_finance') await this.sendFinanceStats(chatId, user, msgId);
-      else if (data === 'stats_challenges') await this.sendChallengeStats(chatId, user, msgId);
-      else if (data === 'stats_overview') await this.sendOverviewStats(chatId, user, msgId);
+      // Bildirishnomalar callback handlerlari
+      if (data === 'notif_finance') {
+        const analysis = await this.generateFinanceAnalysis(user._id);
+        await this.bot.sendMessage(chatId, analysis, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      } else if (data === 'notif_daily') {
+        const result = await this.saveNotificationSettings(user._id, 'daily', 'daily');
+        await this.bot.sendMessage(chatId, result.message, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      } else if (data === 'notif_weekly') {
+        const result = await this.saveNotificationSettings(user._id, 'weekly', 'weekly');
+        await this.bot.sendMessage(chatId, result.message, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      } else if (data === 'notif_monthly') {
+        const result = await this.saveNotificationSettings(user._id, 'monthly', 'monthly');
+        await this.bot.sendMessage(chatId, result.message, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      } else if (data === 'notif_schedule') {
+        await this.showScheduleSettings(chatId, user);
+      } else if (data === 'schedule_daily') {
+        const result = await this.saveNotificationSettings(user._id, 'daily', 'daily');
+        await this.bot.sendMessage(chatId, result.message, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      } else if (data === 'schedule_weekly') {
+        const result = await this.saveNotificationSettings(user._id, 'weekly', 'weekly');
+        await this.bot.sendMessage(chatId, result.message, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      } else if (data === 'schedule_monthly') {
+        const result = await this.saveNotificationSettings(user._id, 'monthly', 'monthly');
+        await this.bot.sendMessage(chatId, result.message, { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      } else if (data === 'notif_cancel') {
+        await this.bot.sendMessage(chatId, '❌ Bekor qilindi', { 
+          reply_markup: this.getMainKeyboard(true) 
+        });
+      }
+      // Eski statistika callbacklari
+      else if (data === 'stats_debts') await this.sendDebtStats(chatId, user, query.message.message_id);
+      else if (data === 'stats_tasks') await this.sendTaskStats(chatId, user, query.message.message_id);
+      else if (data === 'stats_goals') await this.sendGoalStats(chatId, user, query.message.message_id);
+      else if (data === 'stats_finance') await this.sendFinanceStats(chatId, user, query.message.message_id);
+      else if (data === 'stats_challenges') await this.sendChallengeStats(chatId, user, query.message.message_id);
+      else if (data === 'stats_overview') await this.sendOverviewStats(chatId, user, query.message_id);
       else if (data === 'back_stats') {
         await this.bot.editMessageText('Qaysi statistikani kormoqchisiz?', {
           chat_id: chatId,
-          message_id: msgId,
+          message_id: query.message.message_id,
           reply_markup: this.getStatsKeyboard()
         });
       }
@@ -250,6 +314,230 @@ class InFastAIBotService {
 
     if (process.env.NODE_ENV !== 'production') {
       this.bot.on('polling_error', function(e) { console.error('Polling error:', e.message); });
+    }
+  }
+
+  // Foydalanuvchilarga ovoz yuborishni eslatish
+  async sendVoiceReminder() {
+    const reminderInterval = 2 * 60 * 60 * 1000; // 2 soat
+    
+    setInterval(async () => {
+      try {
+        const users = await User.find({
+          telegramChatId: { $exists: true, $ne: null },
+          'telegramNotifications.enabled': true
+        });
+
+        for (const user of users) {
+          const randomMessages = [
+            '🎤 Unutmang! Ovozli komanda bilan moliyangizni tez qo\'shing!\n\n' +
+            'Misol: "Bugun taksiga 25 ming sarfladim"',
+            
+            '📊 Ovoz bilan statistikangizni tekshiring!\n\n' +
+            'Aytishingiz mumkin: "Moliyaviy holatimni ko\'r"',
+            
+            '💰 Ovozli xarajatlarni yozing!\n\n' +
+            'Masalan: "Restoranda 50 ming, marketda 30 ming"',
+            
+            '🎯 Ovoz bilan maqsadlarangizni kuzating!\n\n' +
+            'Aytishingiz mumkin: "Yil oxiriga 1 million yig\'ishim kerak"'
+          ];
+          
+          const randomMessage = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+          
+          await this.bot.sendMessage(user.telegramChatId, randomMessage, {
+            reply_markup: this.getMainKeyboard(true)
+          });
+        }
+      } catch (error) {
+        console.error('Voice reminder error:', error);
+      }
+    }, reminderInterval);
+  }
+
+  // Bildirishnomalar sozlamalari
+  async showNotificationSettings(chatId, user) {
+    await this.bot.sendMessage(chatId, 
+      '⚙️ *Bildirishnomalar sozlamalari*\n\n' +
+      'Qaysi turdagi bildirishnomalarni qabul qilasiz?\n\n' +
+      '📊 *Moliya tahlili* - Moliyaviy holatingiz haqida tahlil\n' +
+      '📅 *Kunlik hisobot* - Har kuni xarajatlaringiz haqida\n' +
+      '📆 *Haftalik hisobot* - Har hafta statistikasi\n' +
+      '⏰ *Vaqtini belgilash* - Qaysi vaqtda eslatish\n\n' +
+      'Tanlang:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '📊 Moliya tahlili', callback_data: 'notif_finance' },
+              { text: '📅 Kunlik hisobot', callback_data: 'notif_daily' }
+            ],
+            [
+              { text: '📆 Haftalik hisobot', callback_data: 'notif_weekly' },
+              { text: '⏰ Vaqtini belgilash', callback_data: 'notif_schedule' }
+            ],
+            [
+              { text: '❌ Bekor qilish', callback_data: 'notif_cancel' }
+            ]
+          ]
+        }
+      }
+    );
+  }
+
+  // Vaqtni belgilash
+  async showScheduleSettings(chatId, user) {
+    await this.bot.sendMessage(chatId, 
+      '⏰ *Bildirishnomalar vaqtini belgilash*\n\n' +
+      'Qachay eslatishni tanlang:\n\n' +
+      '🌅 Har kuni - Har kuni soat 9:00 da\n' +
+      '📅 Har haftada - Har hafta dushanba kuni\n' +
+      '📅 Har oyda - Har oyning 1-kuni\n\n' +
+      'Tanlang:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              { text: '🌅 Har kuni', callback_data: 'schedule_daily' },
+              { text: '📅 Har haftada', callback_data: 'schedule_weekly' }
+            ],
+            [
+              { text: '📅 Har oyda', callback_data: 'schedule_monthly' },
+              { text: '❌ Bekor qilish', callback_data: 'notif_cancel' }
+            ]
+          ]
+        }
+      }
+    );
+  }
+
+  // Vaqtni saqlash
+  async saveNotificationSettings(userId, type, schedule) {
+    try {
+      await User.updateOne(
+        { _id: userId },
+        { 
+          $set: { 
+            'notificationSettings': {
+              type: type,
+              schedule: schedule,
+              updatedAt: new Date()
+            }
+          }
+        }
+      );
+      
+      let scheduleText = '';
+      if (schedule === 'daily') scheduleText = 'Har kuni soat 9:00';
+      else if (schedule === 'weekly') scheduleText = 'Har hafta dushanba kuni';
+      else if (schedule === 'monthly') scheduleText = 'Har oyning 1-kuni';
+      
+      return {
+        success: true,
+        message: `✅ Bildirishnomalar sozlandi!\n\n📊 Turi: ${type}\n⏰ Vaqt: ${scheduleText}`
+      };
+    } catch (error) {
+      console.error('Error saving notification settings:', error);
+      return {
+        success: false,
+        message: '❌ Sozlamalarni saqlashda xatolik yuz berdi.'
+      };
+    }
+  }
+
+  // Moliya tahlili bildirishnomasi
+  async generateFinanceAnalysis(userId) {
+    const Finance = require('../models/Finance');
+    
+    try {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+      
+      // Joriy oy moliyalari
+      const currentMonthFinances = await Finance.find({ 
+        userId, 
+        date: { $gte: startOfMonth } 
+      });
+      
+      // O'tgan oy moliyalari
+      const lastMonthFinances = await Finance.find({ 
+        userId, 
+        date: { $gte: startOfLastMonth, $lte: endOfLastMonth } 
+      });
+      
+      // Hisoblashlar
+      const currentIncome = currentMonthFinances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
+      const currentExpense = currentMonthFinances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
+      const currentBalance = currentIncome - currentExpense;
+      
+      const lastIncome = lastMonthFinances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
+      const lastExpense = lastMonthFinances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
+      const lastBalance = lastIncome - lastExpense;
+      
+      // Kategoriyalar bo'yicha xarajatlar
+      const expensesByCategory = {};
+      currentMonthFinances.filter(f => f.type === 'expense').forEach(f => {
+        expensesByCategory[f.category] = (expensesByCategory[f.category] || 0) + f.amount;
+      });
+      
+      // O'sish/kamayish foizi
+      const incomeChange = lastIncome > 0 ? ((currentIncome - lastIncome) / lastIncome * 100) : 0;
+      const expenseChange = lastExpense > 0 ? ((currentExpense - lastExpense) / lastExpense * 100) : 0;
+      
+      // Eng katta xarajatlar
+      const topExpenses = Object.entries(expensesByCategory)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 3)
+        .map(([category, amount]) => ({ category, amount }));
+      
+      // Tavsiyalar
+      const recommendations = [];
+      
+      if (currentBalance < 0) {
+        recommendations.push('⚠️ Diqqat! Bu oy xarajatlaringiz daromadingizdan ortiq.');
+      }
+      
+      if (currentExpense > currentIncome * 0.9) {
+        recommendations.push('💡 Xarajatlarni kamaytirish tavsiya etiladi.');
+      }
+      
+      if (topExpenses.length > 0) {
+        recommendations.push(`📊 Eng ko'p xarajat: ${topExpenses[0].category} - ${this.formatCurrency(topExpenses[0].amount)}`);
+      }
+      
+      if (recommendations.length === 0) {
+        recommendations.push('✅ Moliyaviy holatingiz yaxshi!');
+      }
+      
+      let analysis = `📊 *MOLIYA TAHILI*\n\n`;
+      analysis += `💰 *Joriy oy balansi*\n`;
+      analysis += `Daromad: ${this.formatCurrency(currentIncome)}\n`;
+      analysis += `Xarajat: ${this.formatCurrency(currentExpense)}\n`;
+      analysis += `Balans: ${this.formatCurrency(currentBalance)}\n\n`;
+      
+      analysis += `📈 *O'tgan oy bilan solishtirganda*\n`;
+      analysis += `Daromad o'zgarishi: ${incomeChange > 0 ? '+' : ''}${incomeChange.toFixed(1)}%\n`;
+      analysis += `Xarajat o'zgarishi: ${expenseChange > 0 ? '+' : ''}${expenseChange.toFixed(1)}%\n\n`;
+      
+      if (topExpenses.length > 0) {
+        analysis += `🏷️ *Eng ko'p xarajatlar*\n`;
+        topExpenses.forEach((exp, i) => {
+          analysis += `${i + 1}. ${exp.category}: ${this.formatCurrency(exp.amount)}\n`;
+        });
+        analysis += '\n';
+      }
+      
+      analysis += `🤖 *AI tavsiyalari*\n`;
+      recommendations.forEach(rec => {
+        analysis += `• ${rec}\n`;
+      });
+      
+      return analysis;
+    } catch (error) {
+      console.error('Error generating finance analysis:', error);
+      return '❌ Tahlilni olishda xatolik yuz berdi.';
     }
   }
 
@@ -487,14 +775,82 @@ class InFastAIBotService {
 
   startReminderScheduler() {
     var self = this;
+    
     // Har 1 soatda tekshirish
     this.reminderInterval = setInterval(function() {
-      self.sendDailyReminder();
+      self.checkAndSendNotifications();
     }, 60 * 60 * 1000);
 
     // Dastlab 1 daqiqadan keyin
-    setTimeout(function() { self.sendDailyReminder(); }, 60000);
-    console.log('Reminder scheduler started');
+    setTimeout(function() { self.checkAndSendNotifications(); }, 60000);
+    console.log('Notification scheduler started');
+  }
+
+  // Bildirishnomalarni tekshirish va yuborish
+  async checkAndSendNotifications() {
+    try {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentDay = now.getDay(); // 0 = Yakshanba
+      
+      const users = await User.find({
+        telegramChatId: { $exists: true, $ne: null },
+        'notificationSettings': { $exists: true }
+      });
+
+      for (const user of users) {
+        const settings = user.notificationSettings;
+        
+        let shouldSend = false;
+        let notificationType = '';
+        
+        // Vaqtni tekshirish
+        if (settings.schedule === 'daily' && currentHour === 9) {
+          shouldSend = true;
+          notificationType = 'daily';
+        } else if (settings.schedule === 'weekly' && currentDay === 1 && currentHour === 9) {
+          shouldSend = true;
+          notificationType = 'weekly';
+        } else if (settings.schedule === 'monthly') {
+          const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const isFirstDay = now.getDate() === 1 && currentHour === 9;
+          shouldSend = isFirstDay;
+          notificationType = 'monthly';
+        }
+        
+        if (shouldSend) {
+          await this.sendScheduledNotification(user, notificationType);
+        }
+      }
+    } catch (error) {
+      console.error('Notification scheduler error:', error);
+    }
+  }
+
+  // Rejalashtirilgan bildirishnomani yuborish
+  async sendScheduledNotification(user, type) {
+    try {
+      let message = '';
+      
+      if (type === 'daily') {
+        const analysis = await this.generateFinanceAnalysis(user._id);
+        message = `📅 *KUNLIK HISOBOT*\n\n${analysis}`;
+      } else if (type === 'weekly') {
+        const analysis = await this.generateFinanceAnalysis(user._id);
+        message = `📆 *HAFTALIK HISOBOT*\n\n${analysis}`;
+      } else if (type === 'monthly') {
+        const analysis = await this.generateFinanceAnalysis(user._id);
+        message = `📅 *OYLIK HISOBOT*\n\n${analysis}`;
+      }
+      
+      await this.bot.sendMessage(user.telegramChatId, message, {
+        reply_markup: this.getMainKeyboard(true)
+      });
+      
+      console.log(`✅ ${type} notification sent to user ${user.telegramChatId}`);
+    } catch (error) {
+      console.error('Error sending scheduled notification:', error);
+    }
   }
 
   async sendDailyReminder() {
@@ -613,9 +969,20 @@ class InFastAIBotService {
       // 2. Matnni tahlil qilish
       const analysis = await this.analyzeText(transcription);
       
-      // 3. Moliyaga saqlash (agar moliya bo'lsa)
+      // 3. Statistika so'rovini tekshirish
+      const isStatsRequest = this.isStatsRequest(transcription);
+      
+      if (isStatsRequest) {
+        const stats = await this.generateFinanceStats(userId);
+        return {
+          success: true,
+          message: `📊 Moliyaviy holatingiz:\n\n${stats}`
+        };
+      }
+      
+      // 4. Moliyaga saqlash (agar moliya bo'lsa)
       let result = null;
-      if (analysis.type === 'finance') {
+      if (analysis.type === 'finance' || (analysis.multiple && analysis.operations.length > 0)) {
         result = await this.saveFinance(analysis, userId);
       } else {
         result = { type: 'General', details: 'Moliya emas' };
@@ -632,6 +999,165 @@ class InFastAIBotService {
         message: '❌ Ovozli komandani qayta ishlashda xatolik yuz berdi.'
       };
     }
+  }
+
+  // Statistika so'rovini aniqlash
+  isStatsRequest(text) {
+    const statsKeywords = [
+      'moliyaviy holatim',
+      'moliya holatim',
+      'moliyamni ko\'r',
+      'moliyamni ko\'rsat',
+      'statistikamni',
+      'hisobotimni',
+      'tahlil qil',
+      'tahlili',
+      'holatimni',
+      'xarajatlarim',
+      'daromadlarim',
+      'balance',
+      'balans',
+      'qancha sarfladim',
+      'qancha oldim',
+      'oylik hisobot',
+      'kunlik hisobot'
+    ];
+    
+    const lowerText = text.toLowerCase();
+    return statsKeywords.some(keyword => lowerText.includes(keyword));
+  }
+
+  // Moliya statistikasini generatsiya qilish
+  async generateFinanceStats(userId) {
+    const Finance = require('../models/Finance');
+    const User = require('../models/User');
+    
+    try {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+      
+      // Barcha moliya operatsiyalari
+      const allFinances = await Finance.find({ userId }).sort({ date: -1 });
+      
+      // Oylik moliya
+      const monthlyFinances = await Finance.find({ 
+        userId, 
+        date: { $gte: startOfMonth } 
+      });
+      
+      // Haftalik moliya
+      const weeklyFinances = await Finance.find({ 
+        userId, 
+        date: { $gte: startOfWeek } 
+      });
+      
+      // Hisoblashlar
+      const totalIncome = allFinances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
+      const totalExpense = allFinances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
+      const balance = totalIncome - totalExpense;
+      
+      const monthlyIncome = monthlyFinances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
+      const monthlyExpense = monthlyFinances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
+      const monthlyBalance = monthlyIncome - monthlyExpense;
+      
+      const weeklyIncome = weeklyFinances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
+      const weeklyExpense = weeklyFinances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
+      const weeklyBalance = weeklyIncome - weeklyExpense;
+      
+      // Kategoriyalar bo'yicha xarajatlar
+      const expensesByCategory = {};
+      monthlyFinances.filter(f => f.type === 'expense').forEach(f => {
+        expensesByCategory[f.category] = (expensesByCategory[f.category] || 0) + f.amount;
+      });
+      
+      // Eng ko'p xarajat qilingan kategoriyalar
+      const topCategories = Object.entries(expensesByCategory)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([category, amount]) => `${category}: ${this.formatCurrency(amount)}`);
+      
+      // Oxirgi operatsiyalar
+      const recentTransactions = allFinances.slice(0, 5).map(f => 
+        `${f.type === 'income' ? '➕' : '➖'} ${this.formatCurrency(f.amount)} - ${f.category}`
+      );
+      
+      // AI tavsiyalari
+      const recommendations = this.generateRecommendations(balance, monthlyExpense, monthlyIncome, expensesByCategory);
+      
+      let stats = `💰 *UMUMIY BALANS*\n`;
+      stats += `Jami daromad: ${this.formatCurrency(totalIncome)}\n`;
+      stats += `Jami xarajat: ${this.formatCurrency(totalExpense)}\n`;
+      stats += `Jami balans: ${this.formatCurrency(balance)}\n\n`;
+      
+      stats += `📅 *BU OY*\n`;
+      stats += `Daromad: ${this.formatCurrency(monthlyIncome)}\n`;
+      stats += `Xarajat: ${this.formatCurrency(monthlyExpense)}\n`;
+      stats += `Balans: ${this.formatCurrency(monthlyBalance)}\n\n`;
+      
+      stats += `📆 *BU HAFTA*\n`;
+      stats += `Daromad: ${this.formatCurrency(weeklyIncome)}\n`;
+      stats += `Xarajat: ${this.formatCurrency(weeklyExpense)}\n`;
+      stats += `Balans: ${this.formatCurrency(weeklyBalance)}\n\n`;
+      
+      if (topCategories.length > 0) {
+        stats += `🏷️ *ENG KO'P XARAJATLAR*\n`;
+        topCategories.forEach((cat, i) => {
+          stats += `${i + 1}. ${cat}\n`;
+        });
+        stats += '\n';
+      }
+      
+      if (recentTransactions.length > 0) {
+        stats += `📋 *OXIRGI OPERATSIYALAR*\n`;
+        recentTransactions.forEach(trx => {
+          stats += `${trx}\n`;
+        });
+        stats += '\n';
+      }
+      
+      if (recommendations.length > 0) {
+        stats += `🤖 *AI TAVSIYALARI*\n`;
+        recommendations.forEach(rec => {
+          stats += `• ${rec}\n`;
+        });
+      }
+      
+      return stats;
+    } catch (error) {
+      console.error('Error generating finance stats:', error);
+      return '❌ Statistikani olishda xatolik yuz berdi.';
+    }
+  }
+
+  // AI tavsiyalari
+  generateRecommendations(balance, monthlyExpense, monthlyIncome, expensesByCategory) {
+    const recommendations = [];
+    
+    if (balance < 0) {
+      recommendations.push('⚠️ Xarajatlaringiz daromadingizdan ko\'p. Bajajni kamaytirishni ko\'rib chiqing.');
+    }
+    
+    if (monthlyExpense > monthlyIncome * 0.8) {
+      recommendations.push('💡 Xarajatlaringiz daromadingizning 80% dan oshmoqda. Tejamkorlikka e\'tibor bering.');
+    }
+    
+    const savingsRate = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpense) / monthlyIncome * 100) : 0;
+    if (savingsRate < 20) {
+      recommendations.push('🎯 Daromadingizning kamida 20% ni tejashga harakat qiling.');
+    }
+    
+    // Eng katta xarajat kategoriyasi
+    const topCategory = Object.entries(expensesByCategory).sort(([,a], [,b]) => b - a)[0];
+    if (topCategory) {
+      recommendations.push(`📊 Eng ko'p xarajat qilingan yo'nalish: ${topCategory[0]}`);
+    }
+    
+    if (recommendations.length === 0) {
+      recommendations.push('✅ Ajoyib! Moliyaviy holatingiz yaxshi holatda.');
+    }
+    
+    return recommendations;
   }
 
   // Matn tahlili - faqat moliya uchun, bir nechta operatsiyalarni ajratish

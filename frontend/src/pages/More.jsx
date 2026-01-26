@@ -28,6 +28,18 @@ const More = () => {
           badge: 'Yangi',
           disabled: false
         }
+    {
+      title: 'Sahifalar',
+      items: [
+        {
+          name: 'Challengelar',
+          description: 'Do\'stlar bilan birga odat shakllantiring',
+          icon: Trophy,
+          href: '/challenges',
+          color: 'bg-orange-500',
+          badge: 'Yangi',
+          disabled: false
+        }
       ]
     },
     {

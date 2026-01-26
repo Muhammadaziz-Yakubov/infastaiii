@@ -43,8 +43,7 @@ const MobileBottomBar = () => {
     { name: 'Tasks', href: '/tasks', icon: CheckSquare, labelKey: 'sidebar.tasks' },
     { name: 'Finance', href: '/finance', icon: Wallet, labelKey: 'sidebar.finance' },
     { name: 'Goals', href: '/goals', icon: Goal, labelKey: 'sidebar.goals' },
-    { name: 'Family', href: '/family', icon: Users, labelKey: 'sidebar.family' },
-    { name: 'More', href: '/more', icon: MoreHorizontal, labelKey: 'sidebar.more' },
+    { name: 'More', href: '/more', icon: MoreHorizontal, labelKey: 'sidebar.more' }
   ];
 
   return (
@@ -147,7 +146,6 @@ const Sidebar = () => {
     { name: 'sidebar.tasks', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'sidebar.finance', href: '/finance', icon: Wallet, badge: null },
     { name: 'sidebar.goals', href: '/goals', icon: Goal, badge: null },
-    { name: 'sidebar.family', href: '/family', icon: Users, badge: null },
     { name: 'sidebar.challenges', href: '/challenges', icon: Trophy, badge: null }
   ];
 
