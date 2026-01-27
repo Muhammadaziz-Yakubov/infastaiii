@@ -952,9 +952,37 @@ exports.bulkDeleteTransactions = async (req, res) => {
 // Clear all transactions (admin)
 exports.clearAllTransactions = async (req, res) => {
   try {
-    const Finance = require('../models/Finance');
+    console.log('🧹 Starting clear all transactions operation...');
     
+    // Check if Finance model exists
+    let Finance;
+    try {
+      Finance = require('../models/Finance');
+      console.log('✅ Finance model loaded successfully');
+    } catch (modelError) {
+      console.error('❌ Error loading Finance model:', modelError);
+      return res.status(500).json({
+        success: false,
+        message: 'Finance modeli yuklanmadi',
+        error: modelError.message
+      });
+    }
+    
+    // Count documents before deletion
+    const countBefore = await Finance.countDocuments();
+    console.log(`📊 Found ${countBefore} transactions to delete`);
+    
+    if (countBefore === 0) {
+      return res.json({
+        success: true,
+        message: 'O\'chirish uchun tranzaksiyalar topilmadi',
+        deletedCount: 0
+      });
+    }
+    
+    // Perform deletion
     const result = await Finance.deleteMany({});
+    console.log(`✅ Successfully deleted ${result.deletedCount} transactions`);
 
     res.json({
       success: true,
@@ -962,10 +990,15 @@ exports.clearAllTransactions = async (req, res) => {
       deletedCount: result.deletedCount
     });
   } catch (error) {
-    console.error('Clear all transactions error:', error);
+    console.error('❌ Clear all transactions error:', error);
+    console.error('Error stack:', error.stack);
+    
+    // Send detailed error response
     res.status(500).json({
       success: false,
-      message: 'Barcha tranzaksiyalarni o\'chirishda xatolik'
+      message: 'Barcha tranzaksiyalarni o\'chirishda xatolik',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };

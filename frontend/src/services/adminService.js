@@ -296,11 +296,22 @@ export const adminService = {
   // Clear all transactions
   clearAllTransactions: async () => {
     try {
+      console.log('🧹 Sending clear all transactions request...');
       const response = await api.delete('/api/admin/transactions/clear-all');
+      console.log('✅ Clear all transactions response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('clearAllTransactions error:', error.response?.data || error.message);
-      throw error;
+      console.error('❌ clearAllTransactions error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      // More detailed error message
+      const errorMessage = error.response?.data?.error || 
+                          error.response?.data?.message || 
+                          error.message || 
+                          'Barcha tranzaksiyalarni o\'chirishda xatolik';
+      
+      throw new Error(errorMessage);
     }
   }
 };
