@@ -180,6 +180,26 @@ class InFastAIBotService {
 
       if (text === '⚙️ Sozlamalar') {
         await this.showSettings(chatId);
+      } else if (text.toLowerCase().includes('moliyaviy') || text.toLowerCase().includes('holat') || 
+                 text.toLowerCase().includes('statistika') || text.toLowerCase().includes('moliya')) {
+        if (!user) {
+          await this.bot.sendMessage(chatId, 
+            '❌ Avval kontaktni ulashing!',
+            { 
+              reply_markup: {
+                keyboard: [
+                  [{ text: '📱 Kontaktni ulashish', request_contact: true }]
+                ],
+                resize_keyboard: true,
+                one_time_keyboard: true
+              }
+            }
+          );
+          return;
+        }
+        
+        // Format selection prompt
+        await this.showFormatSelection(chatId, user);
       }
     });
 
@@ -270,6 +290,12 @@ class InFastAIBotService {
         await this.bot.sendMessage(chatId, '🔙 Asosiy menyu:', { 
           reply_markup: this.getMainKeyboard(true) 
         });
+      }
+      // Format selection handlers
+      else if (data === 'format_voice') {
+        await this.handleFormatSelection(chatId, 'voice', user);
+      } else if (data === 'format_text') {
+        await this.handleFormatSelection(chatId, 'text', user);
       }
       // Eski statistika callbacklari
       else if (data === 'stats_debts') await this.sendDebtStats(chatId, user, query.message.message_id);
@@ -1695,6 +1721,138 @@ class InFastAIBotService {
     };
 
     this.bot.on('message', messageHandler);
+  }
+
+  // TTS (Text-to-Speech) using Uzbek Voice AI
+  async textToSpeech(text, model = 'lola') {
+    try {
+      console.log('🔊 Starting TTS conversion...');
+      
+      const axios = require('axios');
+      
+      const requestData = {
+        text: text,
+        model: model,
+        blocking: true
+      };
+
+      const response = await axios.post(
+        'https://uzbekvoice.ai/api/v1/tts',
+        requestData,
+        {
+          headers: {
+            'Authorization': process.env.UZBEK_VOICE_API_KEY || '02ecec9f-8d33-4479-873b-68ac37897d64:2759153e-b632-42a5-af45-51ffa7fcfbed',
+            'Content-Type': 'application/json'
+          },
+          timeout: 30000 // 30 sekund
+        }
+      );
+
+      console.log('✅ TTS response received');
+      
+      if (response.data && response.data.result && response.data.result.audio_url) {
+        return response.data.result.audio_url;
+      } else {
+        throw new Error('Invalid TTS response format');
+      }
+      
+    } catch (error) {
+      console.error('❌ TTS API error:', error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  async sendVoiceResponse(chatId, text, user) {
+    try {
+      await this.bot.sendMessage(chatId, '🔊 Ovozli javob tayorlanmoqda...');
+      
+      // TTS orqali ovoz yaratish
+      const audioUrl = await this.textToSpeech(text);
+      
+      // Ovozli faylni yuklab olish va yuborish
+      const https = require('https');
+      const fs = require('fs');
+      const path = require('path');
+      
+      const voicePath = path.join(__dirname, '../../temp', `tts_${Date.now()}.ogg`);
+      
+      // Ovozli faylni yuklab olish
+      const file = fs.createWriteStream(voicePath);
+      
+      await new Promise((resolve, reject) => {
+        https.get(audioUrl, (response) => {
+          response.pipe(file);
+          file.on('finish', () => {
+            file.close();
+            resolve();
+          });
+        }).on('error', reject);
+      });
+      
+      // Ovozli xabar yuborish
+      await this.bot.sendVoice(chatId, voicePath);
+      
+      // Vaqtinchalik faylni o'chirish
+      if (fs.existsSync(voicePath)) fs.unlinkSync(voicePath);
+      
+      console.log('✅ Voice response sent successfully');
+      
+    } catch (error) {
+      console.error('❌ Voice response error:', error);
+      await this.bot.sendMessage(chatId, 
+        '❌ Ovozli javob yuborishda xatolik yuz berdi.\n\n' +
+        'Matnli javob yuborilmoqda...',
+        { reply_markup: this.getMainKeyboard(true) }
+      );
+      
+      // Xatolik bo'lsa matnli javob yuborish
+      await this.bot.sendMessage(chatId, text, {
+        parse_mode: 'Markdown',
+        reply_markup: this.getMainKeyboard(true)
+      });
+    }
+  }
+
+  async showFormatSelection(chatId, user) {
+    const formatMessage = `📊 **Moliyaviy holatni qanday formatda olmoqchisiz?**\n\n` +
+      `🔊 **Ovozli** - Sintezlangan ovoz bilan eshitish\n` +
+      `📝 **Yozma** - Matn shaklida o'qish\n\n` +
+      `Tanlang:`;
+
+    await this.bot.sendMessage(chatId, formatMessage, {
+      parse_mode: 'Markdown',
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: '🔊 Ovozli', callback_data: 'format_voice' },
+            { text: '📝 Yozma', callback_data: 'format_text' }
+          ]
+        ]
+      }
+    });
+  }
+
+  async handleFormatSelection(chatId, format, user) {
+    try {
+      await this.bot.sendMessage(chatId, '📊 Moliyaviy holatingiz hisoblanmoqda...');
+      
+      const analysis = await this.generateFinanceAnalysis(user._id);
+      
+      if (format === 'voice') {
+        // Ovozli javob yuborish
+        await this.sendVoiceResponse(chatId, analysis.analysis, user);
+      } else {
+        // Matnli javob yuborish
+        await this.sendFinanceAnalysisWithChart(chatId, analysis);
+      }
+      
+    } catch (error) {
+      console.error('❌ Format selection error:', error);
+      await this.bot.sendMessage(chatId, 
+        '❌ Moliyaviy tahlilni olishda xatolik yuz berdi.',
+        { reply_markup: this.getMainKeyboard(true) }
+      );
+    }
   }
 
   async showSettings(chatId) {
