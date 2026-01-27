@@ -280,6 +280,17 @@ export const adminService = {
       console.error('deleteTransaction error:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Bulk delete transactions
+  bulkDeleteTransactions: async (transactionIds) => {
+    try {
+      const response = await api.post('/api/admin/transactions/bulk-delete', { transactionIds });
+      return response.data;
+    } catch (error) {
+      console.error('bulkDeleteTransactions error:', error.response?.data || error.message);
+      throw error;
+    }
   }
 };
 

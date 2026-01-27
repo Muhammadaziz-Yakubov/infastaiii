@@ -918,3 +918,34 @@ exports.deleteTransaction = async (req, res) => {
   }
 };
 
+// Bulk delete transactions (admin)
+exports.bulkDeleteTransactions = async (req, res) => {
+  try {
+    const Finance = require('../models/Finance');
+    const { transactionIds } = req.body;
+
+    if (!transactionIds || !Array.isArray(transactionIds) || transactionIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tranziukatsiya ID lari majburiy'
+      });
+    }
+
+    const result = await Finance.deleteMany({
+      _id: { $in: transactionIds }
+    });
+
+    res.json({
+      success: true,
+      message: `${result.deletedCount} ta tranzaksiya o'chirildi`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Bulk delete transactions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Ommaviy o\'chirishda xatolik'
+    });
+  }
+};
+

@@ -48,5 +48,8 @@ router.delete('/challenges/:challengeId', adminController.deleteChallenge);
 router.delete('/goals/:goalId', adminController.deleteGoal);
 router.delete('/transactions/:transactionId', adminController.deleteTransaction);
 
+// Bulk delete operations
+router.post('/transactions/bulk-delete', adminController.bulkDeleteTransactions);
+
 module.exports = router;
 

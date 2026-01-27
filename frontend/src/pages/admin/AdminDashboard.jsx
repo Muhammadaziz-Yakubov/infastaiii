@@ -168,6 +168,10 @@ const AdminDashboard = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState(''); // 'task', 'challenge', 'goal', 'transaction'
   const [showDeleteItemConfirm, setShowDeleteItemConfirm] = useState(false);
+  
+  // Bulk delete state for transactions
+  const [selectedTransactions, setSelectedTransactions] = useState([]);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
 
   const getAdminToken = () => {
@@ -448,6 +452,44 @@ const AdminDashboard = () => {
       alert(result?.message || 'O\'chirildi!');
     } catch (error) {
       alert('O\'chirishda xatolik!');
+    }
+  };
+
+  // Handle bulk delete transactions
+  const handleBulkDeleteTransactions = async () => {
+    if (selectedTransactions.length === 0) return;
+
+    try {
+      const result = await adminService.bulkDeleteTransactions(selectedTransactions);
+      if (result.success) {
+        setTransactions(transactions.filter(t => !selectedTransactions.includes(t._id)));
+        setTransactionsPagination(prev => ({ ...prev, total: prev.total - selectedTransactions.length }));
+        setSelectedTransactions([]);
+        setShowBulkDeleteConfirm(false);
+        // Refresh summary
+        fetchTransactions();
+        alert(`${selectedTransactions.length} ta tranzaksiya o'chirildi!`);
+      }
+    } catch (error) {
+      alert('Ommaviy o\'chirishda xatolik!');
+    }
+  };
+
+  // Toggle transaction selection
+  const toggleTransactionSelection = (transactionId) => {
+    setSelectedTransactions(prev => 
+      prev.includes(transactionId) 
+        ? prev.filter(id => id !== transactionId)
+        : [...prev, transactionId]
+    );
+  };
+
+  // Toggle all transactions selection
+  const toggleAllTransactionsSelection = () => {
+    if (selectedTransactions.length === transactions.length) {
+      setSelectedTransactions([]);
+    } else {
+      setSelectedTransactions(transactions.map(t => t._id));
     }
   };
 
@@ -1253,6 +1295,15 @@ const AdminDashboard = () => {
                     <span className="text-sm font-normal text-gray-400">({transactionsPagination.total} ta)</span>
                   </h2>
                   <div className="flex gap-2">
+                    {selectedTransactions.length > 0 && (
+                      <button
+                        onClick={() => setShowBulkDeleteConfirm(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {selectedTransactions.length} ta o'chirish
+                      </button>
+                    )}
                     <select
                       value={transactionTypeFilter}
                       onChange={(e) => setTransactionTypeFilter(e.target.value)}
@@ -1279,6 +1330,14 @@ const AdminDashboard = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="text-left text-gray-400 text-sm border-b border-gray-700">
+                      <th className="px-6 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedTransactions.length === transactions.length && transactions.length > 0}
+                          onChange={toggleAllTransactionsSelection}
+                          className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                      </th>
                       <th className="px-6 py-4">Foydalanuvchi</th>
                       <th className="px-6 py-4">Turi</th>
                       <th className="px-6 py-4">Kategoriya</th>
@@ -1292,6 +1351,14 @@ const AdminDashboard = () => {
                   <tbody>
                     {transactions.map((transaction) => (
                       <tr key={transaction._id} className="border-b border-gray-700 hover:bg-gray-750">
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedTransactions.includes(transaction._id)}
+                            onChange={() => toggleTransactionSelection(transaction._id)}
+                            className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2"
+                          />
+                        </td>
                         <td className="px-6 py-4">
                           <div>
                             <p className="text-white font-medium">
@@ -1690,6 +1757,45 @@ const AdminDashboard = () => {
                 </button>
                 <button
                   onClick={() => { setShowDeleteItemConfirm(false); setItemToDelete(null); setDeleteType(''); }}
+                  className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Bekor qilish
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl max-w-md w-full border border-gray-700">
+            <div className="p-6 border-b border-gray-700">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                <Trash2 className="w-5 h-5 text-red-500" />
+                Ommaviy O'chirish
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-300 mb-4">
+                Rostdan ham {selectedTransactions.length} ta tranzaksiyani o'chirmoqchimisiz?
+              </p>
+              <p className="text-gray-400 text-sm">
+                Bu amalni qaytarib bo'lmaydi!
+              </p>
+            </div>
+            <div className="p-6 border-t border-gray-700">
+              <div className="flex gap-3">
+                <button
+                  onClick={handleBulkDeleteTransactions}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Ha, o'chirish
+                </button>
+                <button
+                  onClick={() => { setShowBulkDeleteConfirm(false); }}
                   className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
                 >
                   Bekor qilish
