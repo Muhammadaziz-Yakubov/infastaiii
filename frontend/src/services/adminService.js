@@ -291,6 +291,17 @@ export const adminService = {
       console.error('bulkDeleteTransactions error:', error.response?.data || error.message);
       throw error;
     }
+  },
+
+  // Clear all transactions
+  clearAllTransactions: async () => {
+    try {
+      const response = await api.delete('/api/admin/transactions/clear-all');
+      return response.data;
+    } catch (error) {
+      console.error('clearAllTransactions error:', error.response?.data || error.message);
+      throw error;
+    }
   }
 };
 

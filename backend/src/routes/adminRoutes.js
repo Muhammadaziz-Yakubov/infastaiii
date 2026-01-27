@@ -50,6 +50,7 @@ router.delete('/transactions/:transactionId', adminController.deleteTransaction)
 
 // Bulk delete operations
 router.post('/transactions/bulk-delete', adminController.bulkDeleteTransactions);
+router.delete('/transactions/clear-all', adminController.clearAllTransactions);
 
 module.exports = router;
 

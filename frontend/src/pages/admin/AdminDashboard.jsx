@@ -172,6 +172,7 @@ const AdminDashboard = () => {
   // Bulk delete state for transactions
   const [selectedTransactions, setSelectedTransactions] = useState([]);
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
 
 
   const getAdminToken = () => {
@@ -490,6 +491,24 @@ const AdminDashboard = () => {
       setSelectedTransactions([]);
     } else {
       setSelectedTransactions(transactions.map(t => t._id));
+    }
+  };
+
+  // Handle clear all transactions
+  const handleClearAllTransactions = async () => {
+    try {
+      const result = await adminService.clearAllTransactions();
+      if (result.success) {
+        setTransactions([]);
+        setTransactionsPagination(prev => ({ ...prev, total: 0 }));
+        setSelectedTransactions([]);
+        setShowClearAllConfirm(false);
+        // Refresh summary
+        fetchTransactions();
+        alert('Barcha tranzaksiyalar muvaffaqiyatli o\'chirildi!');
+      }
+    } catch (error) {
+      alert('Barcha tranzaksiyalarni o\'chirishda xatolik!');
     }
   };
 
@@ -1304,6 +1323,15 @@ const AdminDashboard = () => {
                         {selectedTransactions.length} ta o'chirish
                       </button>
                     )}
+                    {transactions.length > 0 && (
+                      <button
+                        onClick={() => setShowClearAllConfirm(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Hammasini tozalash
+                      </button>
+                    )}
                     <select
                       value={transactionTypeFilter}
                       onChange={(e) => setTransactionTypeFilter(e.target.value)}
@@ -1796,6 +1824,45 @@ const AdminDashboard = () => {
                 </button>
                 <button
                   onClick={() => { setShowBulkDeleteConfirm(false); }}
+                  className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Bekor qilish
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Transactions Confirmation Modal */}
+      {showClearAllConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-xl max-w-md w-full border border-gray-700">
+            <div className="p-6 border-b border-gray-700">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                <Trash2 className="w-5 h-5 text-orange-500" />
+                Barcha Tranzaksiyalarni Tozalash
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-300 mb-4">
+                Rostdan ham barcha {transactionsPagination.total} ta tranzaksiyani o'chirmoqchimisiz?
+              </p>
+              <p className="text-gray-400 text-sm">
+                Bu amalni qaytarib bo'lmaydi! Barcha moliyaviy ma'lumotlar yo'qoladi.
+              </p>
+            </div>
+            <div className="p-6 border-t border-gray-700">
+              <div className="flex gap-3">
+                <button
+                  onClick={handleClearAllTransactions}
+                  className="flex-1 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2 font-medium"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Ha, hammasini o'chirish
+                </button>
+                <button
+                  onClick={() => { setShowClearAllConfirm(false); }}
                   className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
                 >
                   Bekor qilish

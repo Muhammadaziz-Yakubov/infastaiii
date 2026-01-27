@@ -949,3 +949,24 @@ exports.bulkDeleteTransactions = async (req, res) => {
   }
 };
 
+// Clear all transactions (admin)
+exports.clearAllTransactions = async (req, res) => {
+  try {
+    const Finance = require('../models/Finance');
+    
+    const result = await Finance.deleteMany({});
+
+    res.json({
+      success: true,
+      message: `Barcha ${result.deletedCount} ta tranzaksiya o'chirildi`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Clear all transactions error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Barcha tranzaksiyalarni o\'chirishda xatolik'
+    });
+  }
+};
+
