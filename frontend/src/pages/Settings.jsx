@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DeleteAccount from '../components/Profile/DeleteAccount';
-import TelegramSettings from '../components/Settings/TelegramSettings';
 import { userService } from '../services/userService';
 
 const Settings = () => {
@@ -256,8 +255,6 @@ const Settings = () => {
         </div>
       </div> */}
 
-      {/* Telegram InFast AI Bot */}
-      <TelegramSettings />
 
       {/* Delete Account */}
       <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm border border-red-200 dark:border-red-900/50">

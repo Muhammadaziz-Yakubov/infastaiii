@@ -17,25 +17,13 @@ class InFastAIBotService {
   }
 
   getMainKeyboard(isLinked) {
-    if (!isLinked) {
-      return {
-        keyboard: [
-          [{ text: 'Hisobni ulash' }]
-        ],
-        resize_keyboard: true,
-        one_time_keyboard: false
-      };
-    } else {
-      return {
-        keyboard: [
-          [{ text: '📊 Moliyaviy holat' }],
-          [{ text: '⚙️ Bildirishnomalar' }],
-          [{ text: '🌐 Ilovaga o\'tish' }]
-        ],
-        resize_keyboard: true,
-        one_time_keyboard: false
-      };
-    }
+    return {
+      keyboard: [
+        [{ text: '⚙️ Sozlamalar' }]
+      ],
+      resize_keyboard: true,
+      one_time_keyboard: false
+    };
   }
 
   getStatsKeyboard() {
@@ -101,46 +89,85 @@ class InFastAIBotService {
       const firstName = msg.from.first_name || 'Foydalanuvchi';
       const startParam = match[1];
 
-      if (startParam && startParam.startsWith('link_')) {
-        const linkCode = startParam.replace('link_', '');
-        const linked = await this.linkAccount(chatId, linkCode, msg.from);
-        if (linked) {
-          var successMsg = '🎉 Ajoyib, ' + firstName + '!\n\n';
-          successMsg += '✅ Hisobingiz muvaffaqiyatli ulandi!\n\n';
-          successMsg += '📊 Endi statistikalaringizni ko\'ring\n';
-          successMsg += '🔔 Eslatmalar avtomatik keladi';
-          await this.bot.sendMessage(chatId, successMsg, { reply_markup: this.getMainKeyboard(true) });
-          return;
-        }
-      }
-
       const user = await User.findOne({ telegramChatId: chatId.toString() });
 
       if (user) {
         var welcomeBack = '👋 Salom, ' + firstName + '!\n\n';
-        welcomeBack += '📊 Statistika - ma\'lumotlaringizni ko\'ring\n';
-        welcomeBack += '🌐 Ilova - to\'liq boshqaruv';
+        welcomeBack += '✅ Siz tizimga kirgansiz!\n';
+        welcomeBack += '📱 Kontaktni ulashish orqali kirishingiz mumkin.';
         await this.bot.sendMessage(chatId, welcomeBack, { reply_markup: this.getMainKeyboard(true) });
       } else {
         var welcomeNew = '🚀 Xush kelibsiz, ' + firstName + '!\n\n';
         welcomeNew += '🤖 Men InFast AI botiman\n\n';
-        welcomeNew += '📱 Hisobingizni ulang va:\n';
-        welcomeNew += '• Statistikalarni ko\'ring\n';
-        welcomeNew += '• Eslatmalar oling\n';
-        welcomeNew += '• Ilovani boshqaring';
-        await this.bot.sendMessage(chatId, welcomeNew, { reply_markup: this.getMainKeyboard(false) });
+        welcomeNew += '📱 Tizimga kirish uchun kontaktni ulashing:';
+        await this.bot.sendMessage(chatId, welcomeNew, { 
+          reply_markup: {
+            keyboard: [
+              [{ text: '📱 Kontaktni ulashish', request_contact: true }]
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true
+          }
+        });
       }
     });
 
-    this.bot.onText(/\/link\s+(.+)/, async (msg, match) => {
-      const chatId = msg.chat.id;
-      const linkCode = match[1];
-      const linked = await this.linkAccount(chatId, linkCode, msg.from);
-      
-      if (linked) {
-        await this.bot.sendMessage(chatId, '🎉 Ajoyib! Hisobingiz ulandi!', { reply_markup: this.getMainKeyboard(true) });
-      } else {
-        await this.bot.sendMessage(chatId, '❌ Kod noto\'g\'ri yoki muddati o\'tgan', { reply_markup: this.getMainKeyboard(false) });
+    // Handle contact sharing for authentication
+    this.bot.on('contact', async (msg) => {
+      try {
+        console.log('📱 Contact event received for authentication');
+
+        const chatId = msg.chat.id;
+        const contact = msg.contact;
+        const userId = msg.from.id;
+
+        if (!contact || !contact.phone_number) {
+          console.log('❌ Invalid contact data');
+          await this.bot.sendMessage(chatId, '❌ Kontakt ma\'lumotlari topilmadi. Qayta urinib ko\'ring.');
+          return;
+        }
+
+        let phoneNumber = contact.phone_number;
+        if (!phoneNumber.startsWith('+')) {
+          phoneNumber = `+${phoneNumber}`;
+        }
+
+        console.log(`📱 Contact received from user ${userId}: ${phoneNumber}`);
+
+        // Check if user exists with this phone number
+        let user = await User.findOne({ phone: phoneNumber });
+
+        if (user) {
+          // Existing user - link Telegram account
+          user.telegramChatId = chatId.toString();
+          user.telegramUsername = msg.from.username;
+          user.telegramFirstName = msg.from.first_name;
+          user.telegramLinkedAt = new Date();
+          user.lastLogin = new Date();
+          await user.save();
+
+          console.log(`✅ Existing user linked: ${user.email || user.phone}`);
+          
+          const successMessage = `✅ **Tizimga kirishingiz muvaffaqiyatli amalga oshdi!**\n\n` +
+            `👋 Salom, ${msg.from.first_name}!\n` +
+            `📱 Telefon: ${phoneNumber}\n\n` +
+            `🎉 Endi botdan to\'liq foydalanishingiz mumkin!`;
+          
+          await this.bot.sendMessage(chatId, successMessage, {
+            parse_mode: 'Markdown',
+            reply_markup: this.getMainKeyboard(true)
+          });
+        } else {
+          // New user - start registration flow
+          await this.startRegistrationFlow(chatId, phoneNumber, msg.from);
+        }
+
+      } catch (error) {
+        console.error('❌ Contact handler error:', error.message);
+        await this.bot.sendMessage(msg.chat.id, 
+          '❌ Xatolik yuz berdi. Qayta urinib ko\'ring.\n' +
+          'Xatolik: ' + error.message
+        );
       }
     });
 
@@ -151,41 +178,8 @@ class InFastAIBotService {
       const text = msg.text;
       const user = await User.findOne({ telegramChatId: chatId.toString() });
 
-      if (text === 'Hisobni ulash') {
-        await this.sendLinkInstructions(chatId);
-      } else if (text === '📊 Moliyaviy holat') {
-        if (!user) {
-          await this.bot.sendMessage(chatId, 'Avval hisobni ulang!', { reply_markup: this.getMainKeyboard(false) });
-          return;
-        }
-        await this.bot.sendMessage(chatId, '📊 Moliyaviy holatingiz hisoblanmoqda...');
-        const analysis = await this.generateFinanceAnalysis(user._id);
-        await this.sendFinanceAnalysisWithChart(chatId, analysis);
-      } else if (text === '⚙️ Bildirishnomalar') {
-        if (!user) {
-          await this.bot.sendMessage(chatId, 'Avval hisobni ulang!', { reply_markup: this.getMainKeyboard(false) });
-          return;
-        }
-        await this.showNotificationSettings(chatId, user);
-      } else if (text === '🌐 Ilovaga o\'tish') {
-        await this.bot.sendMessage(chatId, 
-          '🌐 To\'liq boshqaruv uchun ilovamizga o\'ting:\n\n' +
-          '🔗 https://infastproject.uz\n\n' +
-          '📱 Ilovada siz:\n' +
-          '• Barcha statistikalarni ko\'rasiz\n' +
-          '• Grafiklar va diagrammalar\n' +
-          '• Moliya boshqaruvi\n' +
-          '• Task va maqsadlar\n' +
-          '• Va boshqa ko\'plab imkoniyatlar!\n\n' +
-          '🚀 Hozir o\'ting va boshqaruvni o\'zingiz qiling!',
-          { 
-            reply_markup: {
-              inline_keyboard: [[
-                { text: '🚀 Ilovaga o\'tish', url: 'https://infastproject.uz' }
-              ]]
-            }
-          }
-        );
+      if (text === '⚙️ Sozlamalar') {
+        await this.showSettings(chatId);
       }
     });
 
@@ -1579,6 +1573,160 @@ class InFastAIBotService {
       
       throw error;
     }
+  }
+
+  // Registration flow for new users
+  async startRegistrationFlow(chatId, phoneNumber, telegramUser) {
+    try {
+      // Store temporary registration data
+      this.registrationData = this.registrationData || {};
+      this.registrationData[chatId] = {
+        phone: phoneNumber,
+        telegramUser: telegramUser,
+        step: 'name'
+      };
+
+      const welcomeMessage = `🆕 **Ro'yxatdan o'tish**\n\n` +
+        `📱 Telefon: ${phoneNumber}\n\n` +
+        `Iltimos, ismingizni kiriting:`;
+
+      await this.bot.sendMessage(chatId, welcomeMessage, {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          remove_keyboard: true
+        }
+      });
+
+      // Set up message listener for registration steps
+      this.setupRegistrationListener(chatId);
+
+    } catch (error) {
+      console.error('Registration flow error:', error);
+      await this.bot.sendMessage(chatId, '❌ Ro\'yxatdan o\'tishda xatolik yuz berdi.');
+    }
+  }
+
+  setupRegistrationListener(chatId) {
+    const messageHandler = async (msg) => {
+      if (msg.chat.id !== chatId) return;
+
+      const registration = this.registrationData[chatId];
+      if (!registration) return;
+
+      try {
+        switch (registration.step) {
+          case 'name':
+            registration.firstName = msg.text.trim();
+            registration.step = 'surname';
+            
+            await this.bot.sendMessage(chatId, 
+              `✅ Ism: ${registration.firstName}\n\n` +
+              `Endi familyangizni kiriting:`,
+              { parse_mode: 'Markdown' }
+            );
+            break;
+
+          case 'surname':
+            registration.lastName = msg.text.trim();
+            registration.step = 'password';
+            
+            await this.bot.sendMessage(chatId,
+              `✅ Ism: ${registration.firstName}\n` +
+              `✅ Familya: ${registration.lastName}\n\n` +
+              `Endi parol o'ylab toping (kamida 6 ta belgi):`,
+              { parse_mode: 'Markdown' }
+            );
+            break;
+
+          case 'password':
+            const password = msg.text.trim();
+            
+            if (password.length < 6) {
+              await this.bot.sendMessage(chatId,
+                '❌ Parol kamida 6 ta belgidan iborat bo\'lishi kerak!\n\n' +
+                'Qayta kiriting:',
+                { parse_mode: 'Markdown' }
+              );
+              return;
+            }
+
+            // Create new user
+            const newUser = new User({
+              firstName: registration.firstName,
+              lastName: registration.lastName,
+              phone: registration.phone,
+              password: password,
+              authProvider: 'phone',
+              telegramChatId: chatId.toString(),
+              telegramUsername: registration.telegramUser.username,
+              telegramFirstName: registration.telegramUser.first_name,
+              telegramLinkedAt: new Date(),
+              lastLogin: new Date(),
+              emailVerified: true // Phone auth users are considered verified
+            });
+
+            await newUser.save();
+
+            // Clean up registration data
+            delete this.registrationData[chatId];
+
+            const successMessage = `🎉 **Ro'yxatdan o'tdingiz!**\n\n` +
+              `👋 Salom, ${registration.firstName} ${registration.lastName}!\n` +
+              `📱 Telefon: ${registration.phone}\n\n` +
+              `✅ Tizimga muvaffaqiyatli kirdingiz!\n` +
+              `🎉 Endi botdan to'liq foydalanishingiz mumkin!`;
+
+            await this.bot.sendMessage(chatId, successMessage, {
+              parse_mode: 'Markdown',
+              reply_markup: this.getMainKeyboard(true)
+            });
+
+            // Remove this listener
+            this.bot.removeListener('message', messageHandler);
+            break;
+
+          default:
+            break;
+        }
+      } catch (error) {
+        console.error('Registration handler error:', error);
+        await this.bot.sendMessage(chatId, '❌ Xatolik yuz berdi. Qayta urinib ko\'ring.');
+      }
+    };
+
+    this.bot.on('message', messageHandler);
+  }
+
+  async showSettings(chatId) {
+    const user = await User.findOne({ telegramChatId: chatId.toString() });
+    
+    if (!user) {
+      await this.bot.sendMessage(chatId, 
+        '❌ Avval kontaktni ulashing!',
+        { 
+          reply_markup: {
+            keyboard: [
+              [{ text: '📱 Kontaktni ulashish', request_contact: true }]
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true
+          }
+        }
+      );
+      return;
+    }
+
+    const settingsMessage = `⚙️ **Sozlamalar**\n\n` +
+      `👋 Salom, ${user.firstName}!\n` +
+      `📱 Telefon: ${user.phone}\n` +
+      `🔐 Auth provider: ${user.authProvider}\n` +
+      `📅 Ro'yxatdan o'tgan: ${new Date(user.createdAt).toLocaleDateString('uz-UZ')}\n\n` +
+      `🎉 Hisobingiz faol va tayyor!`;
+
+    await this.bot.sendMessage(chatId, settingsMessage, {
+      parse_mode: 'Markdown',
+      reply_markup: this.getMainKeyboard(true)
+    });
   }
 
   async sendMessage(chatId, message, options) {
