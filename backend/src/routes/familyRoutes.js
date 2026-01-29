@@ -7,15 +7,6 @@ const protect = require('../middleware/authMiddleware');
 
 router.use(protect);
 
-// Health check endpoint
-router.get('/health', (req, res) => {
-    res.json({ 
-        success: true, 
-        message: 'Family routes are working',
-        user: req.user.id
-    });
-});
-
 // Middleware wrapper functions
 const validateFamilyCreation = (req, res, next) => MonetizationMiddleware.validateFamilyCreation(req, res, next);
 const validateMemberInvitation = (req, res, next) => MonetizationMiddleware.validateMemberInvitation(req, res, next);
@@ -33,12 +24,20 @@ router.post('/',
     FamilyController.createFamily
 );
 
-router.get('/', 
-    FamilyController.getUserFamilies
-);
+router.get('/health', (req, res) => {
+    res.json({ 
+        success: true, 
+        message: 'Family routes are working',
+        user: req.user.id
+    });
+});
 
 router.get('/dashboard', 
     FamilyController.getUserFamilyDashboard
+);
+
+router.get('/', 
+    FamilyController.getUserFamilies
 );
 
 router.get('/:familyId', 
