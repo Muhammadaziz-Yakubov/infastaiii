@@ -10,9 +10,40 @@ const {
 } = require('../dto/familyDto');
 
 class FamilyController {
+    static async joinFamily(req, res) {
+        try {
+            console.log('Joining family with data:', req.body);
+            
+            const { inviteCode, role } = req.body;
+            
+            if (!inviteCode) {
+                return res.status(400).json({
+                    error: 'Invite code is required'
+                });
+            }
+
+            const family = await FamilyService.joinFamily(req.user.id, inviteCode, role);
+            res.status(200).json({
+                success: true,
+                data: family,
+                message: 'Joined family successfully'
+            });
+        } catch (error) {
+            console.error('Join family error:', error);
+            res.status(400).json({ 
+                error: error.message || 'Failed to join family' 
+            });
+        }
+    }
+
     static async createFamily(req, res) {
         try {
-            const dto = new CreateFamilyDto(req.body);
+            console.log('Creating family with data:', req.body);
+            
+            const { name, role, subscriptionPlan = 'FREE' } = req.body;
+            
+            // Create DTO with the correct data
+            const dto = new CreateFamilyDto({ name, subscriptionPlan });
             const validation = dto.validate();
 
             if (!validation.isValid) {

@@ -24,6 +24,10 @@ router.post('/',
     FamilyController.createFamily
 );
 
+router.post('/join', 
+    FamilyController.joinFamily
+);
+
 router.get('/health', (req, res) => {
     res.json({ 
         success: true, 

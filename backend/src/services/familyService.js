@@ -481,6 +481,60 @@ class FamilyService {
 
         return { message: 'Family archived successfully' };
     }
+
+    static async joinFamily(userId, inviteCode, role = 'MEMBER') {
+        try {
+            console.log('Joining family with invite code:', inviteCode);
+            
+            const family = await Family.findOne({ 
+                inviteCode: inviteCode.toUpperCase(),
+                inviteCodeExpires: { $gt: new Date() }
+            });
+
+            if (!family) {
+                throw new Error('Invalid or expired invite code');
+            }
+
+            // Check if user is already a member
+            if (family.isMember(userId)) {
+                throw new Error('You are already a member of this family');
+            }
+
+            // Check plan limits
+            if (family.subscriptionPlan === 'FREE' && family.getMemberCount() >= 3) {
+                throw new Error('This family has reached the FREE plan member limit');
+            }
+
+            // Add user to family
+            family.members.push({
+                userId: userId,
+                role: role,
+                joinedAt: new Date(),
+                permissions: {
+                    canInviteMembers: role === 'ADMIN',
+                    canManageTasks: true,
+                    canViewFinance: role === 'ADMIN',
+                    canManageFinance: role === 'ADMIN',
+                    canCreateGoals: role === 'ADMIN',
+                    canManageChallenges: role === 'ADMIN'
+                }
+            });
+
+            await family.save();
+
+            // Clear the invite code
+            family.inviteCode = null;
+            family.inviteCodeExpires = null;
+            await family.save();
+
+            return await Family.findById(family._id)
+                .populate('members.userId', 'firstName lastName email phone avatar')
+                .populate('ownerId', 'firstName lastName email phone avatar');
+        } catch (error) {
+            console.error('Error in joinFamily:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = FamilyService;
