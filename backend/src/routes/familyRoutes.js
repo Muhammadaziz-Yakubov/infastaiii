@@ -19,6 +19,10 @@ const requireFinanceAccess = (req, res, next) => PermissionDecorator.requireFina
 const requireChallengeManagement = (req, res, next) => PermissionDecorator.requireChallengeManagement(req, res, next);
 
 // Family CRUD operations
+router.post('/test', 
+    FamilyController.createFamily
+);
+
 router.post('/', 
     validateFamilyCreation, 
     FamilyController.createFamily
