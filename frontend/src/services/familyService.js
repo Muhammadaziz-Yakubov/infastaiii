@@ -10,7 +10,7 @@ export const familyService = {
         return response.data;
     },
     createFamily: async (name, role) => {
-        const response = await api.post('/api/family/create', { name, role });
+        const response = await api.post('/api/family/test', { name, role });
         return response.data;
     },
     joinFamily: async (inviteCode, role) => {
