@@ -43,43 +43,48 @@ class FamilyService {
     }
 
     static async getUserFamilies(userId, query = {}) {
-        const { page = 1, limit = 10, search, isActive } = query;
-        const skip = (page - 1) * limit;
+        try {
+            console.log('Getting families for user:', userId);
+            
+            let matchQuery = {
+                $or: [
+                    { ownerId: userId },
+                    { 'members.userId': userId }
+                ],
+                isArchived: false
+            };
 
-        let matchQuery = {
-            $or: [
-                { ownerId: userId },
-                { 'members.userId': userId }
-            ],
-            isArchived: false
-        };
-
-        if (isActive !== undefined) {
-            matchQuery.isActive = isActive;
-        }
-
-        if (search) {
-            matchQuery.name = { $regex: search, $options: 'i' };
-        }
-
-        const families = await Family.find(matchQuery)
-            .populate('members.userId', 'firstName lastName email phone avatar')
-            .populate('ownerId', 'firstName lastName email phone avatar')
-            .sort({ updatedAt: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const total = await Family.countDocuments(matchQuery);
-
-        return {
-            families,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit)
+            if (query.isActive !== undefined) {
+                matchQuery.isActive = query.isActive;
             }
-        };
+
+            if (query.search) {
+                matchQuery.name = { $regex: query.search, $options: 'i' };
+            }
+
+            console.log('Family query:', JSON.stringify(matchQuery, null, 2));
+
+            const families = await Family.find(matchQuery)
+                .populate('members.userId', 'firstName lastName email phone avatar')
+                .populate('ownerId', 'firstName lastName email phone avatar')
+                .sort({ updatedAt: -1 })
+                .limit(query.limit || 10);
+
+            console.log('Found families:', families.length);
+
+            return {
+                families,
+                pagination: {
+                    page: query.page || 1,
+                    limit: query.limit || 10,
+                    total: families.length,
+                    pages: Math.ceil(families.length / (query.limit || 10))
+                }
+            };
+        } catch (error) {
+            console.error('Error in getUserFamilies:', error);
+            throw error;
+        }
     }
 
     static async getFamilyById(familyId, userId) {

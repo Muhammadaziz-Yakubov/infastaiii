@@ -455,8 +455,11 @@ class FamilyController {
             const userId = req.user.id;
             
             // Get user's families
-            const families = await FamilyService.getUserFamilies(userId);
-            console.log('Families found:', families ? families.length : 0);
+            const familyData = await FamilyService.getUserFamilies(userId);
+            console.log('Family data received:', familyData);
+            
+            const families = familyData?.families || [];
+            console.log('Families found:', families.length);
             
             if (!families || families.length === 0) {
                 console.log('No families found, returning default data');
