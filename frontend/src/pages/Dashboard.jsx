@@ -14,12 +14,17 @@ import {
   CheckCircle2,
   AlertCircle,
   Rocket,
-  Timer
+  Timer,
+  Users,
+  Heart,
+  Crown,
+  Star
 } from 'lucide-react';
 import authService from '../services/authService';
 import { goalsService } from '../services/goalsService';
 import { taskService } from '../services/taskService';
 import { financeService } from '../services/financeService';
+import { familyService } from '../services/familyService';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { userService } from '../services/userService';
@@ -33,8 +38,8 @@ const Dashboard = () => {
     tasks: { total: 0, completed: 0, pending: 0, overdue: 0 },
     goals: { total: 0, completed: 0, inProgress: 0 },
     finance: { income: 0, expense: 0, balance: 0, thisMonth: 0 },
+    family: { memberCount: 0, subscriptionPlan: 'FREE', isActive: true },
     recentTasks: [],
-    recentGoals: [],
     recentGoals: [],
     upcomingDeadlines: []
   });
@@ -50,11 +55,12 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        const [profileResult, tasksData, goalsData, financeData] = await Promise.all([
+        const [profileResult, tasksData, goalsData, financeData, familyData] = await Promise.all([
           userService.getProfile().catch(err => ({ success: false, error: err })),
           taskService.getTasks().catch(err => ({ tasks: [] })),
           goalsService.getGoals().catch(err => ({ goals: [] })),
-          financeService.getTransactions().catch(err => ({ transactions: [] }))
+          financeService.getTransactions().catch(err => ({ transactions: [] })),
+          familyService.getDashboard().catch(err => ({ family: null }))
         ]);
 
         if (profileResult.success) {
@@ -98,6 +104,8 @@ const Dashboard = () => {
           .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
           .slice(0, 3);
 
+        const family = familyData.family || { memberCount: 0, subscriptionPlan: 'FREE', isActive: true };
+
         setStats({
           tasks: {
             total: tasks.length,
@@ -115,6 +123,11 @@ const Dashboard = () => {
             expense,
             balance: income - expense,
             thisMonth: thisMonthIncome - thisMonthExpense
+          },
+          family: {
+            memberCount: family.memberCount || 0,
+            subscriptionPlan: family.subscriptionPlan || 'FREE',
+            isActive: family.isActive !== false
           },
           recentTasks: tasks.slice(0, 5),
           recentGoals: goals.slice(0, 3),
@@ -297,23 +310,69 @@ const Dashboard = () => {
             </div>
           </div>
         </Link>
-          <Link
-          to="/pomodoro"
-          className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-white relative overflow-hidden group"
+
+        {/* Family Members Card */}
+        <Link
+          to="/family"
+          className="bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-white relative overflow-hidden group"
         >
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Timer className="w-24 h-24 transform rotate-12" />
+            <Heart className="w-24 h-24 transform rotate-12" />
           </div>
           <div className="flex flex-col h-full justify-between relative z-10">
             <div className="bg-white/20 w-12 h-12 rounded-lg flex items-center justify-center backdrop-blur-sm mb-4">
-              <Timer className="w-6 h-6 text-white" />
+              <Users className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold mb-1">Focus Timer</h3>
-              <p className="text-indigo-100 text-sm">Diqqatni jamlash uchun</p>
+              <h3 className="text-2xl font-bold mb-1">{stats.family.memberCount}</h3>
+              <p className="text-rose-100 text-sm">Oila a'zolari</p>
             </div>
             <div className="mt-4 flex items-center gap-2 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/20 transition-colors">
-              Boshlash <ArrowRight className="w-4 h-4" />
+              Oila <ArrowRight className="w-4 h-4" />
+            </div>
+          </div>
+        </Link>
+
+        {/* Family Subscription Card */}
+        <Link
+          to="/family"
+          className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-white relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Crown className="w-24 h-24 transform rotate-12" />
+          </div>
+          <div className="flex flex-col h-full justify-between relative z-10">
+            <div className="bg-white/20 w-12 h-12 rounded-lg flex items-center justify-center backdrop-blur-sm mb-4">
+              <Star className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-1">{stats.family.subscriptionPlan}</h3>
+              <p className="text-amber-100 text-sm">Obuna reja</p>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/20 transition-colors">
+              Yangilash <ArrowRight className="w-4 h-4" />
+            </div>
+          </div>
+        </Link>
+
+        {/* Family Subscription Card */}
+        <Link
+          to="/family"
+          className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-white relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Crown className="w-24 h-24 transform rotate-12" />
+          </div>
+          <div className="flex flex-col h-full justify-between relative z-10">
+            <div className="bg-white/20 w-12 h-12 rounded-lg flex items-center justify-center backdrop-blur-sm mb-4">
+              <Star className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold mb-1">{stats.family.subscriptionPlan}</h3>
+              <p className="text-amber-100 text-sm">Obuna reja</p>
+            </div>
+            <div className="mt-4 flex items-center gap-2 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/20 transition-colors">
+              Yangilash <ArrowRight className="w-4 h-4" />
             </div>
           </div>
         </Link>
@@ -321,7 +380,6 @@ const Dashboard = () => {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Tasks */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-6">

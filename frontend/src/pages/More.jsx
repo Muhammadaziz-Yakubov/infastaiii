@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Trophy, User, Settings, Archive, Crown, HelpCircle,
   ChevronRight, Shield, Bell, Palette, LogOut, Star,
-  FileText, MessageCircle, Heart, Info
+  FileText, MessageCircle, Heart, Info, Users
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -19,6 +19,15 @@ const More = () => {
     {
       title: 'Sahifalar',
       items: [
+        {
+          name: 'Oila',
+          description: 'Oilavi boshqaruvi va a\'zolar',
+          icon: Users,
+          href: '/family',
+          color: 'bg-pink-500',
+          badge: 'Yangi',
+          disabled: false
+        },
         {
           name: 'Challengelar',
           description: 'Do\'stlar bilan birga odat shakllantiring',

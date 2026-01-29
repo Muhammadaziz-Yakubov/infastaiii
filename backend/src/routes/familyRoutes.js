@@ -7,9 +7,20 @@ const protect = require('../middleware/authMiddleware');
 
 router.use(protect);
 
+// Middleware wrapper functions
+const validateFamilyCreation = (req, res, next) => MonetizationMiddleware.validateFamilyCreation(req, res, next);
+const validateMemberInvitation = (req, res, next) => MonetizationMiddleware.validateMemberInvitation(req, res, next);
+const validateAIAccess = (req, res, next) => MonetizationMiddleware.validateAIAccess(req, res, next);
+const validateChildControls = (req, res, next) => MonetizationMiddleware.validateChildControls(req, res, next);
+const requireFamilyMember = (req, res, next) => FamilyGuard.requireFamilyMember(req, res, next);
+const requireFamilyAdmin = (req, res, next) => FamilyGuard.requireFamilyAdmin(req, res, next);
+const requirePermission = (permission) => (req, res, next) => PermissionDecorator.requirePermission(permission)(req, res, next);
+const requireFinanceAccess = (req, res, next) => PermissionDecorator.requireFinanceAccess(req, res, next);
+const requireChallengeManagement = (req, res, next) => PermissionDecorator.requireChallengeManagement(req, res, next);
+
 // Family CRUD operations
 router.post('/', 
-    MonetizationMiddleware.validateFamilyCreation, 
+    validateFamilyCreation, 
     FamilyController.createFamily
 );
 
@@ -18,12 +29,12 @@ router.get('/',
 );
 
 router.get('/:familyId', 
-    FamilyGuard.requireFamilyMember, 
+    requireFamilyMember, 
     FamilyController.getFamilyById
 );
 
 router.put('/:familyId', 
-    FamilyGuard.requireFamilyAdmin, 
+    requireFamilyAdmin, 
     FamilyController.updateFamily
 );
 
@@ -33,19 +44,19 @@ router.delete('/:familyId',
 );
 
 router.get('/:familyId/stats', 
-    FamilyGuard.requireFamilyMember, 
+    requireFamilyMember, 
     FamilyController.getFamilyStats
 );
 
 router.get('/:familyId/dashboard', 
-    FamilyGuard.requireFamilyMember, 
+    requireFamilyMember, 
     FamilyController.getFamilyDashboard
 );
 
 // Member management
 router.post('/:familyId/invite', 
-    FamilyGuard.requirePermission('canInviteMembers'),
-    MonetizationMiddleware.validateMemberInvitation,
+    validateMemberInvitation,
+    requirePermission('canInviteMembers'),
     FamilyController.inviteMember
 );
 
@@ -62,27 +73,27 @@ router.get('/invitations/pending',
 );
 
 router.get('/:familyId/invitations', 
-    FamilyGuard.requireFamilyAdmin, 
+    requireFamilyAdmin, 
     FamilyController.getFamilyInvitations
 );
 
 router.delete('/:familyId/members/:memberId', 
-    FamilyGuard.requireFamilyAdmin, 
+    requireFamilyAdmin, 
     FamilyController.removeMember
 );
 
 router.put('/:familyId/members/:memberId/role', 
-    FamilyGuard.requireFamilyAdmin, 
+    requireFamilyAdmin, 
     FamilyController.updateMemberRole
 );
 
 router.put('/:familyId/members/:memberId/permissions', 
-    FamilyGuard.requireFamilyAdmin, 
+    requireFamilyAdmin, 
     FamilyController.updateMemberPermissions
 );
 
 router.post('/:familyId/leave', 
-    FamilyGuard.requireFamilyMember, 
+    requireFamilyMember, 
     FamilyController.leaveFamily
 );
 
@@ -93,95 +104,98 @@ router.post('/:familyId/transfer-ownership',
 
 // Task management (protected by permissions)
 router.post('/:familyId/tasks', 
-    FamilyGuard.requirePermission('canManageTasks'),
-    require('../controllers/taskController').createTask
+    requirePermission('canManageTasks'),
+    (req, res) => require('../controllers/taskController').createTask(req, res)
 );
 
 router.get('/:familyId/tasks', 
-    FamilyGuard.requireFamilyMember,
-    require('../controllers/taskController').getFamilyTasks
+    requireFamilyMember,
+    (req, res) => require('../controllers/taskController').getTasks(req, res)
 );
 
 router.put('/:familyId/tasks/:taskId', 
-    FamilyGuard.requirePermission('canManageTasks'),
-    require('../controllers/taskController').updateTask
+    requirePermission('canManageTasks'),
+    (req, res) => require('../controllers/taskController').updateTask(req, res)
 );
 
 router.delete('/:familyId/tasks/:taskId', 
-    FamilyGuard.requirePermission('canManageTasks'),
-    require('../controllers/taskController').deleteTask
+    requirePermission('canManageTasks'),
+    (req, res) => require('../controllers/taskController').deleteTask(req, res)
 );
 
 // Goal management
 router.post('/:familyId/goals', 
-    PermissionDecorator.requireGoalCreation,
-    require('../controllers/goalController').createGoal
+    requirePermission('canCreateGoals'),
+    (req, res) => require('../controllers/goalController').createGoal(req, res)
 );
 
 router.get('/:familyId/goals', 
-    FamilyGuard.requireFamilyMember,
-    require('../controllers/goalController').getFamilyGoals
+    requireFamilyMember,
+    (req, res) => require('../controllers/goalController').getGoals(req, res)
 );
 
 router.put('/:familyId/goals/:goalId', 
-    PermissionDecorator.requireGoalCreation,
-    require('../controllers/goalController').updateGoal
+    requirePermission('canCreateGoals'),
+    (req, res) => require('../controllers/goalController').updateGoal(req, res)
 );
 
 router.delete('/:familyId/goals/:goalId', 
-    PermissionDecorator.requireGoalCreation,
-    require('../controllers/goalController').deleteGoal
+    requirePermission('canCreateGoals'),
+    (req, res) => require('../controllers/goalController').deleteGoal(req, res)
 );
 
 // Finance management (protected by permissions)
 router.post('/:familyId/finances', 
-    PermissionDecorator.requireFinanceManagement,
-    require('../controllers/financeController').createFinance
+    requirePermission('canManageFinance'),
+    (req, res) => require('../controllers/financeController').createFinance(req, res)
 );
 
 router.get('/:familyId/finances', 
-    PermissionDecorator.requireFinanceAccess,
-    require('../controllers/financeController').getFamilyFinances
+    requireFinanceAccess,
+    (req, res) => require('../controllers/financeController').getTransactions(req, res)
 );
 
 router.get('/:familyId/finances/summary', 
-    PermissionDecorator.requireFinanceAccess,
-    require('../controllers/financeController').getFinanceSummary
+    requireFinanceAccess,
+    (req, res) => require('../controllers/financeController').getFinanceSummary(req, res)
 );
 
 // AI features (premium only)
 router.get('/:familyId/ai/analysis', 
-    MonetizationMiddleware.validateAIAccess,
-    require('../controllers/aiController').getFamilyAnalysis
+    validateAIAccess,
+    requireFamilyMember,
+    (req, res) => require('../controllers/aiController').getFamilyAnalysis(req, res)
 );
 
 router.get('/:familyId/ai/finance-summary', 
-    MonetizationMiddleware.validateAIAccess,
-    PermissionDecorator.requireFinanceAccess,
-    require('../controllers/aiController').getFinanceSummary
+    validateAIAccess,
+    requireFinanceAccess,
+    requireFamilyMember,
+    (req, res) => require('../controllers/aiController').getFinanceSummary(req, res)
 );
 
 // Challenges
 router.post('/:familyId/challenges', 
-    PermissionDecorator.requireChallengeManagement,
-    require('../controllers/challengeController').createChallenge
+    requireChallengeManagement,
+    requireFamilyMember,
+    (req, res) => require('../controllers/challengeController').createChallenge(req, res)
 );
 
 router.get('/:familyId/challenges', 
-    FamilyGuard.requireFamilyMember,
-    require('../controllers/challengeController').getFamilyChallenges
+    requireFamilyMember,
+    (req, res) => require('../controllers/challengeController').getChallenges(req, res)
 );
 
 router.post('/:familyId/challenges/:challengeId/join', 
-    FamilyGuard.requireFamilyMember,
-    require('../controllers/challengeController').joinChallenge
+    requireFamilyMember,
+    (req, res) => require('../controllers/challengeController').joinChallenge(req, res)
 );
 
 // Child controls (premium only)
 router.put('/:familyId/child-controls', 
-    MonetizationMiddleware.validateChildControls,
-    FamilyGuard.requireFamilyAdmin,
-    require('../controllers/familyController').updateChildControls
+    validateChildControls,
+    requireFamilyAdmin,
+    (req, res) => require('../controllers/familyController').updateChildControls(req, res)
 );
 
 module.exports = router;

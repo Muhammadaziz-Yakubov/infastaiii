@@ -27,7 +27,9 @@ import {
   Menu,
   Trophy,
   Users,
-  MoreHorizontal
+  MoreHorizontal,
+  Home,
+  Heart
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -43,6 +45,7 @@ const MobileBottomBar = () => {
     { name: 'Tasks', href: '/tasks', icon: CheckSquare, labelKey: 'sidebar.tasks' },
     { name: 'Finance', href: '/finance', icon: Wallet, labelKey: 'sidebar.finance' },
     { name: 'Goals', href: '/goals', icon: Goal, labelKey: 'sidebar.goals' },
+    { name: 'Family', href: '/family', icon: Heart, labelKey: 'sidebar.family' },
     { name: 'More', href: '/more', icon: MoreHorizontal, labelKey: 'sidebar.more' }
   ];
 
@@ -146,6 +149,7 @@ const Sidebar = () => {
     { name: 'sidebar.tasks', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'sidebar.finance', href: '/finance', icon: Wallet, badge: null },
     { name: 'sidebar.goals', href: '/goals', icon: Goal, badge: null },
+    { name: 'sidebar.family', href: '/family', icon: Heart, badge: null },
     { name: 'sidebar.challenges', href: '/challenges', icon: Trophy, badge: null }
   ];
 
