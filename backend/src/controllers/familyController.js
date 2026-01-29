@@ -443,12 +443,15 @@ class FamilyController {
 
     static async getUserFamilyDashboard(req, res) {
         try {
+            console.log('getUserFamilyDashboard called for user:', req.user.id);
             const userId = req.user.id;
             
             // Get user's families
             const families = await FamilyService.getUserFamilies(userId);
+            console.log('Families found:', families ? families.length : 0);
             
             if (!families || families.length === 0) {
+                console.log('No families found, returning default data');
                 return res.json({
                     success: true,
                     data: {
@@ -462,6 +465,7 @@ class FamilyController {
             
             // Get the first family (or primary family)
             const family = families[0];
+            console.log('Using family:', family._id);
             
             const Task = require('../models/Task');
             const Finance = require('../models/Finance');
@@ -473,7 +477,7 @@ class FamilyController {
             const income = finances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
             const expense = finances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
 
-            res.json({
+            const result = {
                 success: true,
                 data: {
                     family,
@@ -488,9 +492,13 @@ class FamilyController {
                         balance: income - expense
                     }
                 }
-            });
+            };
+            
+            console.log('Returning dashboard data for family:', family._id);
+            res.json(result);
         } catch (error) {
             console.error('Get user family dashboard error:', error);
+            console.error('Error stack:', error.stack);
             res.status(500).json({ 
                 error: error.message || 'Failed to get family dashboard' 
             });
