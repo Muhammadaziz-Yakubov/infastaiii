@@ -28,6 +28,10 @@ router.get('/',
     FamilyController.getUserFamilies
 );
 
+router.get('/dashboard', 
+    FamilyController.getUserFamilyDashboard
+);
+
 router.get('/:familyId', 
     requireFamilyMember, 
     FamilyController.getFamilyById

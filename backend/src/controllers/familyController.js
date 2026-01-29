@@ -441,6 +441,62 @@ class FamilyController {
         }
     }
 
+    static async getUserFamilyDashboard(req, res) {
+        try {
+            const userId = req.user.id;
+            
+            // Get user's families
+            const families = await FamilyService.getUserFamilies(userId);
+            
+            if (!families || families.length === 0) {
+                return res.json({
+                    success: true,
+                    data: {
+                        family: null,
+                        memberCount: 0,
+                        subscriptionPlan: 'FREE',
+                        isActive: false
+                    }
+                });
+            }
+            
+            // Get the first family (or primary family)
+            const family = families[0];
+            
+            const Task = require('../models/Task');
+            const Finance = require('../models/Finance');
+
+            const tasks = await Task.find({ familyId: family._id });
+            const completedTasks = tasks.filter(t => t.status === 'completed').length;
+
+            const finances = await Finance.find({ familyId: family._id });
+            const income = finances.filter(f => f.type === 'income').reduce((sum, f) => sum + f.amount, 0);
+            const expense = finances.filter(f => f.type === 'expense').reduce((sum, f) => sum + f.amount, 0);
+
+            res.json({
+                success: true,
+                data: {
+                    family,
+                    memberCount: family.members.length,
+                    subscriptionPlan: family.subscriptionPlan,
+                    isActive: family.isActive !== false,
+                    stats: {
+                        totalTasks: tasks.length,
+                        completedTasks,
+                        income,
+                        expense,
+                        balance: income - expense
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Get user family dashboard error:', error);
+            res.status(500).json({ 
+                error: error.message || 'Failed to get family dashboard' 
+            });
+        }
+    }
+
     static async getFamilyDashboard(req, res) {
         try {
             const { familyId } = req.params;
