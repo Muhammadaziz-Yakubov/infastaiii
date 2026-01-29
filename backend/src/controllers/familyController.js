@@ -443,6 +443,14 @@ class FamilyController {
 
     static async getUserFamilyDashboard(req, res) {
         try {
+            // Check if user is authenticated
+            if (!req.user || !req.user.id) {
+                console.error('User not authenticated in getUserFamilyDashboard');
+                return res.status(401).json({
+                    error: 'User not authenticated'
+                });
+            }
+
             console.log('getUserFamilyDashboard called for user:', req.user.id);
             const userId = req.user.id;
             
@@ -499,8 +507,10 @@ class FamilyController {
         } catch (error) {
             console.error('Get user family dashboard error:', error);
             console.error('Error stack:', error.stack);
+            console.error('Request user:', req.user);
             res.status(500).json({ 
-                error: error.message || 'Failed to get family dashboard' 
+                error: error.message || 'Failed to get family dashboard',
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined
             });
         }
     }
