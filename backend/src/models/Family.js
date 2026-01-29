@@ -123,7 +123,6 @@ const familySchema = new mongoose.Schema({
 
 familySchema.index({ ownerId: 1 });
 familySchema.index({ 'members.userId': 1 });
-familySchema.index({ inviteCode: 1 });
 familySchema.index({ subscriptionPlan: 1 });
 
 familySchema.methods.isMember = function(userId) {
