@@ -15,7 +15,10 @@ import {
   ChevronRight,
   Bell,
   Activity,
-  Star
+  Star,
+  Menu,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import authService from '../services/authService';
 import { goalsService } from '../services/goalsService';
@@ -135,82 +138,77 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 lg:pb-8">
       {/* Header Section */}
-      <div className="px-6 pt-8 pb-6 bg-white dark:bg-gray-800 rounded-b-[32px] shadow-sm mb-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">{getGreeting()}</p>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {user?.firstName || 'Foydalanuvchi'}
-            </h1>
-          </div>
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-purple-600 p-0.5 shadow-lg shadow-blue-500/20">
-            <div className="w-full h-full rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+      <div className="px-6 pt-6 pb-2">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full border-2 border-gray-100 dark:border-gray-700 overflow-hidden bg-gray-200">
               {user?.avatar ? (
                 <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
               ) : (
-                <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">
+                <div className="w-full h-full flex items-center justify-center bg-blue-500 text-white font-bold text-lg">
                   {user?.firstName?.[0] || 'U'}
-                </span>
+                </div>
               )}
             </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                Salom, {user?.firstName || 'Foydalanuvchi'}
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">{getGreeting()}!</p>
+            </div>
+          </div>
+          <button className="p-2.5 bg-gray-50 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300 relative">
+            <Bell className="w-6 h-6" />
+            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
+          </button>
+        </div>
+
+        {/* Total Balance */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-gray-500 dark:text-gray-400 font-medium text-sm">Umumiy balans</span>
+            <button className="p-1 text-gray-400">
+              <Star className="w-4 h-4" /> {/* Replacing eye for now or using lucide-react eye if available */}
+            </button>
+          </div>
+          <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white flex items-baseline gap-1">
+            {(stats.finance.balance).toLocaleString()} <span className="text-xl font-bold">so'm</span>
+          </h2>
+        </div>
+
+        {/* Quick Actions - Circle Buttons */}
+        <div className="flex items-center gap-6 mb-8">
+          <div className="flex flex-col items-center gap-2">
+            <Link to="/finance" className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95">
+              <TrendingUp className="w-6 h-6 text-black rotate-45" />
+            </Link>
+            <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Yuborish</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <Link to="/finance" className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95">
+              <TrendingDown className="w-6 h-6 text-black -rotate-45" />
+            </Link>
+            <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Qabul qilish</span>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <button onClick={() => navigate('/more')} className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95">
+              <Menu className="w-6 h-6 text-black" />
+            </button>
+            <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Boshqa</span>
           </div>
         </div>
 
-        {/* Main Stats Cards - Scrollable on Mobile */}
-        <div className="flex overflow-x-auto gap-4 pb-2 -mx-6 px-6 scrollbar-hide">
-          {/* Balance Card */}
-          <div className="min-w-[280px] h-[160px] rounded-[24px] bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 shadow-xl shadow-gray-200/50 dark:shadow-none relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
-            <div className="relative z-10 flex flex-col h-full justify-between">
-              <div className="flex justify-between items-start">
-                <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
-                  <Wallet className="w-5 h-5 text-emerald-400" />
-                </div>
-                <span className="text-xs font-medium text-gray-400 bg-black/20 px-2 py-1 rounded-lg backdrop-blur-md">Jami balans</span>
-              </div>
-              <div>
-                <h3 className="text-3xl font-bold tracking-tight mb-1">
-                  {(stats.finance.balance).toLocaleString()} <span className="text-lg font-medium text-gray-400">so'm</span>
-                </h3>
-                <div className="flex items-center gap-3 text-xs font-medium text-gray-400">
-                  <span className="flex items-center text-emerald-400 gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                    <TrendingUp className="w-3 h-3" /> +{(stats.finance.income).toLocaleString()}
-                  </span>
-                  <span className="flex items-center text-rose-400 gap-1 bg-rose-500/10 px-1.5 py-0.5 rounded">
-                    <TrendingDown className="w-3 h-3" /> -{(stats.finance.expense).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
+        {/* Promo Banner */}
+        <div className="mb-8 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-[24px] p-6 relative overflow-hidden shadow-xl shadow-indigo-500/20">
+          <div className="relative z-10 pr-24">
+            <h3 className="text-white font-bold text-lg mb-2">Do'stingizni taklif qiling va keshbek oling</h3>
+            <Link to="/more" className="text-[#D4FF00] font-bold text-sm flex items-center gap-1">
+              Taklif qilish <ChevronRight className="w-4 h-4" />
+            </Link>
           </div>
-
-          {/* Productivity Card */}
-          <div className="min-w-[280px] h-[160px] rounded-[24px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-6 shadow-xl shadow-blue-500/5 dark:shadow-none relative group">
-            <div className="flex flex-col h-full justify-between">
-              <div className="flex justify-between items-start">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                  <Activity className="w-5 h-5 text-blue-500" />
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-400 font-medium">Samaradorlik</p>
-                  <p className="text-lg font-bold text-gray-900 dark:text-white">
-                    {stats.tasks.total > 0 ? Math.round((stats.tasks.completed / stats.tasks.total) * 100) : 0}%
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-gray-500">Vazifalar</span>
-                    <span className="font-bold text-gray-900 dark:text-white">{stats.tasks.completed}/{stats.tasks.total}</span>
-                  </div>
-                  <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${stats.tasks.total > 0 ? (stats.tasks.completed / stats.tasks.total) * 100 : 0}%` }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="absolute right-[-10px] top-[-10px] w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+          <div className="absolute right-4 bottom-4 w-20 h-20 bg-white/20 rounded-2xl rotate-12 backdrop-blur-sm flex items-center justify-center">
+            <Star className="w-10 h-10 text-white" />
           </div>
         </div>
       </div>
@@ -265,43 +263,44 @@ const Dashboard = () => {
           </div>
         </section>
 
-        {/* Recent Activity */}
-        <section>
+        <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">So'nggi faoliyat</h3>
+            <h3 className="text-xl font-extrabold text-gray-900 dark:text-white">Tranzaksiyalar</h3>
+            <Link to="/finance" className="text-sm font-bold text-[#6366F1]">Barchasi</Link>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-[24px] p-2 shadow-sm border border-gray-100 dark:border-gray-700">
-            {stats.recentActivity.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <p>Hozircha faoliyat yo'q</p>
+          <div className="space-y-3">
+            {stats.recentActivity.filter(i => i.type === 'finance').length === 0 ? (
+              <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-[24px] border border-gray-100 dark:border-gray-700">
+                <p className="text-gray-400 font-medium">Hozircha tranzaksiyalar yo'q</p>
               </div>
             ) : (
-              stats.recentActivity.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-4 border-b border-gray-50 dark:border-gray-700/50 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-2xl transition-colors">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.type === 'task'
-                      ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                      : item.data.type === 'income'
-                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
-                        : 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
-                    }`}>
-                    {item.type === 'task' ? <CheckSquare className="w-5 h-5" /> : <Wallet className="w-5 h-5" />}
+              stats.recentActivity.filter(i => i.type === 'finance').map((item, idx) => (
+                <div key={idx} className="bg-white dark:bg-gray-800 p-4 rounded-[24px] border border-gray-100 dark:border-gray-700 flex items-center justify-between shadow-sm hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${item.data.type === 'income'
+                      ? 'bg-emerald-100 text-emerald-600'
+                      : 'bg-rose-100 text-rose-600'
+                      }`}>
+                      {item.data.type === 'income' ? <TrendingDown className="w-6 h-6 rotate-45" /> : <TrendingUp className="w-6 h-6 rotate-45" />}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 dark:text-white text-base truncate max-w-[150px]">
+                        {item.data.description || item.data.category}
+                      </p>
+                      <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                        {item.data.category}
+                      </p>
+                    </div>
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 dark:text-white truncate text-sm">
-                      {item.type === 'task' ? item.data.title : (item.data.description || item.data.category)}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(item.date).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  {item.type === 'finance' && (
-                    <span className={`font-bold text-sm ${item.data.type === 'income' ? 'text-emerald-500' : 'text-gray-900 dark:text-white'}`}>
+                  <div className="text-right">
+                    <p className={`font-extrabold text-lg ${item.data.type === 'income' ? 'text-emerald-500' : 'text-gray-900 dark:text-white'}`}>
                       {item.data.type === 'income' ? '+' : '-'}{item.data.amount.toLocaleString()}
-                    </span>
-                  )}
+                    </p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">
+                      {new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
                 </div>
               ))
             )}

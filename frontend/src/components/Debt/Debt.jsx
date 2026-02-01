@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  DollarSign, Calendar, User, Phone, Clock, AlertCircle,
+  Wallet, Calendar, User, Phone, Clock, AlertCircle,
   CheckCircle, TrendingUp, TrendingDown, Plus, Edit,
   Trash2, X, Search, Filter, RefreshCw, ArrowUpRight,
   ArrowDownRight, FileText, CreditCard, Users
@@ -19,7 +19,7 @@ const Debt = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedDebt, setSelectedDebt] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
-  
+
   // Filter states
   const [filters, setFilters] = useState({
     type: 'all',
@@ -43,11 +43,11 @@ const Debt = () => {
       if (filters.sort) params.sort = filters.sort;
 
       const data = await financeService.getDebts();
-      
+
       if (data.success) {
         // Apply filters on frontend since backend may not support all filters
         let filteredDebts = data.debts || [];
-        
+
         if (filters.type !== 'all') {
           filteredDebts = filteredDebts.filter(d => d.type === filters.type);
         }
@@ -56,13 +56,13 @@ const Debt = () => {
         }
         if (filters.search) {
           const searchLower = filters.search.toLowerCase();
-          filteredDebts = filteredDebts.filter(d => 
+          filteredDebts = filteredDebts.filter(d =>
             d.personName?.toLowerCase().includes(searchLower) ||
             d.description?.toLowerCase().includes(searchLower) ||
             d.personPhone?.toLowerCase().includes(searchLower)
           );
         }
-        
+
         setDebts(filteredDebts);
       } else {
         toast.error(data.message || 'Xatolik yuz berdi');
@@ -79,7 +79,7 @@ const Debt = () => {
     try {
       // Calculate statistics from debts data
       const data = await financeService.getDebts();
-      
+
       if (data.success) {
         const debts = data.debts || [];
         let totalBorrowed = 0;
@@ -88,7 +88,7 @@ const Debt = () => {
         let activeLent = 0;
         let overdueBorrowed = 0;
         let overdueLent = 0;
-        
+
         debts.forEach(debt => {
           if (debt.type === 'borrow') {
             totalBorrowed += debt.amount || 0;
@@ -100,7 +100,7 @@ const Debt = () => {
             if (debt.status === 'overdue') overdueLent += debt.remainingAmount || 0;
           }
         });
-        
+
         setStatistics({
           success: true,
           summary: {
@@ -122,7 +122,7 @@ const Debt = () => {
   const handleCreateDebt = async (debtData) => {
     try {
       const data = await financeService.createDebt(debtData);
-      
+
       if (data.success) {
         toast.success('Qarz yaratildi ✅');
         setShowForm(false);
@@ -140,7 +140,7 @@ const Debt = () => {
   const handleUpdateDebt = async (debtId, debtData) => {
     try {
       const data = await financeService.updateDebt(debtId, debtData);
-      
+
       if (data.success) {
         toast.success('Qarz yangilandi ✅');
         setShowForm(false);
@@ -161,7 +161,7 @@ const Debt = () => {
 
     try {
       const data = await financeService.deleteDebt(debtId);
-      
+
       if (data.success) {
         toast.success('Qarz o\'chirildi 🗑️');
         loadDebts();
@@ -191,7 +191,7 @@ const Debt = () => {
         amount: parseFloat(paymentAmount),
         description: 'To\'lov'
       });
-      
+
       if (data.success) {
         toast.success('To\'lov qo\'shildi ✅');
         setShowPaymentModal(false);
@@ -216,12 +216,12 @@ const Debt = () => {
     const date = new Date(dateString);
     const today = new Date();
     const diffDays = Math.floor((date - today) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return 'Bugun';
     if (diffDays === 1) return 'Ertaga';
     if (diffDays > 0) return `${diffDays} kun qoldi`;
     if (diffDays < 0) return `${Math.abs(diffDays)} kun kechikdi`;
-    
+
     return date.toLocaleDateString('uz-UZ', {
       day: 'numeric',
       month: 'short',
@@ -370,11 +370,10 @@ const Debt = () => {
                   >
                     <div className="flex items-start gap-4">
                       {/* Icon */}
-                      <div className={`p-3 rounded-xl ${
-                        debt.type === 'borrow' 
-                          ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                          : 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
-                      }`}>
+                      <div className={`p-3 rounded-xl ${debt.type === 'borrow'
+                        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'
+                        }`}>
                         {debt.type === 'borrow' ? (
                           <ArrowDownRight className="w-6 h-6" />
                         ) : (
@@ -418,11 +417,10 @@ const Debt = () => {
                             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Muddati</p>
                             <div className="flex items-center gap-2">
                               <Calendar className="w-4 h-4 text-gray-400" />
-                              <p className={`font-semibold ${
-                                debt.status === 'overdue' 
-                                  ? 'text-red-600 dark:text-red-400'
-                                  : 'text-gray-900 dark:text-white'
-                              }`}>
+                              <p className={`font-semibold ${debt.status === 'overdue'
+                                ? 'text-red-600 dark:text-red-400'
+                                : 'text-gray-900 dark:text-white'
+                                }`}>
                                 {formatDate(debt.dueDate)}
                               </p>
                             </div>
@@ -490,11 +488,10 @@ const Debt = () => {
                       <p className="font-medium text-gray-900 dark:text-white text-sm">
                         {debt.personName}
                       </p>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        debt.type === 'borrow' 
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                          : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs ${debt.type === 'borrow'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                        }`}>
                         {debt.type === 'borrow' ? 'Olingan' : 'Berilgan'}
                       </span>
                     </div>
@@ -550,8 +547,8 @@ const Debt = () => {
       {showForm && (
         <DebtForm
           debt={editingDebt}
-          onSubmit={editingDebt ? 
-            (data) => handleUpdateDebt(editingDebt._id, data) : 
+          onSubmit={editingDebt ?
+            (data) => handleUpdateDebt(editingDebt._id, data) :
             handleCreateDebt
           }
           onClose={() => {
@@ -565,7 +562,7 @@ const Debt = () => {
       {showPaymentModal && selectedDebt && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex items-center justify-center min-h-screen px-4 py-6">
-            <div 
+            <div
               className="fixed inset-0 bg-gray-900 bg-opacity-75 backdrop-blur-sm"
               onClick={() => {
                 setShowPaymentModal(false);
@@ -580,7 +577,7 @@ const Debt = () => {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-green-500" />
+                    <Wallet className="w-5 h-5 text-green-500" />
                     To'lov qilish
                   </h3>
                   <button
@@ -623,7 +620,7 @@ const Debt = () => {
                       To'lov summasi <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                      <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
                       <input
                         type="number"
                         value={paymentAmount}

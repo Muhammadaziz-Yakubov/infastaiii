@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, CheckSquare, DollarSign, Target, CreditCard } from 'lucide-react';
+import { Plus, X, CheckSquare, Wallet, Target, CreditCard } from 'lucide-react';
 
 const FAB = ({ onAddTask, onAddFinance, onAddDebt, onAddGoal }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +21,7 @@ const FAB = ({ onAddTask, onAddFinance, onAddDebt, onAddGoal }) => {
       action: onAddTask
     },
     {
-      icon: DollarSign,
+      icon: Wallet,
       label: 'Tranzaksiya',
       color: 'bg-green-500 hover:bg-green-600',
       action: onAddFinance
@@ -75,9 +75,8 @@ const FAB = ({ onAddTask, onAddFinance, onAddDebt, onAddGoal }) => {
         {/* Main button - Professional katta "+" */}
         <button
           onClick={toggleMenu}
-          className={`w-20 h-20 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center ${
-            isOpen ? 'rotate-45' : 'rotate-0'
-          }`}
+          className={`w-20 h-20 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center ${isOpen ? 'rotate-45' : 'rotate-0'
+            }`}
         >
           {isOpen ? (
             <X className="w-8 h-8" />

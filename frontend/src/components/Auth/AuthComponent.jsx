@@ -44,7 +44,7 @@ const AuthComponent = () => {
   const [tempToken, setTempToken] = useState('');
   const [userExists, setUserExists] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  
+
   // User info for registration
   const [userInfo, setUserInfo] = useState({
     firstName: '',
@@ -105,12 +105,12 @@ const AuthComponent = () => {
     const newOtp = [...otp];
     newOtp[index] = value.slice(-1);
     setOtp(newOtp);
-    
+
     // Auto-focus next input
     if (value && index < 5) {
       otpRefs.current[index + 1]?.focus();
     }
-    
+
     // Auto-submit when all fields are filled
     if (value && index === 5) {
       const fullOtp = [...newOtp].join('');
@@ -185,13 +185,13 @@ const AuthComponent = () => {
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     const otpString = otp.join('').trim();
-    
+
     // Validate OTP format
     if (otpString.length !== 6) {
       setError('OTP kodini to\'liq kiriting');
       return;
     }
-    
+
     if (!/^\d{6}$/.test(otpString)) {
       setError('OTP kod faqat raqamlardan iborat bo\'lishi kerak');
       return;
@@ -211,7 +211,7 @@ const AuthComponent = () => {
       }
     } catch (err) {
       console.error('OTP verification error:', err);
-      
+
       // Network xatoliklarini tekshirish
       if (err.type === 'network' || err.message?.includes('Network Error') || err.message?.includes('ERR_CONNECTION_REFUSED')) {
         setError('Serverga ulanib bo\'lmadi. Iltimos, backend serverni ishga tushiring (npm start yoki node server.js)');
@@ -298,7 +298,7 @@ const AuthComponent = () => {
       }
     } catch (err) {
       console.error('Password creation error:', err);
-      
+
       // Network xatoliklarini tekshirish
       if (err.type === 'network' || err.message?.includes('Network Error') || err.message?.includes('ERR_CONNECTION_REFUSED')) {
         setError('Serverga ulanib bo\'lmadi. Iltimos, backend serverni ishga tushiring (npm start yoki node server.js)');
@@ -508,7 +508,7 @@ const AuthComponent = () => {
                       <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">1. Telegram botga o'ting</h3>
                       <p className="text-blue-800 dark:text-blue-200">
                         <a href="https://t.me/InFastAI_Register_Bot" target="_blank" rel="noopener noreferrer"
-                           className="underline hover:text-blue-600 dark:hover:text-blue-300 font-medium">
+                          className="underline hover:text-blue-600 dark:hover:text-blue-300 font-medium">
                           @InFastAI_Register_Bot
                         </a> ga boring
                       </p>
@@ -628,9 +628,9 @@ const AuthComponent = () => {
                   <div className="relative">
                     <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-purple-500 dark:border-purple-400 shadow-lg">
                       {avatarPreview ? (
-                        <img 
-                          src={avatarPreview} 
-                          alt="Avatar preview" 
+                        <img
+                          src={avatarPreview}
+                          alt="Avatar preview"
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -785,9 +785,9 @@ const AuthComponent = () => {
                       disabled={loading}
                     />
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Men InFast AI 
-                      <Link 
-                        to="/privacy-policy" 
+                      Men InFast AI
+                      <Link
+                        to="/privacy-policy"
                         className="text-blue-600 dark:text-blue-400 hover:underline mx-1"
                         target="_blank"
                       >
@@ -849,6 +849,20 @@ const AuthComponent = () => {
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  <div className="flex justify-end mt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // For now we can show a message or redirect to a help page
+                        // Since there's no reset-password step implemented in this component yet,
+                        // we'll show a toast or alert.
+                        alert('Parolni tiklash uchun Telegram botga /reset_password deb yozing.');
+                      }}
+                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Parolni unutdingizmi?
                     </button>
                   </div>
                 </div>

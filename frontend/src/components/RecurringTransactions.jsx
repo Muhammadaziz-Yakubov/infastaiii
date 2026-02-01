@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Repeat, Calendar, DollarSign, Trash2, Edit, Plus, CheckCircle, Clock, X } from 'lucide-react';
+import { Repeat, Calendar, Wallet, Trash2, Edit, Plus, CheckCircle, Clock, X } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
 import { useTheme } from '../contexts/ThemeContext';
 import CurrencyInput from './CurrencyInput';
@@ -47,13 +47,13 @@ const RecurringTransactions = ({ onTransactionCreated }) => {
   // Check and create transactions
   const checkAndCreateTransactions = async (recurringList) => {
     const today = new Date().toISOString().split('T')[0];
-    
+
     for (const item of recurringList) {
       if (!item.isActive) continue;
-      
+
       const nextDate = new Date(item.nextDate);
       const todayDate = new Date(today);
-      
+
       if (nextDate <= todayDate) {
         // Create transaction
         try {
@@ -64,15 +64,15 @@ const RecurringTransactions = ({ onTransactionCreated }) => {
             description: item.description || item.name,
             date: today
           });
-          
+
           // Update next date
           const updatedNextDate = calculateNextDate(item.nextDate, item.frequency);
-          setRecurring(prev => prev.map(r => 
-            r.name === item.name 
+          setRecurring(prev => prev.map(r =>
+            r.name === item.name
               ? { ...r, nextDate: updatedNextDate }
               : r
           ));
-          
+
           toast.success(`✅ ${item.name} avtomatik qo'shildi`);
           if (onTransactionCreated) onTransactionCreated();
         } catch (error) {
@@ -103,7 +103,7 @@ const RecurringTransactions = ({ onTransactionCreated }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.amount || formData.amount <= 0) {
       toast.error('Barcha maydonlarni to\'ldiring');
       return;
@@ -112,8 +112,8 @@ const RecurringTransactions = ({ onTransactionCreated }) => {
     const nextDate = calculateNextDate(formData.startDate, formData.frequency);
 
     if (editing) {
-      setRecurring(prev => prev.map(r => 
-        r.name === editing.name 
+      setRecurring(prev => prev.map(r =>
+        r.name === editing.name
           ? { ...formData, nextDate }
           : r
       ));
@@ -146,7 +146,7 @@ const RecurringTransactions = ({ onTransactionCreated }) => {
   };
 
   const handleToggle = (name) => {
-    setRecurring(prev => prev.map(r => 
+    setRecurring(prev => prev.map(r =>
       r.name === name ? { ...r, isActive: !r.isActive } : r
     ));
   };
@@ -200,19 +200,18 @@ const RecurringTransactions = ({ onTransactionCreated }) => {
         <div className="space-y-3">
           {recurring.map((item, index) => {
             const daysUntil = Math.ceil((new Date(item.nextDate) - new Date()) / (1000 * 60 * 60 * 24));
-            
+
             return (
               <div
                 key={index}
-                className={`p-4 rounded-xl border ${isDark ? 'border-gray-700 bg-gray-700/50' : 'border-gray-200 bg-gray-50'} ${
-                  !item.isActive ? 'opacity-50' : ''
-                }`}
+                className={`p-4 rounded-xl border ${isDark ? 'border-gray-700 bg-gray-700/50' : 'border-gray-200 bg-gray-50'} ${!item.isActive ? 'opacity-50' : ''
+                  }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <div className={`p-2 rounded-lg ${item.type === 'income' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-                        <DollarSign className="w-4 h-4" />
+                        <Wallet className="w-4 h-4" />
                       </div>
                       <div className="flex-1">
                         <h4 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -222,15 +221,14 @@ const RecurringTransactions = ({ onTransactionCreated }) => {
                           {item.category} • {frequencyLabels[item.frequency]}
                         </p>
                       </div>
-                      <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        item.isActive 
-                          ? 'bg-green-500/20 text-green-500' 
+                      <div className={`px-3 py-1 rounded-full text-sm font-medium ${item.isActive
+                          ? 'bg-green-500/20 text-green-500'
                           : 'bg-gray-500/20 text-gray-500'
-                      }`}>
+                        }`}>
                         {item.isActive ? 'Faol' : 'Nofaol'}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4 mt-3">
                       <div>
                         <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Summa</p>
@@ -259,15 +257,14 @@ const RecurringTransactions = ({ onTransactionCreated }) => {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 ml-4">
                     <button
                       onClick={() => handleToggle(item.name)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        item.isActive
+                      className={`p-2 rounded-lg transition-colors ${item.isActive
                           ? 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500'
                           : 'bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50'
-                      }`}
+                        }`}
                       title={item.isActive ? 'Nofaol qilish' : 'Faollashtirish'}
                     >
                       {item.isActive ? (

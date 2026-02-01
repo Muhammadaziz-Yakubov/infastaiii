@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  X, Plus, Calendar, DollarSign, CreditCard, Target,
+  X, Plus, Calendar, Wallet, CreditCard, Target,
   CheckSquare, ArrowUpRight, ArrowDownRight, User, Phone
 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -122,7 +122,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
   const getIcon = () => {
     switch (type) {
       case 'task': return CheckSquare;
-      case 'finance': return DollarSign;
+      case 'finance': return Wallet;
       case 'goal': return Target;
       case 'debt': return CreditCard;
       default: return Plus;
@@ -153,7 +153,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 placeholder="Vazifa nomini kiriting"
                 required
@@ -166,7 +166,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none resize-none"
                 rows={3}
                 placeholder="Vazifa haqida..."
@@ -180,7 +180,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
                 </label>
                 <select
                   value={formData.priority}
-                  onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 >
                   <option value="low">Past</option>
@@ -196,7 +196,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
                 <input
                   type="date"
                   value={formData.deadline}
-                  onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                   min={new Date().toISOString().split('T')[0]}
                   className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
@@ -215,24 +215,22 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormData({...formData, type: 'income', category: ''})}
-                  className={`py-3 px-4 rounded-lg font-semibold transition-all ${
-                    formData.type === 'income'
+                  onClick={() => setFormData({ ...formData, type: 'income', category: '' })}
+                  className={`py-3 px-4 rounded-lg font-semibold transition-all ${formData.type === 'income'
                       ? 'bg-green-500 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  }`}
+                    }`}
                 >
                   <ArrowDownRight className="w-5 h-5 inline mr-1" />
                   Kirim
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({...formData, type: 'expense', category: ''})}
-                  className={`py-3 px-4 rounded-lg font-semibold transition-all ${
-                    formData.type === 'expense'
+                  onClick={() => setFormData({ ...formData, type: 'expense', category: '' })}
+                  className={`py-3 px-4 rounded-lg font-semibold transition-all ${formData.type === 'expense'
                       ? 'bg-red-500 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  }`}
+                    }`}
                 >
                   <ArrowUpRight className="w-5 h-5 inline mr-1" />
                   Chiqim
@@ -243,7 +241,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
             <CurrencyInput
               label="Summa *"
               value={formData.amount}
-              onChange={(value) => setFormData({...formData, amount: value})}
+              onChange={(value) => setFormData({ ...formData, amount: value })}
               currency="UZS"
               placeholder="0"
               required
@@ -255,7 +253,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               </label>
               <select
                 value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 required
               >
@@ -287,7 +285,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               <input
                 type="text"
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
                 placeholder="Qo'shimcha ma'lumot..."
               />
@@ -305,7 +303,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                 placeholder="Masalan: MacBook olish"
                 required
@@ -315,7 +313,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
             <CurrencyInput
               label="Maqsad summasi *"
               value={formData.targetAmount}
-              onChange={(value) => setFormData({...formData, targetAmount: value})}
+              onChange={(value) => setFormData({ ...formData, targetAmount: value })}
               currency="UZS"
               placeholder="0"
               required
@@ -324,7 +322,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
             <CurrencyInput
               label="Boshlang'ich summa"
               value={formData.currentAmount}
-              onChange={(value) => setFormData({...formData, currentAmount: value})}
+              onChange={(value) => setFormData({ ...formData, currentAmount: value })}
               currency="UZS"
               placeholder="0"
             />
@@ -336,7 +334,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               <input
                 type="date"
                 value={formData.deadline}
-                onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                 min={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none"
                 required
@@ -349,7 +347,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none resize-none"
                 rows={3}
                 placeholder="Maqsad haqida..."
@@ -368,24 +366,22 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormData({...formData, type: 'borrow'})}
-                  className={`py-3 px-4 rounded-lg font-semibold transition-all ${
-                    formData.type === 'borrow'
+                  onClick={() => setFormData({ ...formData, type: 'borrow' })}
+                  className={`py-3 px-4 rounded-lg font-semibold transition-all ${formData.type === 'borrow'
                       ? 'bg-blue-500 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  }`}
+                    }`}
                 >
                   <ArrowDownRight className="w-5 h-5 inline mr-1" />
                   Qarz oldim
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({...formData, type: 'lend'})}
-                  className={`py-3 px-4 rounded-lg font-semibold transition-all ${
-                    formData.type === 'lend'
+                  onClick={() => setFormData({ ...formData, type: 'lend' })}
+                  className={`py-3 px-4 rounded-lg font-semibold transition-all ${formData.type === 'lend'
                       ? 'bg-purple-500 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  }`}
+                    }`}
                 >
                   <ArrowUpRight className="w-5 h-5 inline mr-1" />
                   Qarz berdim
@@ -400,7 +396,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               <input
                 type="text"
                 value={formData.personName}
-                onChange={(e) => setFormData({...formData, personName: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, personName: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 placeholder="Ism familiya"
                 required
@@ -410,7 +406,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
             <CurrencyInput
               label="Summa *"
               value={formData.amount}
-              onChange={(value) => setFormData({...formData, amount: value})}
+              onChange={(value) => setFormData({ ...formData, amount: value })}
               currency="UZS"
               placeholder="0"
               required
@@ -423,7 +419,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               <input
                 type="date"
                 value={formData.dueDate}
-                onChange={(e) => setFormData({...formData, dueDate: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                 min={new Date().toISOString().split('T')[0]}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 required
@@ -436,7 +432,7 @@ const MobileModals = ({ isOpen, onClose, type, onSuccess }) => {
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
                 rows={3}
                 placeholder="Qo'shimcha ma'lumot..."

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Brain, Zap, DollarSign, Target, CheckSquare,
+  Brain, Zap, Wallet, Target, CheckSquare,
   Calendar, Clock, Plus, X, TrendingUp,
-  TrendingDown, AlertCircle, Sparkles, Wallet,
+  TrendingDown, AlertCircle, Sparkles,
   ArrowRight, Send, Loader2, Mic, MicOff,
   Lightbulb, Star, Rocket
 } from 'lucide-react';
@@ -55,7 +55,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     'yolovchi': 'Transport',
     'mashina': 'Transport',
     'avtomobil': 'Transport',
-    
+
     // Taom
     'ovqat': 'Taom',
     'osh': 'Taom',
@@ -66,7 +66,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     'market': 'Taom',
     'do\'kon': 'Taom',
     'savdo': 'Taom',
-    
+
     // Shopping
     'kiyim': 'Kiyim-kechak',
     'ko\'ylak': 'Kiyim-kechak',
@@ -78,12 +78,12 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     'shopping': 'Kiyim-kechak',
     'magazin': 'Kiyim-kechak',
     'sotib': 'Kiyim-kechak',
-    
+
     // Electronics
     'telefon': 'Kiyim-kechak',
     'kompyuter': 'Kiyim-kechak',
     'noutbuk': 'Kiyim-kechak',
-    
+
     // Utilities
     'internet': 'Kommunal to\'lovlar',
     'kommunal': 'Kommunal to\'lovlar',
@@ -92,7 +92,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     'gaz': 'Kommunal to\'lovlar',
     'suv': 'Kommunal to\'lovlar',
     'telefon': 'Kommunal to\'lovlar',
-    
+
     // Health
     'shifokor': 'Sog\'liq',
     'dori': 'Sog\'liq',
@@ -100,7 +100,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     'dorixona': 'Sog\'liq',
     'kasalxona': 'Sog\'liq',
     'tibbiyot': 'Sog\'liq',
-    
+
     // Education
     'ta\'lim': 'Ta\'lim',
     'kitob': 'Ta\'lim',
@@ -108,27 +108,27 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     'o\'qish': 'Ta\'lim',
     'maktab': 'Ta\'lim',
     'universitet': 'Ta\'lim',
-    
+
     // Entertainment
     'sayr': 'Ko\'ngilochar',
     'kino': 'Ko\'ngilochar',
     'teatr': 'Ko\'ngilochar',
     'dam olish': 'Ko\'ngilochar',
-    
+
     // Housing
     'uy': 'Uy-joy',
     'ijara': 'Uy-joy',
     'kvartira': 'Uy-joy',
     'uy-joy': 'Uy-joy',
     'ipoteka': 'Uy-joy',
-    
+
     // Services
     'ekspert': 'Xizmatlar',
     'konsultatsiya': 'Xizmatlar',
     'xizmat': 'Xizmatlar',
     'yurist': 'Xizmatlar',
     'hisobchi': 'Xizmatlar',
-    
+
     // Gambling
     'tikib': 'Qimor o\'yinlari',
     'yutqizib': 'Qimor o\'yinlari',
@@ -136,30 +136,30 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
     'kazino': 'Qimor o\'yinlari',
     'bukmeker': 'Qimor o\'yinlari',
     'lotereya': 'Qimor o\'yinlari',
-    
+
     // Travel
     'sayohat': 'Sayohat',
     'mehmonxona': 'Sayohat',
     'aviachipta': 'Sayohat',
-    
+
     // Sports
     'sport': 'Sport',
     'fitnes': 'Sport',
     'zal': 'Sport',
     'badiy tana': 'Sport',
-    
+
     // Gifts
     'sovg\'a': 'Sovg\'alar',
     'bayram': 'Sovg\'alar',
     'tug\'ilgan kun': 'Sovg\'alar',
     'to\'y': 'Sovg\'alar',
-    
+
     // Debt
     'qarz': 'Qarz kredit',
     'kredit': 'Qarz kredit',
     'foiz': 'Qarz kredit',
     'nasiya': 'Qarz kredit',
-    
+
     // Family
     'oilaviy': 'Oilaviy',
     'oilaviya': 'Oilaviy',
@@ -442,7 +442,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
                 }}
                 className={`w-full text-left px-4 py-2 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-100'} rounded-lg flex items-center gap-3 transition-colors`}
               >
-                <DollarSign className="w-4 h-4 text-green-500" />
+                <Wallet className="w-4 h-4 text-green-500" />
                 <div>
                   <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>Xarajat sifatida</p>
                   <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Moliya hisobiga qo'shish</p>
@@ -649,7 +649,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
   };
 
   const examplePhrases = [
-    { text: "Taksi ga 25 ming sarfladim", type: "finance", icon: DollarSign },
+    { text: "Taksi ga 25 ming sarfladim", type: "finance", icon: Wallet },
     { text: "Bugun 30 minglik ovqatlandim", type: "finance", icon: Wallet },
     { text: "Kompuyuter olish maqsadimga 100 ming qo'shdim", type: "goal", icon: Target },
     { text: "Moshina olish uchun 500 ming kerak", type: "goal", icon: Rocket },
@@ -660,7 +660,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
   return (
     <div className="relative">
       {/* Quick Add Trigger Button */}
-     {!showQuickAdd && (
+      {!showQuickAdd && (
         <button
           onClick={() => setShowQuickAdd(true)}
           className="fixed bottom-24 lg:bottom-6 right-4 lg:right-6 z-30 w-16 h-16 bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:via-amber-600 hover:to-orange-700 rounded-full shadow-2xl shadow-orange-500/40 hover:shadow-orange-500/60 flex items-center justify-center transition-all duration-300 group hover:scale-110"
@@ -673,7 +673,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
 
       {/* Quick Add Modal */}
       {showQuickAdd && (
-        <div 
+        <div
           className="modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md animate-fade-in"
           onClick={(e) => {
             if (e.target.classList.contains('modal-backdrop')) {
@@ -721,11 +721,10 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
-                        isActive
-                          ? `${isDark ? 'bg-gray-700 text-white shadow-lg' : 'bg-white text-gray-900 shadow'}`
-                          : `${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
-                      }`}
+                      className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 ${isActive
+                        ? `${isDark ? 'bg-gray-700 text-white shadow-lg' : 'bg-white text-gray-900 shadow'}`
+                        : `${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`
+                        }`}
                     >
                       <Icon className="w-4 h-4" />
                       <span className="hidden sm:inline">{tab.label}</span>
@@ -794,7 +793,7 @@ const SmartQuickAdd = ({ onAddTask, onAddFinance, onAddGoal, existingGoals = [] 
                         className={`w-full text-left p-3 ${isDark ? 'bg-gray-700/50 hover:bg-gray-700 border-gray-600' : 'bg-gray-50 hover:bg-gray-100 border-gray-200'} border rounded-xl transition-all hover:scale-[1.02] flex items-center gap-3`}
                       >
                         {suggestion.type === 'task' && <CheckSquare className="w-4 h-4 text-blue-500 flex-shrink-0" />}
-                        {suggestion.type === 'finance' && <DollarSign className="w-4 h-4 text-green-500 flex-shrink-0" />}
+                        {suggestion.type === 'finance' && <Wallet className="w-4 h-4 text-green-500 flex-shrink-0" />}
                         {suggestion.type === 'goal' && <Target className="w-4 h-4 text-purple-500 flex-shrink-0" />}
                         <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{suggestion.text}</p>
                       </button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Target, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
 import { formatCurrency } from '../utils/currency';
 import { useTheme } from '../contexts/ThemeContext';
 import CurrencyInput from './CurrencyInput';
@@ -54,7 +54,7 @@ const BudgetPlanner = ({ transactions = [], onBudgetSet }) => {
     const budget = monthBudgets[category] || 0;
     const spent = currentMonthExpenses[category] || 0;
     const percentage = budget > 0 ? (spent / budget) * 100 : 0;
-    
+
     if (percentage === 0) return { status: 'good', color: 'text-green-500', bg: 'bg-green-500/20' };
     if (percentage < 50) return { status: 'good', color: 'text-green-500', bg: 'bg-green-500/20' };
     if (percentage < 80) return { status: 'warning', color: 'text-yellow-500', bg: 'bg-yellow-500/20' };
@@ -101,11 +101,10 @@ const BudgetPlanner = ({ transactions = [], onBudgetSet }) => {
         </div>
         <button
           onClick={() => setShowPlanner(!showPlanner)}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            showPlanner
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${showPlanner
               ? 'bg-blue-500 text-white'
               : `${isDark ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-700'} hover:bg-gray-200 dark:hover:bg-gray-600`
-          }`}
+            }`}
         >
           {showPlanner ? 'Yopish' : 'Sozlash'}
         </button>
@@ -139,11 +138,10 @@ const BudgetPlanner = ({ transactions = [], onBudgetSet }) => {
         </div>
         <div className="w-full bg-white/20 rounded-full h-2 mb-2">
           <div
-            className={`h-2 rounded-full transition-all ${
-              budgetPercentage > 100 ? 'bg-red-400' :
-              budgetPercentage > 80 ? 'bg-yellow-400' :
-              'bg-green-400'
-            }`}
+            className={`h-2 rounded-full transition-all ${budgetPercentage > 100 ? 'bg-red-400' :
+                budgetPercentage > 80 ? 'bg-yellow-400' :
+                  'bg-green-400'
+              }`}
             style={{ width: `${Math.min(budgetPercentage, 100)}%` }}
           />
         </div>
@@ -165,7 +163,7 @@ const BudgetPlanner = ({ transactions = [], onBudgetSet }) => {
             const budget = monthBudgets[category] || 0;
             const spent = currentMonthExpenses[category] || 0;
             const status = getBudgetStatus(category);
-            
+
             return (
               <div key={category} className={`p-4 rounded-xl border ${isDark ? 'border-gray-700 bg-gray-700/50' : 'border-gray-200 bg-gray-50'}`}>
                 <div className="flex items-center justify-between mb-3">
@@ -176,7 +174,7 @@ const BudgetPlanner = ({ transactions = [], onBudgetSet }) => {
                     {spent > 0 && budget > 0 ? `${Math.round((spent / budget) * 100)}%` : '0%'}
                   </div>
                 </div>
-                
+
                 <CurrencyInput
                   label=""
                   value={budget}
@@ -184,7 +182,7 @@ const BudgetPlanner = ({ transactions = [], onBudgetSet }) => {
                   currency="UZS"
                   placeholder="0"
                 />
-                
+
                 <div className="mt-2 flex items-center justify-between text-sm">
                   <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
                     Sarflangan: {formatCurrency(spent)}
@@ -195,16 +193,15 @@ const BudgetPlanner = ({ transactions = [], onBudgetSet }) => {
                     </span>
                   )}
                 </div>
-                
+
                 {budget > 0 && (
                   <div className="mt-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1.5">
                     <div
-                      className={`h-1.5 rounded-full transition-all ${
-                        status.status === 'exceeded' ? 'bg-red-500' :
-                        status.status === 'danger' ? 'bg-orange-500' :
-                        status.status === 'warning' ? 'bg-yellow-500' :
-                        'bg-green-500'
-                      }`}
+                      className={`h-1.5 rounded-full transition-all ${status.status === 'exceeded' ? 'bg-red-500' :
+                          status.status === 'danger' ? 'bg-orange-500' :
+                            status.status === 'warning' ? 'bg-yellow-500' :
+                              'bg-green-500'
+                        }`}
                       style={{ width: `${Math.min((spent / budget) * 100, 100)}%` }}
                     />
                   </div>
@@ -228,7 +225,7 @@ const BudgetPlanner = ({ transactions = [], onBudgetSet }) => {
             {remaining > 0 ? formatCurrency(remaining) : '0'}
           </p>
         </div>
-        
+
         <div className={`p-4 rounded-xl ${budgetPercentage > 100 ? (isDark ? 'bg-red-900/30' : 'bg-red-50') : (isDark ? 'bg-gray-700/50' : 'bg-blue-50')} border ${budgetPercentage > 100 ? (isDark ? 'border-red-800' : 'border-red-200') : (isDark ? 'border-gray-600' : 'border-blue-200')}`}>
           <div className="flex items-center gap-2 mb-2">
             {budgetPercentage > 100 ? (

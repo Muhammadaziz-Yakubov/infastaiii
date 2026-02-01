@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    DollarSign, TrendingUp, TrendingDown, Plus, Calendar,
+    Wallet, TrendingUp, TrendingDown, Plus, Calendar,
     PieChart, BarChart3, ArrowUpRight, ArrowDownRight, Search,
-    Edit, Trash2, X, RefreshCw, Wallet, Users,
+    Edit, Trash2, X, RefreshCw, Users,
     Home, Car, ShoppingCart, Coffee, Film, HeartPulse,
     Dumbbell, BookOpen, Briefcase, Gift, Phone,
     ShoppingBag, Eye, EyeOff, CreditCard, Clock,
-    AlertCircle, User, ChevronRight, ExternalLink, FileText, WifiOff,
+    AlertCircle, User, ChevronRight, ChevronLeft, MoreHorizontal, ExternalLink, FileText, WifiOff,
     Sparkles, Brain, Lightbulb, Target, ChevronDown, ChevronUp, Info, Banknote
 } from 'lucide-react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement } from 'chart.js';
@@ -158,6 +158,9 @@ const Finance = () => {
                         overdueBorrowed, overdueLent, netDebt: activeLent - activeBorrowed
                     });
                 }
+
+                // AI Tahlilni doim ochish
+                setShowAIAnalysis(true);
 
                 // Statistikani yuklash
                 const statsData = await financeService.getStatistics(selectedPeriod);
@@ -426,8 +429,9 @@ const Finance = () => {
             datasets: [{
                 data: aiAnalysis.topExpenseCategories.map(c => c.amount),
                 backgroundColor: colors.slice(0, aiAnalysis.topExpenseCategories.length),
-                borderColor: colors.slice(0, aiAnalysis.topExpenseCategories.length).map(c => c),
-                borderWidth: 2
+                borderColor: 'transparent',
+                borderWidth: 0,
+                hoverOffset: 4
             }]
         };
     }, [aiAnalysis]);
@@ -485,20 +489,18 @@ const Finance = () => {
             labels,
             datasets: [
                 {
-                    label: 'Daromad',
-                    data: incomeData,
-                    borderColor: 'rgb(34, 197, 94)',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                },
-                {
-                    label: 'Xarajat',
+                    label: 'Xarajatlar',
                     data: expenseData,
-                    borderColor: 'rgb(239, 68, 68)',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    fill: true,
-                    tension: 0.4
+                    borderColor: '#D4FF00', // Neon yellow from images
+                    backgroundColor: 'transparent',
+                    fill: false,
+                    tension: 0.5,
+                    borderWidth: 4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#D4FF00',
+                    pointHoverBorderColor: 'white',
+                    pointHoverBorderWidth: 2,
                 }
             ]
         };
@@ -749,7 +751,7 @@ const Finance = () => {
     };
 
     const getCategoryIcon = (iconName) => {
-        return iconMap[iconName] || DollarSign;
+        return iconMap[iconName] || Wallet;
     };
 
     const getDebtStatus = (debt) => {
@@ -777,22 +779,15 @@ const Finance = () => {
                 {/* Top row - Title and actions */}
                 <div className="flex items-center justify-between mb-4 lg:mb-6">
                     <div className="flex items-center gap-3 lg:gap-4">
-                        <div className="p-2.5 lg:p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl lg:rounded-2xl shadow-lg">
+                        <div className="p-2.5 lg:p-3 bg-indigo-600 rounded-xl lg:rounded-2xl shadow-lg">
                             <Wallet className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{t('finance.title')}</h1>
-                            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">{t('finance.manageDesc')}</p>
+                            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Moliya</h1>
+                            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">Tranzaksiyalar va tahlil</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 lg:gap-3">
-                        <button
-                            onClick={loadData}
-                            className="p-2 lg:p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg lg:rounded-xl transition-all"
-                            title="Yangilash"
-                        >
-                            <RefreshCw className="w-4 h-4 lg:w-5 lg:h-5 text-gray-500" />
-                        </button>
                         <button
                             onClick={() => setShowBalance(!showBalance)}
                             className="p-2 lg:p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg lg:rounded-xl transition-colors"
@@ -873,37 +868,33 @@ const Finance = () => {
 
 
             {/* Tablar - Desktop optimized */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-1 lg:p-1.5 shadow-md border border-gray-200 dark:border-gray-700">
-                <div className="flex space-x-1 lg:space-x-2">
+            <div className="bg-white dark:bg-gray-800 rounded-[24px] p-1.5 shadow-sm border border-gray-100 dark:border-gray-700 mb-6 sticky top-0 z-30 backdrop-blur-md bg-white/80">
+                <div className="flex space-x-1">
                     <button
                         onClick={() => setActiveTab('transactions')}
-                        className={`flex-1 py-2.5 sm:py-3 lg:py-3.5 px-2 sm:px-4 lg:px-6 rounded-lg lg:rounded-xl font-medium sm:font-semibold transition-all text-sm sm:text-base lg:text-lg ${activeTab === 'transactions' ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                        className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'transactions' ? 'bg-[#6366F1] text-white shadow-lg shadow-indigo-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
                     >
-                        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                            <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
-                            <span className="hidden sm:inline">Tranzaksiyalar</span>
-                            <span className="sm:hidden">Tranz.</span>
-                            <span className="text-xs sm:text-sm">({transactions.length})</span>
+                        <div className="flex items-center justify-center gap-2">
+                            <Wallet className="w-5 h-5" />
+                            <span>Tranzaksiyalar</span>
                         </div>
                     </button>
                     <button
                         onClick={() => setActiveTab('debts')}
-                        className={`flex-1 py-2.5 sm:py-3 lg:py-3.5 px-2 sm:px-4 lg:px-6 rounded-lg lg:rounded-xl font-medium sm:font-semibold transition-all text-sm sm:text-base lg:text-lg ${activeTab === 'debts' ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                        className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'debts' ? 'bg-[#EC4899] text-white shadow-lg shadow-pink-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
                     >
-                        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                            <CreditCard className="w-4 h-4 sm:w-5 sm:h-5" />
-                            Qarzlar
-                            <span className="text-xs sm:text-sm">({debts.length})</span>
+                        <div className="flex items-center justify-center gap-2">
+                            <CreditCard className="w-5 h-5" />
+                            <span>Qarzlar</span>
                         </div>
                     </button>
                     <button
                         onClick={() => setActiveTab('analytics')}
-                        className={`flex-1 py-2.5 sm:py-3 lg:py-3.5 px-2 sm:px-4 lg:px-6 rounded-lg lg:rounded-xl font-medium sm:font-semibold transition-all text-sm sm:text-base lg:text-lg ${activeTab === 'analytics' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                        className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'analytics' ? 'bg-[#8B5CF6] text-white shadow-lg shadow-violet-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
                     >
-                        <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                            <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
-                            <span className="hidden sm:inline">AI Tahlil</span>
-                            <span className="sm:hidden">Tahlil</span>
+                        <div className="flex items-center justify-center gap-2">
+                            <Brain className="w-5 h-5" />
+                            <span>Insights</span>
                         </div>
                     </button>
                 </div>
@@ -913,285 +904,125 @@ const Finance = () => {
 
             {/* Kontent */}
             {activeTab === 'analytics' ? (
-                /* AI Tahlil bo'limi */
-                <div className="space-y-4 lg:space-y-6">
-                    {/* AI Tavsiyalar */}
-                    {aiAnalysis && aiAnalysis.recommendations.length > 0 && (
-                        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-emerald-200 dark:border-emerald-800/50">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2.5 bg-emerald-500 rounded-xl">
-                                    <Brain className="w-5 h-5 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">AI Moliyaviy Tahlil</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">So'nggi 30 kun asosida</p>
-                                </div>
-                            </div>
+                <div className="space-y-6">
+                    {/* Insights Header - Purple Section */}
+                    {aiAnalysis ? (
+                        <>
+                            <div className="bg-[#6366F1] -mx-4 lg:-mx-6 -mt-4 lg:-mt-6 p-6 lg:p-8 text-white rounded-b-[40px] shadow-2xl relative overflow-hidden mb-8">
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between mb-8">
+                                        <button onClick={() => setActiveTab('transactions')} className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                                            <ChevronLeft className="w-6 h-6" />
+                                        </button>
+                                        <h3 className="text-xl font-bold tracking-tight">Insights</h3>
+                                        <button className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors">
+                                            <MoreHorizontal className="w-6 h-6 text-white" />
+                                        </button>
+                                    </div>
 
-                            <div className="space-y-3">
-                                {aiAnalysis.recommendations.map((rec, index) => (
-                                    <div
-                                        key={index}
-                                        className={`p-4 rounded-xl ${rec.type === 'success' ? 'bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800' :
-                                                rec.type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800' :
-                                                    'bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
-                                            }`}
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <span className="text-2xl">{rec.icon}</span>
-                                            <div>
-                                                <h4 className="font-semibold text-gray-900 dark:text-white">{rec.title}</h4>
-                                                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{rec.message}</p>
+                                    <div className="mb-2">
+                                        <p className="text-indigo-100/70 text-sm font-medium">Jami xarajat</p>
+                                        <div className="flex items-baseline justify-between">
+                                            <h2 className="text-4xl font-extrabold flex items-baseline gap-1">
+                                                {aiAnalysis.totalExpense.toLocaleString()} <span className="text-xl font-bold opacity-70">so'm</span>
+                                            </h2>
+                                            <div className="bg-white/10 px-3 py-1.5 rounded-xl flex items-center gap-1 text-sm font-bold border border-white/10 cursor-pointer">
+                                                Haftalik <ChevronDown className="w-4 h-4" />
                                             </div>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
 
-                            {/* Tejash imkoniyatlari */}
-                            {aiAnalysis.savingsOpportunities.length > 0 && (
-                                <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Lightbulb className="w-5 h-5 text-yellow-500" />
-                                        <h4 className="font-semibold text-gray-900 dark:text-white">Tejash imkoniyati</h4>
-                                    </div>
-                                    {aiAnalysis.savingsOpportunities.map((opp, index) => (
-                                        <div key={index} className="text-sm text-gray-700 dark:text-gray-300">
-                                            <p>{opp.suggestion}</p>
-                                            <div className="mt-2 flex items-center gap-2">
-                                                <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 rounded-full text-xs font-medium">
-                                                    💰 Potensial tejam: {formatCurrencyShort(opp.potentialSavings)}/oy
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Statistika kartalar */}
-                    {aiAnalysis && (
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <TrendingUp className="w-4 h-4 text-green-500" />
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">Daromad (30 kun)</span>
-                                </div>
-                                <p className="text-lg lg:text-xl font-bold text-green-600 dark:text-green-400">
-                                    +{formatCurrencyShort(aiAnalysis.totalIncome)}
-                                </p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <TrendingDown className="w-4 h-4 text-red-500" />
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">Xarajat (30 kun)</span>
-                                </div>
-                                <p className="text-lg lg:text-xl font-bold text-red-600 dark:text-red-400">
-                                    -{formatCurrencyShort(aiAnalysis.totalExpense)}
-                                </p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Target className="w-4 h-4 text-blue-500" />
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">Tejamkorlik</span>
-                                </div>
-                                <p className={`text-lg lg:text-xl font-bold ${aiAnalysis.savingsRate >= 20 ? 'text-green-600 dark:text-green-400' : aiAnalysis.savingsRate >= 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'}`}>
-                                    {aiAnalysis.savingsRate}%
-                                </p>
-                            </div>
-                            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Calendar className="w-4 h-4 text-purple-500" />
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">Kunlik o'rtacha</span>
-                                </div>
-                                <p className="text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
-                                    {formatCurrencyShort(aiAnalysis.dailyAverage)}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Grafiklar */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                        {/* Pie Chart - Kategoriya bo'yicha xarajatlar */}
-                        {pieChartData && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
-                                <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                    <PieChart className="w-5 h-5 text-blue-500" />
-                                    Xarajatlar taqsimoti
-                                </h3>
-                                <div className="h-64 lg:h-72">
-                                    <Pie
-                                        data={pieChartData}
-                                        options={{
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: {
-                                                    position: 'bottom',
-                                                    labels: {
-                                                        padding: 15,
-                                                        usePointStyle: true,
-                                                        font: { size: 11 }
-                                                    }
-                                                },
-                                                tooltip: {
-                                                    callbacks: {
-                                                        label: (context) => {
-                                                            const value = context.raw;
-                                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                                            const percentage = Math.round((value / total) * 100);
-                                                            return `${context.label}: ${formatCurrencyShort(value)} (${percentage}%)`;
+                                    {/* Neon Chart Area */}
+                                    <div className="h-60 mt-8 relative">
+                                        <Line
+                                            data={incomeExpenseChartData}
+                                            options={{
+                                                responsive: true,
+                                                maintainAspectRatio: false,
+                                                plugins: {
+                                                    legend: { display: false },
+                                                    tooltip: {
+                                                        enabled: true,
+                                                        backgroundColor: 'white',
+                                                        titleColor: '#6366F1',
+                                                        bodyColor: '#1F2937',
+                                                        bodyFont: { weight: 'bold' },
+                                                        padding: 12,
+                                                        cornerRadius: 12,
+                                                        displayColors: false,
+                                                        callbacks: {
+                                                            label: (context) => `${context.raw.toLocaleString()} so'm`
                                                         }
                                                     }
+                                                },
+                                                scales: {
+                                                    x: {
+                                                        display: true,
+                                                        grid: { display: false },
+                                                        ticks: { color: 'rgba(255, 255, 255, 0.5)', font: { size: 10, weight: 'bold' } }
+                                                    },
+                                                    y: { display: false, grid: { display: false } }
                                                 }
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Bar Chart - Haftalik xarajatlar */}
-                        {barChartData && (
-                            <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
-                                <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                    <BarChart3 className="w-5 h-5 text-red-500" />
-                                    Haftalik xarajatlar
-                                </h3>
-                                <div className="h-64 lg:h-72">
-                                    <Bar
-                                        data={barChartData}
-                                        options={{
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: { display: false },
-                                                tooltip: {
-                                                    callbacks: {
-                                                        label: (context) => formatCurrencyShort(context.raw)
-                                                    }
-                                                }
-                                            },
-                                            scales: {
-                                                y: {
-                                                    beginAtZero: true,
-                                                    ticks: {
-                                                        callback: (value) => formatCurrencyShort(value)
-                                                    }
-                                                }
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Daromad vs Xarajat Line Chart */}
-                    {incomeExpenseChartData && (
-                        <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-emerald-500" />
-                                Daromad vs Xarajat (6 oy)
-                            </h3>
-                            <div className="h-64 lg:h-80">
-                                <Line
-                                    data={incomeExpenseChartData}
-                                    options={{
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        plugins: {
-                                            legend: {
-                                                position: 'top',
-                                                labels: {
-                                                    usePointStyle: true,
-                                                    padding: 20
-                                                }
-                                            },
-                                            tooltip: {
-                                                callbacks: {
-                                                    label: (context) => `${context.dataset.label}: ${formatCurrencyShort(context.raw)}`
-                                                }
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true,
-                                                ticks: {
-                                                    callback: (value) => formatCurrencyShort(value)
-                                                }
-                                            }
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Top kategoriyalar ro'yxati */}
-                    {aiAnalysis && aiAnalysis.topExpenseCategories.length > 0 && (
-                        <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
-                            <h3 className="text-base lg:text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                                <BarChart3 className="w-5 h-5 text-purple-500" />
-                                Eng ko'p xarajat kategoriyalari
-                            </h3>
-                            <div className="space-y-3">
-                                {aiAnalysis.topExpenseCategories.map((cat, index) => {
-                                    const categoryData = categories.find(c => c.name === cat.category);
-                                    const Icon = getCategoryIcon(categoryData?.icon || 'DollarSign');
-
-                                    return (
-                                        <div key={index} className="flex items-center gap-3">
-                                            <div
-                                                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                                                style={{ backgroundColor: (categoryData?.color || '#6366f1') + '20' }}
-                                            >
-                                                <Icon className="w-5 h-5" style={{ color: categoryData?.color || '#6366f1' }} />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className="font-medium text-gray-900 dark:text-white text-sm">{cat.category}</span>
-                                                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrencyShort(cat.amount)}</span>
-                                                </div>
-                                                <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full rounded-full transition-all duration-500"
-                                                        style={{
-                                                            width: `${cat.percentage}%`,
-                                                            backgroundColor: categoryData?.color || '#6366f1'
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400 w-10 text-right">
-                                                {cat.percentage}%
-                                            </span>
+                                            }}
+                                        />
+                                        <div className="absolute top-4 left-1/3 bg-white text-[#1F2937] px-3 py-1.5 rounded-xl text-xs font-bold shadow-xl border border-gray-100 flex flex-col items-center">
+                                            <span>{aiAnalysis.dailyAverage.toLocaleString()} so'm</span>
+                                            <div className="w-2 h-2 bg-white rotate-45 -mb-2 mt-1"></div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
+                                    </div>
+                                </div>
 
-                    {/* Ma'lumot yo'q */}
-                    {!aiAnalysis && (
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-x-1/2 translate-y-1/2"></div>
+                            </div>
+
+
+                            <div className="px-1">
+                                <h3 className="text-xl font-extrabold text-gray-900 dark:text-white mb-6 font-display">Kategoriyalar</h3>
+                                <div className="space-y-4">
+                                    {aiAnalysis.topExpenseCategories.map((cat, index) => {
+                                        const categoryData = categories.find(c => c.name === cat.category);
+                                        const Icon = getCategoryIcon(categoryData?.icon || 'Wallet');
+
+                                        return (
+                                            <div key={index} className="bg-white dark:bg-gray-800 p-5 rounded-[32px] border border-gray-100 dark:border-gray-700 flex items-center justify-between shadow-sm hover:shadow-md transition-all group">
+                                                <div className="flex items-center gap-4">
+                                                    <div
+                                                        className="w-14 h-14 rounded-full flex items-center justify-center transition-all group-hover:scale-110 shadow-inner"
+                                                        style={{ backgroundColor: (categoryData?.color || '#6366f1') + '15' }}
+                                                    >
+                                                        <Icon className="w-7 h-7" style={{ color: categoryData?.color || '#6366f1' }} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-gray-900 dark:text-white text-base leading-tight">{cat.category}</h4>
+                                                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                                                            {transactions.filter(t => t.category === cat.category).length} tranzaksiya
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-extrabold text-lg text-gray-900 dark:text-white tracking-tight">
+                                                        {cat.amount.toLocaleString()} <span className="text-xs">so'm</span>
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+                                                        {cat.percentage}% jami
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </>
+                    ) : (
                         <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center shadow-md">
-                            <Brain className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                            <Brain className="w-16 h-16 mx-auto mb-4 text-gray-400 animate-pulse" />
                             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                                 Tahlil uchun ma'lumot yetarli emas
                             </h3>
-                            <p className="text-gray-600 dark:text-gray-400 mb-6">
-                                AI tahlil uchun kamida bir nechta tranzaksiya kerak
-                            </p>
                             <button
-                                onClick={() => {
-                                    setActiveTab('transactions');
-                                    resetForm();
-                                    setShowAddModal(true);
-                                }}
-                                className="bg-emerald-500 text-white px-6 py-2.5 rounded-lg hover:bg-emerald-600 transition-colors inline-flex items-center gap-2"
+                                onClick={() => { setActiveTab('transactions'); setShowAddModal(true); }}
+                                className="bg-[#6366F1] text-white px-6 py-3 rounded-2xl hover:bg-indigo-600 transition-colors inline-flex items-center gap-2 font-bold shadow-lg shadow-indigo-500/30"
                             >
                                 <Plus className="w-5 h-5" />
                                 Tranzaksiya qo'shish
@@ -1199,6 +1030,7 @@ const Finance = () => {
                         </div>
                     )}
                 </div>
+
             ) : activeTab === 'transactions' ? (
                 /* Tranzaksiyalar ro'yxati */
                 filteredTransactions.length === 0 ? (
@@ -1222,91 +1054,59 @@ const Finance = () => {
                         </button>
                     </div>
                 ) : (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl shadow-md lg:shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                        <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    <div className="space-y-0">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-xl font-extrabold text-gray-900 dark:text-white">Tranzaksiyalar</h3>
+                            <div className="flex items-center gap-2">
+                                <button className="p-2 bg-white dark:bg-gray-800 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm">
+                                    <Search className="w-5 h-5 text-gray-400" />
+                                </button>
+                                <button className="p-2 bg-white dark:bg-gray-800 rounded-full border border-gray-100 dark:border-gray-700 shadow-sm">
+                                    <Plus className="w-5 h-5 text-gray-400" onClick={() => setShowAddModal(true)} />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="space-y-1">
+
                             {filteredTransactions.map((transaction) => {
                                 // Database dan olingan icon va color, agar bo'lmasa default
-                                const Icon = getCategoryIcon(transaction.categoryIcon || 'DollarSign');
+                                const Icon = getCategoryIcon(transaction.categoryIcon || 'Wallet');
                                 const categoryColor = transaction.categoryColor || '#64748b';
 
                                 return (
                                     <div
                                         key={transaction._id}
-                                        className="p-4 lg:p-5 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer group"
+                                        className="p-4 bg-white dark:bg-gray-800 rounded-[24px] border border-gray-100 dark:border-gray-700 flex items-center justify-between mb-3 shadow-sm hover:bg-gray-50 transition-all cursor-pointer"
                                         onClick={() => handleEditTransaction(transaction)}
                                     >
-                                        <div className="flex items-center gap-3 lg:gap-4">
-                                            {/* Icon */}
+                                        <div className="flex items-center gap-4">
                                             <div
-                                                className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl lg:rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105"
+                                                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                                                 style={{
-                                                    backgroundColor: categoryColor + '20',
-                                                    color: categoryColor
+                                                    backgroundColor: (categoryColor || '#6366f1') + '15',
+                                                    color: categoryColor || '#6366f1'
                                                 }}
                                             >
-                                                <Icon className="w-6 h-6 lg:w-7 lg:h-7" />
+                                                <Icon className="w-6 h-6" />
                                             </div>
-
-                                            {/* Ma'lumotlar */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 lg:gap-3 mb-1">
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base lg:text-lg">
-                                                        {transaction.category}
-                                                    </h3>
-                                                    <span className={`px-2 lg:px-3 py-0.5 lg:py-1 rounded-full text-xs lg:text-sm font-medium ${transaction.type === 'income' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
-                                                        {transaction.type === 'income' ? 'Kirim' : 'Chiqim'}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-3 lg:gap-4 text-xs sm:text-sm lg:text-base text-gray-600 dark:text-gray-400">
-                                                    <span className="flex items-center gap-1 lg:gap-1.5">
-                                                        <Calendar className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                                                        {formatDate(transaction.date)}
-                                                    </span>
-                                                    {transaction.description && (
-                                                        <span className="truncate hidden sm:block max-w-xs lg:max-w-md">
-                                                            {transaction.description}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Summa */}
-                                            <div className="text-right flex-shrink-0">
-                                                <p className={`text-base sm:text-xl lg:text-2xl font-bold ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                                    {transaction.type === 'income' ? '+' : '-'}
-                                                    {formatShortCurrency(transaction.amount)}
+                                                <h3 className="font-bold text-gray-900 dark:text-white text-base truncate">
+                                                    {transaction.category}
+                                                </h3>
+                                                <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
+                                                    {formatDate(transaction.date)}
+                                                    {transaction.description && ` • ${transaction.description}`}
                                                 </p>
                                             </div>
-
-                                            {/* Tugmalar */}
-                                            <div className="hidden sm:flex items-center gap-1">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleEditTransaction(transaction);
-                                                    }}
-                                                    className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        openDeleteTransactionModal(transaction);
-                                                    }}
-                                                    className="p-2 hover:bg-red-100 dark:hover:bg-red-900/20 rounded-lg text-red-600"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
                                         </div>
-
-                                        {/* Mobile uchun izoh */}
-                                        {transaction.description && (
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 sm:hidden truncate">
-                                                {transaction.description}
+                                        <div className="text-right">
+                                            <p className={`font-extrabold text-lg ${transaction.type === 'income' ? 'text-emerald-500' : 'text-gray-900 dark:text-white'}`}>
+                                                {transaction.type === 'income' ? '+' : '-'}{transaction.amount.toLocaleString()}
                                             </p>
-                                        )}
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase">
+                                                {(transaction.type === 'income' ? 'Kirim' : 'Xarajat')}
+                                            </p>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -1433,133 +1233,144 @@ const Finance = () => {
                         </div>
                     </div>
                 )
-            )}
+            )
+            }
 
             {/* Tranzaksiya Modal */}
-            {(showAddModal || showEditModal) && (
-                <TransactionModal
-                    formData={formData}
-                    setFormData={setFormData}
-                    categories={categories}
-                    editingTransaction={editingTransaction}
-                    handleSubmit={handleSubmit}
-                    onClose={() => {
-                        setShowAddModal(false);
-                        setShowEditModal(false);
-                        resetForm();
-                    }}
-                    getCategoryIcon={getCategoryIcon}
-                />
-            )}
+            {
+                (showAddModal || showEditModal) && (
+                    <TransactionModal
+                        formData={formData}
+                        setFormData={setFormData}
+                        categories={categories}
+                        editingTransaction={editingTransaction}
+                        handleSubmit={handleSubmit}
+                        onClose={() => {
+                            setShowAddModal(false);
+                            setShowEditModal(false);
+                            resetForm();
+                        }}
+                        getCategoryIcon={getCategoryIcon}
+                    />
+                )
+            }
 
             {/* Qarz Modal */}
-            {showDebtModal && (
-                <DebtModal
-                    debtFormData={debtFormData}
-                    setDebtFormData={setDebtFormData}
-                    editingDebt={editingDebt}
-                    handleDebtSubmit={handleDebtSubmit}
-                    onClose={() => {
-                        setShowDebtModal(false);
-                        resetDebtForm();
-                    }}
-                />
-            )}
+            {
+                showDebtModal && (
+                    <DebtModal
+                        debtFormData={debtFormData}
+                        setDebtFormData={setDebtFormData}
+                        editingDebt={editingDebt}
+                        handleDebtSubmit={handleDebtSubmit}
+                        onClose={() => {
+                            setShowDebtModal(false);
+                            resetDebtForm();
+                        }}
+                    />
+                )
+            }
 
             {/* To'lov Modal */}
-            {showPaymentModal && selectedDebt && (
-                <PaymentModal
-                    selectedDebt={selectedDebt}
-                    paymentAmount={paymentAmount}
-                    setPaymentAmount={setPaymentAmount}
-                    handlePayment={handlePayment}
-                    formatCurrency={formatCurrency}
-                    onClose={() => {
-                        setShowPaymentModal(false);
-                        setSelectedDebt(null);
-                        setPaymentAmount('');
-                    }}
-                />
-            )}
+            {
+                showPaymentModal && selectedDebt && (
+                    <PaymentModal
+                        selectedDebt={selectedDebt}
+                        paymentAmount={paymentAmount}
+                        setPaymentAmount={setPaymentAmount}
+                        handlePayment={handlePayment}
+                        formatCurrency={formatCurrency}
+                        onClose={() => {
+                            setShowPaymentModal(false);
+                            setSelectedDebt(null);
+                            setPaymentAmount('');
+                        }}
+                    />
+                )
+            }
 
             {/* Delete Transaction Confirmation Modal */}
-            {showDeleteTransactionModal && itemToDelete && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+            {
+                showDeleteTransactionModal && itemToDelete && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                    <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Tranzaksiyani o'chirish</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Tranzaksiyani o'chirish</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+
+                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                                <span className="font-semibold text-gray-900 dark:text-white">"{itemToDelete.name}"</span> tranzaksiyasini o'chirmoqchimisiz?
+                            </p>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteTransactionModal(false);
+                                        setItemToDelete(null);
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    Bekor qilish
+                                </button>
+                                <button
+                                    onClick={handleDeleteTransaction}
+                                    className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
+                                >
+                                    Ha, o'chirish
+                                </button>
                             </div>
-                        </div>
-
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                            <span className="font-semibold text-gray-900 dark:text-white">"{itemToDelete.name}"</span> tranzaksiyasini o'chirmoqchimisiz?
-                        </p>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowDeleteTransactionModal(false);
-                                    setItemToDelete(null);
-                                }}
-                                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Bekor qilish
-                            </button>
-                            <button
-                                onClick={handleDeleteTransaction}
-                                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
-                            >
-                                Ha, o'chirish
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Delete Debt Confirmation Modal */}
-            {showDeleteDebtModal && itemToDelete && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+            {
+                showDeleteDebtModal && itemToDelete && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                                    <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Qarzni o'chirish</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Qarzni o'chirish</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
+
+                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                                <span className="font-semibold text-gray-900 dark:text-white">{itemToDelete.name}</span> bilan bog'liq qarzni o'chirmoqchimisiz?
+                            </p>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowDeleteDebtModal(false);
+                                        setItemToDelete(null);
+                                    }}
+                                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                    Bekor qilish
+                                </button>
+                                <button
+                                    onClick={handleDeleteDebt}
+                                    className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
+                                >
+                                    Ha, o'chirish
+                                </button>
                             </div>
-                        </div>
-
-                        <p className="text-gray-600 dark:text-gray-300 mb-6">
-                            <span className="font-semibold text-gray-900 dark:text-white">{itemToDelete.name}</span> bilan bog'liq qarzni o'chirmoqchimisiz?
-                        </p>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowDeleteDebtModal(false);
-                                    setItemToDelete(null);
-                                }}
-                                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                            >
-                                Bekor qilish
-                            </button>
-                            <button
-                                onClick={handleDeleteDebt}
-                                className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
-                            >
-                                Ha, o'chirish
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
 
     );
 };
@@ -1793,7 +1604,7 @@ const PaymentModal = ({ selectedDebt, paymentAmount, setPaymentAmount, handlePay
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <DollarSign className="w-5 h-5 text-green-500" />
+                            <Wallet className="w-5 h-5 text-green-500" />
                             To'lov qilish
                         </h3>
                         <button
