@@ -7,7 +7,7 @@ import {
     Dumbbell, BookOpen, Briefcase, Gift, Phone,
     ShoppingBag, Eye, EyeOff, CreditCard, Clock,
     AlertCircle, User, ChevronRight, ExternalLink, FileText, WifiOff,
-    Sparkles, Brain, Lightbulb, Target, ChevronDown, ChevronUp, Info
+    Sparkles, Brain, Lightbulb, Target, ChevronDown, ChevronUp, Info, Banknote
 } from 'lucide-react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, PointElement, LineElement } from 'chart.js';
 import { Pie, Bar, Line } from 'react-chartjs-2';
@@ -28,7 +28,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarEle
 const iconMap = {
     Car, ShoppingCart, Home, Coffee, Film, HeartPulse,
     Dumbbell, BookOpen, Briefcase, Gift, Phone,
-    ShoppingBag, DollarSign, Wallet, TrendingUp, TrendingDown,
+    ShoppingBag, Banknote, Wallet, TrendingUp, TrendingDown,
     Users, CreditCard, Clock, User
 };
 
@@ -75,7 +75,7 @@ const Finance = () => {
     const [selectedDebt, setSelectedDebt] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [showBalance, setShowBalance] = useState(true);
-    
+
     // AI Tahlil state'lar
     const [showAIAnalysis, setShowAIAnalysis] = useState(false);
     const [aiAnalysisExpanded, setAiAnalysisExpanded] = useState(true);
@@ -120,121 +120,121 @@ const Finance = () => {
         }
     }, [navigate]);
 
-   const loadData = async () => {
-    setLoading(true);
-    try {
-        // Online bo'lsa serverdan olish
-        if (navigator.onLine) {
-            // Tranzaksiyalarni yuklash
-            const transData = await financeService.getTransactions();
-            if (transData.success) {
-                setTransactions(transData.transactions || []);
-                await saveToOffline(STORES.TRANSACTIONS, transData.transactions || []);
-            }
-
-            // Qarz ma'lumotlarini yuklash
-            const debtsData = await financeService.getDebts();
-            if (debtsData.success) {
-                setDebts(debtsData.debts || []);
-                await saveToOffline(STORES.DEBTS, debtsData.debts || []);
-                
-                // Qarz statistikasini hisoblash
-                let activeBorrowed = 0, activeLent = 0, overdueBorrowed = 0, overdueLent = 0, totalBorrowed = 0, totalLent = 0;
-                
-                debtsData.debts.forEach(debt => {
-                    if (debt.type === 'borrow') {
-                        totalBorrowed += debt.amount || 0;
-                        activeBorrowed += debt.remainingAmount || 0;
-                        if (debt.status === 'overdue') overdueBorrowed += debt.remainingAmount || 0;
-                    } else {
-                        totalLent += debt.amount || 0;
-                        activeLent += debt.remainingAmount || 0;
-                        if (debt.status === 'overdue') overdueLent += debt.remainingAmount || 0;
-                    }
-                });
-                
-                setDebtStatistics({
-                    totalBorrowed, totalLent, activeBorrowed, activeLent,
-                    overdueBorrowed, overdueLent, netDebt: activeLent - activeBorrowed
-                });
-            }
-
-            // Statistikani yuklash
-            const statsData = await financeService.getStatistics(selectedPeriod);
-            if (statsData.success) {
-                setStatistics(statsData.stats || { balance: 0, totalIncome: 0, totalExpense: 0, savingsRate: 0 });
-            }
-
-            // Kategoriyalarni yuklash
-            const catData = await financeService.getCategories();
-            if (catData.success && catData.categories) {
-                setCategories(catData.categories);
-            } else {
-                setCategories([
-                    // Xarajat kategoriyalari
-                    { _id: '1', name: 'Taom', type: 'expense', icon: 'Coffee', color: '#FF6B35' },
-                    { _id: '2', name: 'Transport', type: 'expense', icon: 'Car', color: '#4ECDC4' },
-                    { _id: '3', name: 'Uy-joy', type: 'expense', icon: 'Home', color: '#45B7D1' },
-                    { _id: '4', name: 'Kiyim-kechak', type: 'expense', icon: 'ShoppingBag', color: '#96CEB4' },
-                    { _id: '5', name: 'Sog\'liq', type: 'expense', icon: 'HeartPulse', color: '#FECA57' },
-                    { _id: '6', name: 'Ta\'lim', type: 'expense', icon: 'BookOpen', color: '#FF9FF3' },
-                    { _id: '7', name: 'Ko\'ngilochar', type: 'expense', icon: 'Film', color: '#54A0FF' },
-                    { _id: '8', name: 'Kommunal to\'lovlar', type: 'expense', icon: 'WifiOff', color: '#FF6B9D' },
-                    { _id: '9', name: 'Xizmatlar', type: 'expense', icon: 'Users', color: '#C44569' },
-                    { _id: '10', name: 'Qimor o\'yinlari', type: 'expense', icon: 'Target', color: '#F8B500' },
-                    { _id: '11', name: 'Avtomobil', type: 'expense', icon: 'Car', color: '#786FA6' },
-                    { _id: '12', name: 'Sayohat', type: 'expense', icon: 'ExternalLink', color: '#F19066' },
-                    { _id: '13', name: 'Sovg\'alar', type: 'expense', icon: 'Gift', color: '#F5CD79' },
-                    { _id: '14', name: 'Sport', type: 'expense', icon: 'Dumbbell', color: '#546DE5' },
-                    { _id: '15', name: 'Qarz kredit', type: 'expense', icon: 'CreditCard', color: '#E15F41' },
-                    { _id: '16', name: 'Oilaviy', type: 'expense', icon: 'Users', color: '#3DC1D3' },
-                    
-                    // Daromad kategoriyalari
-                    { _id: '17', name: 'Maosh', type: 'income', icon: 'DollarSign', color: '#1DD1A1' },
-                    { _id: '18', name: 'Biznes', type: 'income', icon: 'Briefcase', color: '#FF9F43' },
-                    { _id: '19', name: 'Investitsiya', type: 'income', icon: 'TrendingUp', color: '#0ABDE3' },
-                    { _id: '20', name: 'Bonus/Premium', type: 'income', icon: 'Sparkles', color: '#EE5A24' },
-                    { _id: '21', name: 'Ijara', type: 'income', icon: 'Home', color: '#00D2D3' },
-                    { _id: '22', name: 'Qo\'shimcha daromad', type: 'income', icon: 'Plus', color: '#10AC84' },
-                    { _id: '23', name: 'Sovg\'a', type: 'income', icon: 'Gift', color: '#FF6348' },
-                    { _id: '24', name: 'Yordam puli', type: 'income', icon: 'Users', color: '#5F27CD' }
-                ]);
-            }
-        } else {
-            // Offline bo'lsa IndexedDB dan olish
-            const offlineTransactions = await getFromOffline(STORES.TRANSACTIONS);
-            const offlineDebts = await getFromOffline(STORES.DEBTS);
-            setTransactions(offlineTransactions || []);
-            setDebts(offlineDebts || []);
-            toast('Offline rejim - saqlangan ma\'lumotlar', { icon: '📴' });
-        }
-
-    } catch (error) {
-        console.error('Yuklashda xatolik:', error);
-        
-        // Xatolik bo'lsa offline ma'lumotlarni ko'rsatish
+    const loadData = async () => {
+        setLoading(true);
         try {
-            const offlineTransactions = await getFromOffline(STORES.TRANSACTIONS);
-            const offlineDebts = await getFromOffline(STORES.DEBTS);
-            if (offlineTransactions?.length > 0 || offlineDebts?.length > 0) {
+            // Online bo'lsa serverdan olish
+            if (navigator.onLine) {
+                // Tranzaksiyalarni yuklash
+                const transData = await financeService.getTransactions();
+                if (transData.success) {
+                    setTransactions(transData.transactions || []);
+                    await saveToOffline(STORES.TRANSACTIONS, transData.transactions || []);
+                }
+
+                // Qarz ma'lumotlarini yuklash
+                const debtsData = await financeService.getDebts();
+                if (debtsData.success) {
+                    setDebts(debtsData.debts || []);
+                    await saveToOffline(STORES.DEBTS, debtsData.debts || []);
+
+                    // Qarz statistikasini hisoblash
+                    let activeBorrowed = 0, activeLent = 0, overdueBorrowed = 0, overdueLent = 0, totalBorrowed = 0, totalLent = 0;
+
+                    debtsData.debts.forEach(debt => {
+                        if (debt.type === 'borrow') {
+                            totalBorrowed += debt.amount || 0;
+                            activeBorrowed += debt.remainingAmount || 0;
+                            if (debt.status === 'overdue') overdueBorrowed += debt.remainingAmount || 0;
+                        } else {
+                            totalLent += debt.amount || 0;
+                            activeLent += debt.remainingAmount || 0;
+                            if (debt.status === 'overdue') overdueLent += debt.remainingAmount || 0;
+                        }
+                    });
+
+                    setDebtStatistics({
+                        totalBorrowed, totalLent, activeBorrowed, activeLent,
+                        overdueBorrowed, overdueLent, netDebt: activeLent - activeBorrowed
+                    });
+                }
+
+                // Statistikani yuklash
+                const statsData = await financeService.getStatistics(selectedPeriod);
+                if (statsData.success) {
+                    setStatistics(statsData.stats || { balance: 0, totalIncome: 0, totalExpense: 0, savingsRate: 0 });
+                }
+
+                // Kategoriyalarni yuklash
+                const catData = await financeService.getCategories();
+                if (catData.success && catData.categories) {
+                    setCategories(catData.categories);
+                } else {
+                    setCategories([
+                        // Xarajat kategoriyalari
+                        { _id: '1', name: 'Taom', type: 'expense', icon: 'Coffee', color: '#FF6B35' },
+                        { _id: '2', name: 'Transport', type: 'expense', icon: 'Car', color: '#4ECDC4' },
+                        { _id: '3', name: 'Uy-joy', type: 'expense', icon: 'Home', color: '#45B7D1' },
+                        { _id: '4', name: 'Kiyim-kechak', type: 'expense', icon: 'ShoppingBag', color: '#96CEB4' },
+                        { _id: '5', name: 'Sog\'liq', type: 'expense', icon: 'HeartPulse', color: '#FECA57' },
+                        { _id: '6', name: 'Ta\'lim', type: 'expense', icon: 'BookOpen', color: '#FF9FF3' },
+                        { _id: '7', name: 'Ko\'ngilochar', type: 'expense', icon: 'Film', color: '#54A0FF' },
+                        { _id: '8', name: 'Kommunal to\'lovlar', type: 'expense', icon: 'WifiOff', color: '#FF6B9D' },
+                        { _id: '9', name: 'Xizmatlar', type: 'expense', icon: 'Users', color: '#C44569' },
+                        { _id: '10', name: 'Qimor o\'yinlari', type: 'expense', icon: 'Target', color: '#F8B500' },
+                        { _id: '11', name: 'Avtomobil', type: 'expense', icon: 'Car', color: '#786FA6' },
+                        { _id: '12', name: 'Sayohat', type: 'expense', icon: 'ExternalLink', color: '#F19066' },
+                        { _id: '13', name: 'Sovg\'alar', type: 'expense', icon: 'Gift', color: '#F5CD79' },
+                        { _id: '14', name: 'Sport', type: 'expense', icon: 'Dumbbell', color: '#546DE5' },
+                        { _id: '15', name: 'Qarz kredit', type: 'expense', icon: 'CreditCard', color: '#E15F41' },
+                        { _id: '16', name: 'Oilaviy', type: 'expense', icon: 'Users', color: '#3DC1D3' },
+
+                        // Daromad kategoriyalari
+                        { _id: '17', name: 'Maosh', type: 'income', icon: 'Banknote', color: '#1DD1A1' },
+                        { _id: '18', name: 'Biznes', type: 'income', icon: 'Briefcase', color: '#FF9F43' },
+                        { _id: '19', name: 'Investitsiya', type: 'income', icon: 'TrendingUp', color: '#0ABDE3' },
+                        { _id: '20', name: 'Bonus/Premium', type: 'income', icon: 'Sparkles', color: '#EE5A24' },
+                        { _id: '21', name: 'Ijara', type: 'income', icon: 'Home', color: '#00D2D3' },
+                        { _id: '22', name: 'Qo\'shimcha daromad', type: 'income', icon: 'Plus', color: '#10AC84' },
+                        { _id: '23', name: 'Sovg\'a', type: 'income', icon: 'Gift', color: '#FF6348' },
+                        { _id: '24', name: 'Yordam puli', type: 'income', icon: 'Users', color: '#5F27CD' }
+                    ]);
+                }
+            } else {
+                // Offline bo'lsa IndexedDB dan olish
+                const offlineTransactions = await getFromOffline(STORES.TRANSACTIONS);
+                const offlineDebts = await getFromOffline(STORES.DEBTS);
                 setTransactions(offlineTransactions || []);
                 setDebts(offlineDebts || []);
-                toast('Offline ma\'lumotlar ko\'rsatilmoqda', { icon: '📴' });
-                return;
+                toast('Offline rejim - saqlangan ma\'lumotlar', { icon: '📴' });
             }
-        } catch (offlineError) {
-            console.error('Offline load error:', offlineError);
+
+        } catch (error) {
+            console.error('Yuklashda xatolik:', error);
+
+            // Xatolik bo'lsa offline ma'lumotlarni ko'rsatish
+            try {
+                const offlineTransactions = await getFromOffline(STORES.TRANSACTIONS);
+                const offlineDebts = await getFromOffline(STORES.DEBTS);
+                if (offlineTransactions?.length > 0 || offlineDebts?.length > 0) {
+                    setTransactions(offlineTransactions || []);
+                    setDebts(offlineDebts || []);
+                    toast('Offline ma\'lumotlar ko\'rsatilmoqda', { icon: '📴' });
+                    return;
+                }
+            } catch (offlineError) {
+                console.error('Offline load error:', offlineError);
+            }
+
+            if (error.message?.includes('Network Error')) {
+                toast.error('Serverga ulanib bo\'lmadi');
+            } else {
+                toast.error(error.message || 'Yuklashda xatolik');
+            }
+        } finally {
+            setLoading(false);
         }
-        
-        if (error.message?.includes('Network Error')) {
-            toast.error('Serverga ulanib bo\'lmadi');
-        } else {
-            toast.error(error.message || 'Yuklashda xatolik');
-        }
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     // Filterlangan tranzaksiyalar
     const getFilteredTransactions = () => {
@@ -299,10 +299,10 @@ const Finance = () => {
 
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        
+
         // So'nggi 30 kun tranzaksiyalari
         const recentTransactions = transactions.filter(t => new Date(t.date) >= thirtyDaysAgo);
-        
+
         // Kategoriya bo'yicha xarajatlar
         const expensesByCategory = {};
         const incomeByCategory = {};
@@ -331,7 +331,7 @@ const Finance = () => {
 
         // Tejash imkoniyatlari
         const savingsOpportunities = [];
-        
+
         // Eng katta xarajat kategoriyasini tahlil qilish
         if (topExpenseCategories.length > 0) {
             const topCategory = topExpenseCategories[0];
@@ -352,11 +352,11 @@ const Finance = () => {
         for (let i = 3; i >= 0; i--) {
             const weekStart = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
             const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
-            
+
             const weekExpense = recentTransactions
                 .filter(t => t.type === 'expense' && new Date(t.date) >= weekStart && new Date(t.date) < weekEnd)
                 .reduce((sum, t) => sum + t.amount, 0);
-            
+
             weeklyExpenses.push({
                 week: `${i === 0 ? 'Bu hafta' : i === 1 ? 'O\'tgan hafta' : `${i + 1} hafta oldin`}`,
                 amount: weekExpense
@@ -365,10 +365,10 @@ const Finance = () => {
 
         // Daromad vs Xarajat nisbati
         const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
-        
+
         // AI tavsiyalar
         const recommendations = [];
-        
+
         if (savingsRate < 20 && totalIncome > 0) {
             recommendations.push({
                 type: 'warning',
@@ -472,7 +472,7 @@ const Finance = () => {
             const monthIncome = monthTransactions
                 .filter(t => t.type === 'income')
                 .reduce((sum, t) => sum + t.amount, 0);
-            
+
             const monthExpense = monthTransactions
                 .filter(t => t.type === 'expense')
                 .reduce((sum, t) => sum + t.amount, 0);
@@ -557,7 +557,7 @@ const Finance = () => {
                 ...debtFormData,
                 amount: typeof debtFormData.amount === 'number' ? debtFormData.amount : parseFloat(debtFormData.amount)
             };
-            
+
             let data;
             if (editingDebt) {
                 data = await financeService.updateDebt(editingDebt._id, debtData);
@@ -625,7 +625,7 @@ const Finance = () => {
     // To'lov qilish
     const handlePayment = async () => {
         const paymentValue = typeof paymentAmount === 'number' ? paymentAmount : parseFloat(paymentAmount);
-        
+
         if (!paymentValue || paymentValue <= 0) {
             toast.error('To\'lov summasi noto\'g\'ri');
             return;
@@ -782,7 +782,7 @@ const Finance = () => {
                         </div>
                         <div>
                             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">{t('finance.title')}</h1>
-            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">{t('finance.manageDesc')}</p>
+                            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">{t('finance.manageDesc')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 lg:gap-3">
@@ -909,7 +909,7 @@ const Finance = () => {
                 </div>
             </div>
 
-          
+
 
             {/* Kontent */}
             {activeTab === 'analytics' ? (
@@ -927,16 +927,15 @@ const Finance = () => {
                                     <p className="text-sm text-gray-600 dark:text-gray-400">So'nggi 30 kun asosida</p>
                                 </div>
                             </div>
-                            
+
                             <div className="space-y-3">
                                 {aiAnalysis.recommendations.map((rec, index) => (
-                                    <div 
+                                    <div
                                         key={index}
-                                        className={`p-4 rounded-xl ${
-                                            rec.type === 'success' ? 'bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800' :
-                                            rec.type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800' :
-                                            'bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
-                                        }`}
+                                        className={`p-4 rounded-xl ${rec.type === 'success' ? 'bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800' :
+                                                rec.type === 'warning' ? 'bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800' :
+                                                    'bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800'
+                                            }`}
                                     >
                                         <div className="flex items-start gap-3">
                                             <span className="text-2xl">{rec.icon}</span>
@@ -1023,8 +1022,8 @@ const Finance = () => {
                                     Xarajatlar taqsimoti
                                 </h3>
                                 <div className="h-64 lg:h-72">
-                                    <Pie 
-                                        data={pieChartData} 
+                                    <Pie
+                                        data={pieChartData}
                                         options={{
                                             responsive: true,
                                             maintainAspectRatio: false,
@@ -1062,7 +1061,7 @@ const Finance = () => {
                                     Haftalik xarajatlar
                                 </h3>
                                 <div className="h-64 lg:h-72">
-                                    <Bar 
+                                    <Bar
                                         data={barChartData}
                                         options={{
                                             responsive: true,
@@ -1098,7 +1097,7 @@ const Finance = () => {
                                 Daromad vs Xarajat (6 oy)
                             </h3>
                             <div className="h-64 lg:h-80">
-                                <Line 
+                                <Line
                                     data={incomeExpenseChartData}
                                     options={{
                                         responsive: true,
@@ -1142,10 +1141,10 @@ const Finance = () => {
                                 {aiAnalysis.topExpenseCategories.map((cat, index) => {
                                     const categoryData = categories.find(c => c.name === cat.category);
                                     const Icon = getCategoryIcon(categoryData?.icon || 'DollarSign');
-                                    
+
                                     return (
                                         <div key={index} className="flex items-center gap-3">
-                                            <div 
+                                            <div
                                                 className="w-10 h-10 rounded-xl flex items-center justify-center"
                                                 style={{ backgroundColor: (categoryData?.color || '#6366f1') + '20' }}
                                             >
@@ -1157,9 +1156,9 @@ const Finance = () => {
                                                     <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrencyShort(cat.amount)}</span>
                                                 </div>
                                                 <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                    <div 
+                                                    <div
                                                         className="h-full rounded-full transition-all duration-500"
-                                                        style={{ 
+                                                        style={{
                                                             width: `${cat.percentage}%`,
                                                             backgroundColor: categoryData?.color || '#6366f1'
                                                         }}
@@ -1496,7 +1495,7 @@ const Finance = () => {
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
                             </div>
                         </div>
-                        
+
                         <p className="text-gray-600 dark:text-gray-300 mb-6">
                             <span className="font-semibold text-gray-900 dark:text-white">"{itemToDelete.name}"</span> tranzaksiyasini o'chirmoqchimisiz?
                         </p>
@@ -1535,7 +1534,7 @@ const Finance = () => {
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
                             </div>
                         </div>
-                        
+
                         <p className="text-gray-600 dark:text-gray-300 mb-6">
                             <span className="font-semibold text-gray-900 dark:text-white">{itemToDelete.name}</span> bilan bog'liq qarzni o'chirmoqchimisiz?
                         </p>
@@ -1561,7 +1560,7 @@ const Finance = () => {
                 </div>
             )}
         </div>
-        
+
     );
 };
 
@@ -1574,106 +1573,106 @@ const TransactionModal = ({ formData, setFormData, categories, editingTransactio
         ></div>
 
         <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto animate-modal-up sm:animate-none">
-                {/* Header */}
-                <div className="sticky top-0 bg-white dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-10">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        {editingTransaction ? 'Tahrirlash' : 'Yangi tranzaksiya'}
-                    </h3>
+            {/* Header */}
+            <div className="sticky top-0 bg-white dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-10">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    {editingTransaction ? 'Tahrirlash' : 'Yangi tranzaksiya'}
+                </h3>
+                <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+                {/* Turi */}
+                <div className="grid grid-cols-2 gap-2">
                     <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type: 'income', category: '' })}
+                        className={`py-2.5 px-3 rounded-xl font-medium text-sm transition-all ${formData.type === 'income' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
                     >
-                        <X className="w-5 h-5" />
+                        <ArrowDownRight className="w-4 h-4 inline mr-1" />
+                        Daromad
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, type: 'expense', category: '' })}
+                        className={`py-2.5 px-3 rounded-xl font-medium text-sm transition-all ${formData.type === 'expense' ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
+                    >
+                        <ArrowUpRight className="w-4 h-4 inline mr-1" />
+                        Xarajat
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-4 space-y-4">
-                    {/* Turi */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, type: 'income', category: '' })}
-                            className={`py-2.5 px-3 rounded-xl font-medium text-sm transition-all ${formData.type === 'income' ? 'bg-green-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
-                        >
-                            <ArrowDownRight className="w-4 h-4 inline mr-1" />
-                            Daromad
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setFormData({ ...formData, type: 'expense', category: '' })}
-                            className={`py-2.5 px-3 rounded-xl font-medium text-sm transition-all ${formData.type === 'expense' ? 'bg-red-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
-                        >
-                            <ArrowUpRight className="w-4 h-4 inline mr-1" />
-                            Xarajat
-                        </button>
-                    </div>
+                <CurrencyInput
+                    label="Summa"
+                    value={formData.amount}
+                    onChange={(value) => setFormData({ ...formData, amount: value })}
+                    currency="UZS"
+                    placeholder="0"
+                    required
+                />
 
-                    <CurrencyInput
-                        label="Summa"
-                        value={formData.amount}
-                        onChange={(value) => setFormData({ ...formData, amount: value })}
-                        currency="UZS"
-                        placeholder="0"
-                        required
+                {/* Kategoriya - 4 ustunli grid */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Kategoriya <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-4 gap-2 mb-2">
+                        {categories
+                            .filter(cat => cat.type === formData.type)
+                            .slice(0, 8)
+                            .map((cat) => {
+                                const Icon = getCategoryIcon(cat.icon);
+                                return (
+                                    <button
+                                        key={cat._id}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, category: cat.name })}
+                                        className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center ${formData.category === cat.name ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'}`}
+                                    >
+                                        <Icon className="w-5 h-5" style={{ color: cat.color }} />
+                                        <span className="text-[10px] mt-1 text-gray-600 dark:text-gray-400 line-clamp-1">{cat.name}</span>
+                                    </button>
+                                );
+                            })}
+                    </div>
+                </div>
+
+                {/* Sana */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Sana
+                    </label>
+                    <input
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        max={new Date().toISOString().split('T')[0]}
+                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                     />
+                </div>
 
-                    {/* Kategoriya - 4 ustunli grid */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Kategoriya <span className="text-red-500">*</span>
-                        </label>
-                        <div className="grid grid-cols-4 gap-2 mb-2">
-                            {categories
-                                .filter(cat => cat.type === formData.type)
-                                .slice(0, 8)
-                                .map((cat) => {
-                                    const Icon = getCategoryIcon(cat.icon);
-                                    return (
-                                        <button
-                                            key={cat._id}
-                                            type="button"
-                                            onClick={() => setFormData({ ...formData, category: cat.name })}
-                                            className={`p-2 rounded-xl border-2 transition-all flex flex-col items-center ${formData.category === cat.name ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700'}`}
-                                        >
-                                            <Icon className="w-5 h-5" style={{ color: cat.color }} />
-                                            <span className="text-[10px] mt-1 text-gray-600 dark:text-gray-400 line-clamp-1">{cat.name}</span>
-                                        </button>
-                                    );
-                                })}
-                        </div>
-                    </div>
-
-                    {/* Sana */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Sana
-                        </label>
-                        <input
-                            type="date"
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            max={new Date().toISOString().split('T')[0]}
-                            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                        />
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex gap-3 pt-2 pb-4">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium"
-                        >
-                            Bekor
-                        </button>
-                        <button
-                            type="submit"
-                            className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-xl font-medium"
-                        >
-                            {editingTransaction ? 'Saqlash' : 'Qo\'shish'}
-                        </button>
-                    </div>
-                </form>
+                {/* Buttons */}
+                <div className="flex gap-3 pt-2 pb-4">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium"
+                    >
+                        Bekor
+                    </button>
+                    <button
+                        type="submit"
+                        className="flex-1 px-4 py-3 bg-blue-500 text-white rounded-xl font-medium"
+                    >
+                        {editingTransaction ? 'Saqlash' : 'Qo\'shish'}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 );
@@ -1687,94 +1686,94 @@ const DebtModal = ({ debtFormData, setDebtFormData, editingDebt, handleDebtSubmi
         ></div>
 
         <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto animate-modal-up sm:animate-none">
-                {/* Header */}
-                <div className="sticky top-0 bg-white dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-10">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                        {editingDebt ? 'Qarzni tahrirlash' : 'Yangi qarz'}
-                    </h3>
+            {/* Header */}
+            <div className="sticky top-0 bg-white dark:bg-gray-800 px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between z-10">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                    {editingDebt ? 'Qarzni tahrirlash' : 'Yangi qarz'}
+                </h3>
+                <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            </div>
+
+            <form onSubmit={handleDebtSubmit} className="p-4 space-y-4">
+                {/* Qarz turi */}
+                <div className="grid grid-cols-2 gap-2">
                     <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                        type="button"
+                        onClick={() => setDebtFormData({ ...debtFormData, type: 'borrow' })}
+                        className={`py-2.5 px-3 rounded-xl font-medium text-sm transition-all ${debtFormData.type === 'borrow' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
                     >
-                        <X className="w-5 h-5" />
+                        Qarz oldim
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setDebtFormData({ ...debtFormData, type: 'lend' })}
+                        className={`py-2.5 px-3 rounded-xl font-medium text-sm transition-all ${debtFormData.type === 'lend' ? 'bg-purple-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
+                    >
+                        Qarz berdim
                     </button>
                 </div>
 
-                <form onSubmit={handleDebtSubmit} className="p-4 space-y-4">
-                    {/* Qarz turi */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setDebtFormData({ ...debtFormData, type: 'borrow' })}
-                            className={`py-2.5 px-3 rounded-xl font-medium text-sm transition-all ${debtFormData.type === 'borrow' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
-                        >
-                            Qarz oldim
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setDebtFormData({ ...debtFormData, type: 'lend' })}
-                            className={`py-2.5 px-3 rounded-xl font-medium text-sm transition-all ${debtFormData.type === 'lend' ? 'bg-purple-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}
-                        >
-                            Qarz berdim
-                        </button>
-                    </div>
-
-                    {/* Ism */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            {debtFormData.type === 'borrow' ? 'Kimdan?' : 'Kimga?'} <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={debtFormData.personName}
-                            onChange={(e) => setDebtFormData({ ...debtFormData, personName: e.target.value })}
-                            placeholder="Ism familiya"
-                            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                            required
-                        />
-                    </div>
-
-                    <CurrencyInput
-                        label="Summa"
-                        value={debtFormData.amount}
-                        onChange={(value) => setDebtFormData({ ...debtFormData, amount: value })}
-                        currency="UZS"
-                        placeholder="0"
+                {/* Ism */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        {debtFormData.type === 'borrow' ? 'Kimdan?' : 'Kimga?'} <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        value={debtFormData.personName}
+                        onChange={(e) => setDebtFormData({ ...debtFormData, personName: e.target.value })}
+                        placeholder="Ism familiya"
+                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
                         required
                     />
+                </div>
 
-                    {/* Muddat */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                            Qaytarish muddati <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="date"
-                            value={debtFormData.dueDate}
-                            onChange={(e) => setDebtFormData({ ...debtFormData, dueDate: e.target.value })}
-                            min={new Date().toISOString().split('T')[0]}
-                            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                            required
-                        />
-                    </div>
+                <CurrencyInput
+                    label="Summa"
+                    value={debtFormData.amount}
+                    onChange={(value) => setDebtFormData({ ...debtFormData, amount: value })}
+                    currency="UZS"
+                    placeholder="0"
+                    required
+                />
 
-                    {/* Buttons */}
-                    <div className="flex gap-3 pt-2 pb-4">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium"
-                        >
-                            Bekor
-                        </button>
-                        <button
-                            type="submit"
-                            className={`flex-1 px-4 py-3 text-white rounded-xl font-medium ${debtFormData.type === 'borrow' ? 'bg-blue-500' : 'bg-purple-500'}`}
-                        >
-                            {editingDebt ? 'Saqlash' : 'Qo\'shish'}
-                        </button>
-                    </div>
-                </form>
+                {/* Muddat */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                        Qaytarish muddati <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="date"
+                        value={debtFormData.dueDate}
+                        onChange={(e) => setDebtFormData({ ...debtFormData, dueDate: e.target.value })}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                        required
+                    />
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3 pt-2 pb-4">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-medium"
+                    >
+                        Bekor
+                    </button>
+                    <button
+                        type="submit"
+                        className={`flex-1 px-4 py-3 text-white rounded-xl font-medium ${debtFormData.type === 'borrow' ? 'bg-blue-500' : 'bg-purple-500'}`}
+                    >
+                        {editingDebt ? 'Saqlash' : 'Qo\'shish'}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 );

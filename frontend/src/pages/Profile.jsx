@@ -268,7 +268,7 @@ const Profile = () => {
           name={name}
           value={value}
           onChange={onChange}
-          className="w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-900 dark:text-white transition-all hover:border-gray-300 dark:hover:border-gray-500"
+          className="w-full pl-12 pr-12 py-3 bg-white dark:bg-gray-700 border-2 border-sky-200 dark:border-sky-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none text-gray-900 dark:text-white transition-all hover:border-sky-300 dark:hover:border-sky-500"
         />
         <button
           type="button"
@@ -284,17 +284,17 @@ const Profile = () => {
   return (
     <div className="max-w-2xl mx-auto pb-20 lg:pb-6">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 dark:from-purple-700 dark:via-purple-800 dark:to-indigo-800 rounded-2xl p-8 mb-6 shadow-xl">
+      <div className="bg-gradient-to-br from-sky-400 via-blue-500 to-indigo-600 dark:from-sky-700 dark:via-blue-800 dark:to-indigo-800 rounded-2xl p-8 mb-6 shadow-xl shadow-sky-500/25">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* Avatar Section */}
           <div className="relative group">
-            <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-200 shadow-lg bg-white dark:bg-gray-800">
+            <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white/30 shadow-lg bg-white/10 backdrop-blur-sm">
               {user?.avatar ? (
                 <img 
                   key={user.avatar} // Force re-render when avatar changes
                   src={user.avatar.startsWith('http') ? user.avatar : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${user.avatar}`}
                   alt={fullName}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform hover:scale-110"
                   onError={(e) => {
                     console.error('Image load error:', e.target.src);
                     e.target.style.display = 'none';
@@ -305,14 +305,14 @@ const Profile = () => {
                   }}
                 />
               ) : null}
-              <div className={`w-full h-full bg-white dark:bg-gray-800 flex items-center justify-center text-purple-600 dark:text-purple-400 text-4xl font-bold avatar-fallback ${user?.avatar ? 'hidden' : ''}`}>
+              <div className={`w-full h-full bg-gradient-to-br from-sky-100/20 to-blue-100/20 dark:from-sky-900/20 dark:to-blue-900/20 flex items-center justify-center text-sky-600 dark:text-sky-400 text-4xl font-bold avatar-fallback ${user?.avatar ? 'hidden' : ''}`}>
                 {getInitials()}
               </div>
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingImage}
-              className="absolute bottom-0 right-0 w-10 h-10 bg-purple-600 hover:bg-purple-700 dark:bg-purple-800 dark:hover:bg-purple-900 rounded-full flex items-center justify-center text-white shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute bottom-0 right-0 w-10 h-10 bg-gradient-to-br from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 dark:from-sky-700 dark:hover:to-sky-800 rounded-full flex items-center justify-center text-white shadow-lg transition-all transform hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Rasm yuklash"
             >
               {uploadingImage ? (
@@ -332,23 +332,27 @@ const Profile = () => {
 
           {/* User Info */}
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-lg">
               {fullName}
             </h1>
-            <p className="text-purple-100 dark:text-purple-200 text-lg mb-4 flex items-center justify-center md:justify-start gap-2">
+            <p className="text-sky-100 dark:text-sky-200 text-lg mb-4 flex items-center justify-center md:justify-start gap-2">
               {user?.email ? (
                 <>
                   <Mail className="w-5 h-5" />
-                  {user.email}
+                  <span className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20">
+                    {user.email}
+                  </span>
                   {user?.emailVerified && (
-                    <CheckCircle className="w-5 h-5 text-green-300" title="Email tasdiqlangan" />
+                    <CheckCircle className="w-5 h-5 text-emerald-300" title="Email tasdiqlangan" />
                   )}
                 </>
               ) : user?.phone ? (
                 <>
                   <Phone className="w-5 h-5" />
-                  {user.phone}
-                  <CheckCircle className="w-5 h-5 text-green-300" title="Telefon tasdiqlangan" />
+                  <span className="bg-white/10 backdrop-blur-sm px-3 py-1 rounded-full border border-white/20">
+                    {user.phone}
+                  </span>
+                  <CheckCircle className="w-5 h-5 text-emerald-300" title="Telefon tasdiqlangan" />
                 </>
               ) : null}
             </p>
@@ -399,20 +403,20 @@ const Profile = () => {
 
 
       {/* Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 md:p-8">
+      <div className="bg-gradient-to-br from-white via-sky-50/50 to-blue-50/30 dark:from-gray-800 dark:via-sky-900/30 dark:to-blue-900/20 rounded-xl shadow-lg border border-sky-200/50 dark:border-sky-700/50 p-6 md:p-8 backdrop-blur-sm">
         {activeTab === 'profile' && (
           <div>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                  <Edit3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('profile.title')}</h2>
+              <div className="w-10 h-10 bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/40 dark:to-blue-900/40 rounded-lg flex items-center justify-center">
+                <Edit3 className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('profile.title')}</h2>
+            </div>
               {!isEditing && (
                 <button
                   onClick={handleEdit}
-                  className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white rounded-lg font-medium transition-all shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40"
                 >
                   <Edit3 className="w-4 h-4" />
                   {t('common.edit')}
@@ -433,7 +437,7 @@ const Profile = () => {
                         type="text"
                         value={formData.firstName}
                         onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-900 dark:text-white transition-all hover:border-gray-300 dark:hover:border-gray-500"
+                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-sky-200 dark:border-sky-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none text-gray-900 dark:text-white transition-all hover:border-sky-300 dark:hover:border-sky-500"
                         placeholder="Ismingiz"
                         required
                         disabled={loading}
@@ -452,7 +456,7 @@ const Profile = () => {
                         type="text"
                         value={formData.lastName}
                         onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none text-gray-900 dark:text-white transition-all hover:border-gray-300 dark:hover:border-gray-500"
+                        className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-700 border-2 border-sky-200 dark:border-sky-600 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none text-gray-900 dark:text-white transition-all hover:border-sky-300 dark:hover:border-sky-500"
                         placeholder="Familiyangiz"
                         required
                         disabled={loading}
@@ -472,7 +476,7 @@ const Profile = () => {
                         type="email"
                         value={user?.email || ''}
                         disabled
-                        className="w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                        className="w-full pl-12 pr-4 py-3 bg-gradient-to-br from-gray-50 to-sky-50/30 dark:from-gray-800 dark:to-sky-900/20 border-2 border-sky-200 dark:border-sky-600 rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
                       />
                     </div>
                   </div>
@@ -513,7 +517,7 @@ const Profile = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white px-6 py-2.5 rounded-lg font-medium transition-all shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40"
                   >
                     {loading ? (
                       <>
@@ -581,8 +585,8 @@ const Profile = () => {
         {activeTab === 'password' && (
           <form onSubmit={handlePasswordSubmit} className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-                <Lock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div className="w-10 h-10 bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/40 dark:to-blue-900/40 rounded-lg flex items-center justify-center">
+                <Lock className="w-5 h-5 text-sky-600 dark:text-sky-400" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t('profile.changePassword')}</h2>
             </div>

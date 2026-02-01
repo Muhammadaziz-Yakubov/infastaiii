@@ -39,7 +39,7 @@ const More = lazy(() => import('./pages/More'));
 const Download = lazy(() => import('./pages/Download'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const Pomodoro = lazy(() => import('./pages/Pomodoro'));
-const FamilyManager = lazy(() => import('./pages/FamilyManager'));
+
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
 // Admin pages
@@ -49,7 +49,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 // App Content component to use context inside Router
 const AppContent = () => {
   const { showConsentModal, handleConsent } = usePrivacyConsent();
-  
+
   return (
     <>
       <Toaster position="top-right" />
@@ -83,7 +83,7 @@ const AppContent = () => {
               <Route path="/more" element={<More />} />
               <Route path="/more" element={<More />} />
               <Route path="/notifications" element={<Notifications />} />
-              <Route path="/family" element={<FamilyManager />} />
+
             </Route>
           </Route>
 
@@ -97,8 +97,8 @@ const AppContent = () => {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
-      <PrivacyConsentModal 
-        showConsentModal={showConsentModal} 
+      <PrivacyConsentModal
+        showConsentModal={showConsentModal}
         onConsent={handleConsent}
       />
     </>

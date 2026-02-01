@@ -8,23 +8,19 @@ import {
   ArrowRight,
   Calendar,
   Clock,
-  Award,
   Plus,
   Target,
-  CheckCircle2,
-  AlertCircle,
-  Rocket,
-  Timer,
-  Users,
-  Heart,
-  Crown,
+  Zap,
+  Award,
+  ChevronRight,
+  Bell,
+  Activity,
   Star
 } from 'lucide-react';
 import authService from '../services/authService';
 import { goalsService } from '../services/goalsService';
 import { taskService } from '../services/taskService';
 import { financeService } from '../services/financeService';
-import { familyService } from '../services/familyService';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { userService } from '../services/userService';
@@ -35,15 +31,11 @@ const Dashboard = () => {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    tasks: { total: 0, completed: 0, pending: 0, overdue: 0 },
+    tasks: { total: 0, completed: 0, pending: 0 },
     goals: { total: 0, completed: 0, inProgress: 0 },
-    finance: { income: 0, expense: 0, balance: 0, thisMonth: 0 },
-    family: { memberCount: 0, subscriptionPlan: 'FREE', isActive: true },
-    recentTasks: [],
-    recentGoals: [],
-    upcomingDeadlines: []
+    finance: { income: 0, expense: 0, balance: 0 },
+    recentActivity: []
   });
-
 
   useEffect(() => {
     if (!authService.isAuthenticated()) {
@@ -55,12 +47,11 @@ const Dashboard = () => {
       try {
         setLoading(true);
 
-        const [profileResult, tasksData, goalsData, financeData, familyData] = await Promise.all([
-          userService.getProfile().catch(err => ({ success: false, error: err })),
-          taskService.getTasks().catch(err => ({ tasks: [] })),
-          goalsService.getGoals().catch(err => ({ goals: [] })),
-          financeService.getTransactions().catch(err => ({ transactions: [] })),
-          familyService.getDashboard().catch(err => ({ family: null }))
+        const [profileResult, tasksData, goalsData, financeData] = await Promise.all([
+          userService.getProfile().catch(err => ({ success: false })),
+          taskService.getTasks().catch(() => ({ tasks: [] })),
+          goalsService.getGoals().catch(() => ({ goals: [] })),
+          financeService.getTransactions().catch(() => ({ transactions: [] }))
         ]);
 
         if (profileResult.success) {
@@ -69,15 +60,9 @@ const Dashboard = () => {
 
         const tasks = tasksData.tasks || [];
         const completedTasks = tasks.filter(t => t.status === 'completed');
-        const pendingTasks = tasks.filter(t => t.status !== 'completed');
-        const overdueTasks = tasks.filter(t => {
-          if (!t.deadline) return false;
-          return new Date(t.deadline) < new Date() && t.status !== 'completed';
-        });
 
         const goals = goalsData.goals || [];
-        const completedGoals = goals.filter(g => g.status === 'completed');
-        const inProgressGoals = goals.filter(g => g.status === 'in_progress');
+        const goalsInProgress = goals.filter(g => g.status === 'in_progress');
 
         const transactions = financeData.transactions || [];
         const income = transactions
@@ -87,51 +72,39 @@ const Dashboard = () => {
           .filter(t => t.type === 'expense')
           .reduce((sum, t) => sum + (t.amount || 0), 0);
 
-        const thisMonth = new Date().getMonth();
-        const thisMonthTransactions = transactions.filter(t => {
-          const date = new Date(t.date || t.createdAt);
-          return date.getMonth() === thisMonth;
-        });
-        const thisMonthIncome = thisMonthTransactions
-          .filter(t => t.type === 'income')
-          .reduce((sum, t) => sum + (t.amount || 0), 0);
-        const thisMonthExpense = thisMonthTransactions
-          .filter(t => t.type === 'expense')
-          .reduce((sum, t) => sum + (t.amount || 0), 0);
+        // Mix recent activity
+        const recentTasks = tasks.slice(0, 3).map(t => ({
+          type: 'task',
+          date: new Date(t.createdAt),
+          data: t
+        }));
+        const recentTx = transactions.slice(0, 3).map(t => ({
+          type: 'finance',
+          date: new Date(t.date || t.createdAt),
+          data: t
+        }));
 
-        const upcomingDeadlines = tasks
-          .filter(t => t.deadline && t.status !== 'completed')
-          .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
-          .slice(0, 3);
-
-        const family = familyData.family || { memberCount: 0, subscriptionPlan: 'FREE', isActive: true };
+        const activity = [...recentTasks, ...recentTx]
+          .sort((a, b) => b.date - a.date)
+          .slice(0, 5);
 
         setStats({
           tasks: {
             total: tasks.length,
             completed: completedTasks.length,
-            pending: pendingTasks.length,
-            overdue: overdueTasks.length
+            pending: tasks.length - completedTasks.length
           },
           goals: {
             total: goals.length,
-            completed: completedGoals.length,
-            inProgress: inProgressGoals.length
+            completed: goals.filter(g => g.status === 'completed').length,
+            inProgress: goalsInProgress.length
           },
           finance: {
             income,
             expense,
-            balance: income - expense,
-            thisMonth: thisMonthIncome - thisMonthExpense
+            balance: income - expense
           },
-          family: {
-            memberCount: family.memberCount || 0,
-            subscriptionPlan: family.subscriptionPlan || 'FREE',
-            isActive: family.isActive !== false
-          },
-          recentTasks: tasks.slice(0, 5),
-          recentGoals: goals.slice(0, 3),
-          upcomingDeadlines
+          recentActivity: activity
         });
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
@@ -143,378 +116,199 @@ const Dashboard = () => {
     loadDashboardData();
   }, [navigate]);
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 5) return 'Hayrli tun';
+    if (hour < 12) return 'Hayrli tong';
+    if (hour < 18) return 'Hayrli kun';
+    return 'Hayrli kech';
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 w-full">
-        <div className="text-center">
-          <div className="relative w-20 h-20 mx-auto mb-6">
-            <div className="absolute inset-0 border-4 border-blue-200 dark:border-blue-800 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-blue-600 dark:border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">Yuklanmoqda...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  const taskCompletionRate = stats.tasks.total > 0
-    ? Math.round((stats.tasks.completed / stats.tasks.total) * 100)
-    : 0;
-
-  const goalCompletionRate = stats.goals.total > 0
-    ? Math.round((stats.goals.completed / stats.goals.total) * 100)
-    : 0;
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Xayrli tong';
-    if (hour < 18) return 'Xayrli kun';
-    return 'Xayrli kech';
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 lg:pb-6 w-full">
-      {/* Hero Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 lg:p-8 mb-6 shadow-sm border border-gray-200 dark:border-gray-700">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 lg:pb-8">
+      {/* Header Section */}
+      <div className="px-6 pt-8 pb-6 bg-white dark:bg-gray-800 rounded-b-[32px] shadow-sm mb-6">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              {getGreeting()}, {user?.firstName || 'Foydalanuvchi'}! 👋
+            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">{getGreeting()}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {user?.firstName || 'Foydalanuvchi'}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              {new Date().toLocaleDateString('uz-UZ', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
           </div>
-
-          <div className="flex gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.tasks.total}</div>
-              <div className="text-xs text-gray-500">Vazifalar</div>
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-purple-600 p-0.5 shadow-lg shadow-blue-500/20">
+            <div className="w-full h-full rounded-xl bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+              {user?.avatar ? (
+                <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">
+                  {user?.firstName?.[0] || 'U'}
+                </span>
+              )}
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.goals.total}</div>
-              <div className="text-xs text-gray-500">Maqsadlar</div>
-            </div>
-
           </div>
         </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
-        {/* Tasks Card */}
-        <Link
-          to="/tasks"
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-              <CheckSquare className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.tasks.total}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Vazifalar</p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Bajarilgan</span>
-              <span className="font-semibold text-green-600 dark:text-green-400">{stats.tasks.completed}</span>
-            </div>
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                style={{ width: `${taskCompletionRate}%` }}
-              />
-            </div>
-            {stats.tasks.overdue > 0 && (
-              <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
-                <AlertCircle className="w-3 h-3" />
-                <span>{stats.tasks.overdue} kechikkan</span>
+        {/* Main Stats Cards - Scrollable on Mobile */}
+        <div className="flex overflow-x-auto gap-4 pb-2 -mx-6 px-6 scrollbar-hide">
+          {/* Balance Card */}
+          <div className="min-w-[280px] h-[160px] rounded-[24px] bg-gradient-to-br from-gray-900 to-gray-800 text-white p-6 shadow-xl shadow-gray-200/50 dark:shadow-none relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div className="flex justify-between items-start">
+                <div className="p-2 bg-white/10 rounded-xl backdrop-blur-md">
+                  <Wallet className="w-5 h-5 text-emerald-400" />
+                </div>
+                <span className="text-xs font-medium text-gray-400 bg-black/20 px-2 py-1 rounded-lg backdrop-blur-md">Jami balans</span>
               </div>
-            )}
-          </div>
-        </Link>
-
-        {/* Goals Card */}
-        <Link
-          to="/goals"
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-              <Target className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{stats.goals.total}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Maqsadlar</p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Tugatilgan</span>
-              <span className="font-semibold text-purple-600 dark:text-purple-400">{stats.goals.completed}</span>
-            </div>
-            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-purple-500 rounded-full transition-all duration-500"
-                style={{ width: `${goalCompletionRate}%` }}
-              />
-            </div>
-            {stats.goals.inProgress > 0 && (
-              <div className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
-                <Rocket className="w-3 h-3" />
-                <span>{stats.goals.inProgress} jarayonda</span>
-              </div>
-            )}
-          </div>
-        </Link>
-
-        {/* Finance Card */}
-        <Link
-          to="/finance"
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats.finance.balance >= 0 ? '+' : ''}{(stats.finance.balance / 1000).toFixed(0)}k
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Balans</p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                <TrendingUp className="w-4 h-4" />
-                <span>{(stats.finance.income / 1000).toFixed(0)}k</span>
-              </div>
-              <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                <TrendingDown className="w-4 h-4" />
-                <span>{(stats.finance.expense / 1000).toFixed(0)}k</span>
+              <div>
+                <h3 className="text-3xl font-bold tracking-tight mb-1">
+                  {(stats.finance.balance).toLocaleString()} <span className="text-lg font-medium text-gray-400">so'm</span>
+                </h3>
+                <div className="flex items-center gap-3 text-xs font-medium text-gray-400">
+                  <span className="flex items-center text-emerald-400 gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                    <TrendingUp className="w-3 h-3" /> +{(stats.finance.income).toLocaleString()}
+                  </span>
+                  <span className="flex items-center text-rose-400 gap-1 bg-rose-500/10 px-1.5 py-0.5 rounded">
+                    <TrendingDown className="w-3 h-3" /> -{(stats.finance.expense).toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              Bu oy: {stats.finance.thisMonth >= 0 ? '+' : ''}{(stats.finance.thisMonth / 1000).toFixed(0)}k UZS
-            </div>
           </div>
-        </Link>
 
-        {/* Family Members Card */}
-        <Link
-          to="/family"
-          className="bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-white relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Heart className="w-24 h-24 transform rotate-12" />
-          </div>
-          <div className="flex flex-col h-full justify-between relative z-10">
-            <div className="bg-white/20 w-12 h-12 rounded-lg flex items-center justify-center backdrop-blur-sm mb-4">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-1">{stats.family.memberCount}</h3>
-              <p className="text-rose-100 text-sm">Oila a'zolari</p>
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/20 transition-colors">
-              Oila <ArrowRight className="w-4 h-4" />
-            </div>
-          </div>
-        </Link>
-
-        {/* Family Subscription Card */}
-        <Link
-          to="/family"
-          className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-white relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Crown className="w-24 h-24 transform rotate-12" />
-          </div>
-          <div className="flex flex-col h-full justify-between relative z-10">
-            <div className="bg-white/20 w-12 h-12 rounded-lg flex items-center justify-center backdrop-blur-sm mb-4">
-              <Star className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-1">{stats.family.subscriptionPlan}</h3>
-              <p className="text-amber-100 text-sm">Obuna reja</p>
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/20 transition-colors">
-              Yangilash <ArrowRight className="w-4 h-4" />
-            </div>
-          </div>
-        </Link>
-
-        {/* Family Subscription Card */}
-        <Link
-          to="/family"
-          className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 text-white relative overflow-hidden group"
-        >
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Crown className="w-24 h-24 transform rotate-12" />
-          </div>
-          <div className="flex flex-col h-full justify-between relative z-10">
-            <div className="bg-white/20 w-12 h-12 rounded-lg flex items-center justify-center backdrop-blur-sm mb-4">
-              <Star className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold mb-1">{stats.family.subscriptionPlan}</h3>
-              <p className="text-amber-100 text-sm">Obuna reja</p>
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-sm font-medium bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm group-hover:bg-white/20 transition-colors">
-              Yangilash <ArrowRight className="w-4 h-4" />
-            </div>
-          </div>
-        </Link>
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-500" />
-                So'nggi vazifalar
-              </h2>
-              <Link
-                to="/tasks"
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-1 text-sm font-semibold"
-              >
-                Barchasi
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {stats.recentTasks.length === 0 ? (
-              <div className="text-center py-12">
-                <CheckSquare className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
-                <p className="text-gray-500 dark:text-gray-400 mb-4">Vazifalar yo'q</p>
-                <Link
-                  to="/tasks"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold"
-                >
-                  <Plus className="w-5 h-5" />
-                  Vazifa qo'shish
-                </Link>
+          {/* Productivity Card */}
+          <div className="min-w-[280px] h-[160px] rounded-[24px] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-6 shadow-xl shadow-blue-500/5 dark:shadow-none relative group">
+            <div className="flex flex-col h-full justify-between">
+              <div className="flex justify-between items-start">
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                  <Activity className="w-5 h-5 text-blue-500" />
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400 font-medium">Samaradorlik</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">
+                    {stats.tasks.total > 0 ? Math.round((stats.tasks.completed / stats.tasks.total) * 100) : 0}%
+                  </p>
+                </div>
               </div>
-            ) : (
+
               <div className="space-y-3">
-                {stats.recentTasks.slice(0, 5).map((task, index) => (
-                  <div
-                    key={task._id || index}
-                    className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
-                  >
-                    <div className="flex items-center gap-3">
-                      {task.status === 'completed' ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      ) : (
-                        <div className="w-5 h-5 border-2 border-gray-300 dark:border-gray-600 rounded-full flex-shrink-0"></div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className={`font-semibold truncate ${task.status === 'completed' ? 'line-through text-gray-400' : 'text-gray-900 dark:text-white'}`}>
-                          {task.title}
-                        </h3>
-                        {task.priority === 'high' && (
-                          <span className="inline-block mt-1 text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                            Muhim
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                <div>
+                  <div className="flex justify-between text-xs mb-1.5">
+                    <span className="text-gray-500">Vazifalar</span>
+                    <span className="font-bold text-gray-900 dark:text-white">{stats.tasks.completed}/{stats.tasks.total}</span>
                   </div>
-                ))}
+                  <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${stats.tasks.total > 0 ? (stats.tasks.completed / stats.tasks.total) * 100 : 0}%` }}></div>
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-6 space-y-8">
+        {/* Quick Actions Matrix */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Tezkor amallar</h3>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Link to="/tasks" className="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:scale-[1.02] transition-transform active:scale-95">
+              <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400">
+                <CheckSquare className="w-6 h-6" />
+              </div>
+              <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">Vazifa qo'shish</span>
+            </Link>
+            <Link to="/finance" className="p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col items-center gap-3 hover:scale-[1.02] transition-transform active:scale-95">
+              <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <Wallet className="w-6 h-6" />
+              </div>
+              <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">Harajat qilish</span>
+            </Link>
+          </div>
+        </section>
+
+        {/* Goals Progress */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Maqsadlar</h3>
+            <Link to="/goals" className="text-sm font-semibold text-blue-600 dark:text-blue-400">Barchasi</Link>
+          </div>
+          <div className="bg-gradient-to-r from-violet-600 to-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-indigo-500/20 relative overflow-hidden">
+
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-indigo-100 text-sm font-medium mb-1">{stats.goals.inProgress} ta faol maqsad</p>
+                <h4 className="text-2xl font-bold">Orzular sari olg'a!</h4>
+              </div>
+              <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+            </div>
+
+            <button onClick={() => navigate('/goals')} className="mt-6 w-full py-3 bg-white text-indigo-600 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-colors">
+              Maqsadlarni ko'rish
+            </button>
+
+            {/* Decorative Circles */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-500/20 rounded-full blur-xl"></div>
+          </div>
+        </section>
+
+        {/* Recent Activity */}
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">So'nggi faoliyat</h3>
           </div>
 
-          {/* Upcoming Deadlines */}
-          {stats.upcomingDeadlines.length > 0 && (
-            <div className="bg-red-50 dark:bg-red-900/20 rounded-xl p-6 shadow-sm border border-red-200 dark:border-red-900/30">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-                <Calendar className="w-5 h-5 text-red-500" />
-                Yaqinlashayotgan muddatlar
-              </h2>
-              <div className="space-y-2">
-                {stats.upcomingDeadlines.map((task, index) => (
-                  <div key={task._id || index} className="flex items-center justify-between p-3 bg-white/70 dark:bg-gray-800/50 rounded-lg">
-                    <span className="font-medium text-gray-900 dark:text-white truncate flex-1 mr-2">{task.title}</span>
-                    <span className="text-sm text-red-600 dark:text-red-400 font-semibold whitespace-nowrap">
-                      {new Date(task.deadline).toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar - Goals */}
-        <div className="space-y-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Award className="w-5 h-5 text-purple-500" />
-                Maqsadlar
-              </h2>
-              <Link
-                to="/goals"
-                className="text-purple-600 dark:text-purple-400 hover:text-purple-700 text-sm font-semibold"
-              >
-                Barchasi
-              </Link>
-            </div>
-
-            {stats.recentGoals.length === 0 ? (
-              <div className="text-center py-8">
-                <Target className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Maqsadlar yo'q</p>
-                <Link
-                  to="/goals"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all text-sm font-semibold"
-                >
-                  <Plus className="w-4 h-4" />
-                  Maqsad qo'shish
-                </Link>
+          <div className="bg-white dark:bg-gray-800 rounded-[24px] p-2 shadow-sm border border-gray-100 dark:border-gray-700">
+            {stats.recentActivity.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <p>Hozircha faoliyat yo'q</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {stats.recentGoals.map((goal, index) => (
-                  <div
-                    key={goal._id || index}
-                    className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all"
-                  >
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-2">
-                      {goal.title}
-                    </h3>
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2">
-                      <div
-                        className="h-full bg-purple-500 rounded-full transition-all duration-500"
-                        style={{ width: `${goal.progress || 0}%` }}
-                      />
-                    </div>
+              stats.recentActivity.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-4 p-4 border-b border-gray-50 dark:border-gray-700/50 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-2xl transition-colors">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.type === 'task'
+                      ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                      : item.data.type === 'income'
+                        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+                        : 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
+                    }`}>
+                    {item.type === 'task' ? <CheckSquare className="w-5 h-5" /> : <Wallet className="w-5 h-5" />}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 dark:text-white truncate text-sm">
+                      {item.type === 'task' ? item.data.title : (item.data.description || item.data.category)}
+                    </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {goal.progress || 0}% bajarildi
+                      {new Date(item.date).toLocaleDateString()}
                     </p>
                   </div>
-                ))}
-              </div>
+
+                  {item.type === 'finance' && (
+                    <span className={`font-bold text-sm ${item.data.type === 'income' ? 'text-emerald-500' : 'text-gray-900 dark:text-white'}`}>
+                      {item.data.type === 'income' ? '+' : '-'}{item.data.amount.toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              ))
             )}
           </div>
-        </div>
+        </section>
       </div>
-
-    </div >
+    </div>
   );
 };
 

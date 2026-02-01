@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     Target, TrendingUp, Calendar, Wallet, Clock,
     Plus, Edit, Trash2, X, CheckCircle, AlertCircle,
-    ChevronRight, DollarSign, Percent, Sparkles,
+    ChevronRight, Banknote, Percent, Sparkles,
     BarChart3, PiggyBank, Brain, Bell, Settings,
     RefreshCw, Download, Filter, Search, MoreVertical,
     Play, Pause, CheckSquare, Circle, Award,
@@ -110,7 +110,7 @@ const Goals = () => {
                 setShowFundModal(false);
                 setShowAutoSaveModal(false);
                 setShowTaskModal(false);
-                
+
                 // AI maslahatiga qarab harakat qilish
                 if (suggestion.type === 'funding') {
                     handleFund(goal);
@@ -170,18 +170,18 @@ const Goals = () => {
             if (navigator.onLine) {
                 // Online - serverdan olish
                 const goalsData = await goalsService.getGoals();
-                
+
                 if (goalsData.success) {
                     const loadedGoals = goalsData.goals || [];
                     setGoals(loadedGoals);
                     await saveToOffline(STORES.GOALS, loadedGoals);
-                    
+
                     setTimeout(() => generateAiSuggestions(), 100);
                 } else {
                     setGoals(demoGoals);
                     generateAiSuggestions();
                 }
-                
+
                 const transData = await financeService.getTransactions();
                 if (transData.success) {
                     setTransactions(transData.transactions || []);
@@ -192,10 +192,10 @@ const Goals = () => {
                 setGoals(offlineGoals || []);
                 toast('Offline rejim - saqlangan ma\'lumotlar', { icon: '📴' });
             }
-            
+
         } catch (error) {
             console.error('Load error:', error);
-            
+
             // Xatolik bo'lsa offline ma'lumotlarni ko'rsatish
             try {
                 const offlineGoals = await getFromOffline(STORES.GOALS);
@@ -207,13 +207,13 @@ const Goals = () => {
             } catch (offlineError) {
                 console.error('Offline load error:', offlineError);
             }
-            
+
             if (error.message?.includes('Network Error')) {
                 toast.error('Serverga ulanib bo\'lmadi');
             } else {
                 toast.error(error.message || 'Yuklashda xatolik');
             }
-            
+
             if (!goals.length) {
                 setGoals(demoGoals);
                 generateAiSuggestions();
@@ -481,7 +481,7 @@ const Goals = () => {
 
         try {
             const fundValue = typeof fundFormData.amount === 'number' ? fundFormData.amount : parseFloat(fundFormData.amount);
-            
+
             // 1. Goal ga mablag' qo'shish
             const goalData = await goalsService.fundGoal(selectedGoal._id, {
                 amount: fundValue,
@@ -924,9 +924,8 @@ const Goals = () => {
                                         navigate(`/goals/${goal._id}/tracking`);
                                     }
                                 }}
-                                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow ${
-                                    goal.goalType === 'non-financial' ? 'cursor-pointer' : ''
-                                }`}
+                                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-shadow ${goal.goalType === 'non-financial' ? 'cursor-pointer' : ''
+                                    }`}
                             >
                                 {/* Goal Header */}
                                 <div
@@ -977,7 +976,7 @@ const Goals = () => {
                                             </button>
 
                                             {selectedGoal?._id === goal._id && (
-                                                <div 
+                                                <div
                                                     className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 py-2"
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
@@ -992,7 +991,7 @@ const Goals = () => {
                                                         <Edit className="w-4 h-4" />
                                                         Tahrirlash
                                                     </button>
-                                                    
+
                                                     {goal.goalType === 'financial' && (
                                                         <button
                                                             onClick={(e) => {
@@ -1006,7 +1005,7 @@ const Goals = () => {
                                                             Statistika
                                                         </button>
                                                     )}
-                                                    
+
                                                     {goal.goalType === 'non-financial' && (
                                                         <button
                                                             onClick={(e) => {
@@ -1020,7 +1019,7 @@ const Goals = () => {
                                                             Tracking
                                                         </button>
                                                     )}
-                                                    
+
                                                     <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
                                                     <button
                                                         onClick={(e) => {
@@ -1295,7 +1294,7 @@ const Goals = () => {
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
                             </div>
                         </div>
-                        
+
                         <p className="text-gray-600 dark:text-gray-300 mb-2">
                             <span className="font-semibold text-gray-900 dark:text-white">"{goalToDelete.name}"</span> maqsadini o'chirmoqchimisiz?
                         </p>
@@ -1389,22 +1388,20 @@ const GoalModal = ({ formData, setFormData, handleSubmit, onClose, isEditing }) 
                             <button
                                 type="button"
                                 onClick={() => setFormData({ ...formData, goalType: 'financial' })}
-                                className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-all border-2 ${
-                                    formData.goalType === 'financial'
-                                        ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
-                                }`}
+                                className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-all border-2 ${formData.goalType === 'financial'
+                                    ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                    : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
+                                    }`}
                             >
                                 💰 Moliyaviy
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setFormData({ ...formData, goalType: 'non-financial' })}
-                                className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-all border-2 ${
-                                    formData.goalType === 'non-financial'
-                                        ? 'bg-purple-50 border-purple-500 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                                        : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
-                                }`}
+                                className={`py-2.5 px-3 rounded-lg text-sm font-medium transition-all border-2 ${formData.goalType === 'non-financial'
+                                    ? 'bg-purple-50 border-purple-500 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                                    : 'bg-gray-50 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
+                                    }`}
                             >
                                 🎯 Moliyasiz
                             </button>
@@ -1569,7 +1566,7 @@ const FundModal = ({ selectedGoal, fundFormData, setFundFormData, handleSubmit, 
                 {/* Header */}
                 <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <DollarSign className="w-5 h-5 text-green-500" />
+                        <Wallet className="w-5 h-5 text-green-500" />
                         Mablag' Ajratish
                     </h3>
                     <button
@@ -1711,7 +1708,7 @@ const AutoSaveModal = ({ selectedGoal, autoSaveSettings, setAutoSaveSettings, ha
                                         Oylik summa <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative">
-                                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
+                                        <Wallet className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
                                         <input
                                             type="number"
                                             value={autoSaveSettings.amount}
@@ -1879,7 +1876,7 @@ const TaskModal = ({ selectedGoal, taskFormData, setTaskFormData, handleSubmit, 
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                                         <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded">
-                                            <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400" />
+                                            <Banknote className="w-4 h-4 text-green-600 dark:text-green-400" />
                                         </div>
                                         <div>
                                             <p className="font-medium text-gray-900 dark:text-white">Mablag' yig'ish</p>

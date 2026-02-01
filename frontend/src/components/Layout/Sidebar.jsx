@@ -45,7 +45,6 @@ const MobileBottomBar = () => {
     { name: 'Tasks', href: '/tasks', icon: CheckSquare, labelKey: 'sidebar.tasks' },
     { name: 'Finance', href: '/finance', icon: Wallet, labelKey: 'sidebar.finance' },
     { name: 'Goals', href: '/goals', icon: Goal, labelKey: 'sidebar.goals' },
-    { name: 'Family', href: '/family', icon: Heart, labelKey: 'sidebar.family' },
     { name: 'More', href: '/more', icon: MoreHorizontal, labelKey: 'sidebar.more' }
   ];
 
@@ -74,8 +73,8 @@ const MobileBottomBar = () => {
 
                 <div
                   className={`relative w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 ${isActive
-                      ? 'bg-blue-500 text-white shadow-lg scale-110'
-                      : 'text-gray-400 dark:text-gray-500 group-hover:bg-gray-100 dark:group-hover:bg-gray-800 group-hover:text-blue-500 dark:group-hover:text-blue-400'
+                    ? 'bg-blue-500 text-white shadow-lg scale-110'
+                    : 'text-gray-400 dark:text-gray-500 group-hover:bg-gray-100 dark:group-hover:bg-gray-800 group-hover:text-blue-500 dark:group-hover:text-blue-400'
                     }`}
                 >
                   <Icon className={`w-6 h-6 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} />
@@ -89,8 +88,8 @@ const MobileBottomBar = () => {
                 {/* Label */}
                 <span
                   className={`text-[10px] font-medium mt-1 transition-all duration-300 ${isActive
-                      ? 'text-blue-600 dark:text-blue-400 font-semibold'
-                      : 'text-gray-500 dark:text-gray-400'
+                    ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                    : 'text-gray-500 dark:text-gray-400'
                     }`}
                 >
                   {t(item.labelKey)}
@@ -149,7 +148,6 @@ const Sidebar = () => {
     { name: 'sidebar.tasks', href: '/tasks', icon: CheckSquare, badge: null },
     { name: 'sidebar.finance', href: '/finance', icon: Wallet, badge: null },
     { name: 'sidebar.goals', href: '/goals', icon: Goal, badge: null },
-    { name: 'sidebar.family', href: '/family', icon: Heart, badge: null },
     { name: 'sidebar.challenges', href: '/challenges', icon: Trophy, badge: null }
   ];
 
@@ -263,12 +261,12 @@ const Sidebar = () => {
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
                   )}
                   <div className={`p-2.5 rounded-xl transition-all duration-300 ${isActive
-                      ? 'bg-white/20'
-                      : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30'
+                    ? 'bg-white/20'
+                    : 'bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30'
                     }`}>
                     <item.icon className={`w-5 h-5 transition-all duration-300 ${isActive
-                        ? 'scale-110 text-white'
-                        : 'group-hover:scale-110 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                      ? 'scale-110 text-white'
+                      : 'group-hover:scale-110 text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
                       }`} />
                   </div>
                   {!isCollapsed && (

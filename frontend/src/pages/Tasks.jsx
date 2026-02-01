@@ -629,17 +629,17 @@ const Tasks = () => {
       <div id="toast-container"></div>
 
       {/* Header Section - Desktop optimized */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 lg:p-8 shadow-lg border border-gray-200 dark:border-gray-700">
+      <div className="bg-gradient-to-br from-white via-sky-50/30 to-blue-50/20 dark:from-gray-800 dark:via-sky-900/20 dark:to-blue-900/20 rounded-2xl p-5 lg:p-8 shadow-lg border border-sky-200/50 dark:border-sky-700/50 backdrop-blur-sm">
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-4">
-            <div className="p-3 lg:p-4 bg-blue-500 rounded-xl">
+            <div className="p-3 lg:p-4 bg-gradient-to-br from-sky-400 to-blue-500 rounded-xl shadow-lg shadow-sky-500/25">
               <ListTodo className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
             </div>
             <div className="flex-1">
-              <h1 className="text-2xl lg:text-4xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
                 {t('tasks.title')}
               </h1>
-              <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400">
+              <p className="text-sm lg:text-base text-sky-600 dark:text-sky-400">
                 {stats.total} ta faol
               </p>
             </div>
@@ -649,7 +649,7 @@ const Tasks = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={() => navigate('/archive')}
-              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 lg:px-6 lg:py-3.5 bg-green-500 hover:bg-green-600 text-white rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 lg:px-6 lg:py-3.5 bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40"
             >
               <Archive className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               <span className="hidden sm:inline">{t('tasks.completed')}</span>
@@ -669,7 +669,7 @@ const Tasks = () => {
                 });
                 setShowModal(true);
               }}
-              className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 lg:px-6 lg:py-3.5 rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg"
+              className="flex items-center justify-center gap-2 bg-gradient-to-r from-sky-400 to-blue-500 hover:from-sky-500 hover:to-blue-600 text-white px-4 sm:px-5 py-2.5 sm:py-3 lg:px-6 lg:py-3.5 rounded-xl font-semibold text-sm sm:text-base lg:text-lg transition-all shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40"
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
               <span className="hidden sm:inline">{t('tasks.addTask')}</span>
@@ -694,69 +694,69 @@ const Tasks = () => {
 
       {/* Stats Section - 4 columns on desktop */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-gradient-to-br from-white via-sky-50/50 to-blue-50/30 dark:from-gray-800 dark:via-sky-900/30 dark:to-blue-900/20 rounded-xl p-4 lg:p-6 border border-sky-200/50 dark:border-sky-700/50 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 sm:block">
-              <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg sm:hidden">
-                <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="p-2 bg-sky-100/70 dark:bg-sky-900/40 rounded-lg sm:hidden">
+                <BarChart3 className="w-4 h-4 text-sky-600 dark:text-sky-400" />
               </div>
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm lg:text-base font-medium mb-1">Jami</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+                <p className="text-sky-600 dark:text-sky-400 text-sm lg:text-base font-medium mb-1">Jami</p>
+                <p className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">{stats.total}</p>
               </div>
             </div>
-            <div className="hidden sm:block p-3 lg:p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
-              <BarChart3 className="w-6 h-6 lg:w-7 lg:h-7 text-blue-600 dark:text-blue-400" />
+            <div className="hidden sm:block p-3 lg:p-4 bg-gradient-to-br from-sky-100 to-blue-100 dark:from-sky-900/40 dark:to-blue-900/40 rounded-xl">
+              <BarChart3 className="w-6 h-6 lg:w-7 lg:h-7 text-sky-600 dark:text-sky-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-gradient-to-br from-white via-amber-50/50 to-orange-50/30 dark:from-gray-800 dark:via-amber-900/30 dark:to-orange-900/20 rounded-xl p-4 lg:p-6 border border-amber-200/50 dark:border-amber-700/50 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 sm:block">
-              <div className="p-2 bg-amber-50 dark:bg-amber-900/30 rounded-lg sm:hidden">
+              <div className="p-2 bg-amber-100/70 dark:bg-amber-900/40 rounded-lg sm:hidden">
                 <Play className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm lg:text-base font-medium mb-1">Bugun</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{stats.today}</p>
+                <p className="text-amber-600 dark:text-amber-400 text-sm lg:text-base font-medium mb-1">Bugun</p>
+                <p className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{stats.today}</p>
               </div>
             </div>
-            <div className="hidden sm:block p-3 lg:p-4 bg-amber-50 dark:bg-amber-900/30 rounded-xl">
+            <div className="hidden sm:block p-3 lg:p-4 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 rounded-xl">
               <Play className="w-6 h-6 lg:w-7 lg:h-7 text-amber-600 dark:text-amber-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-5 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-gradient-to-br from-white via-rose-50/50 to-red-50/30 dark:from-gray-800 dark:via-rose-900/30 dark:to-red-900/20 rounded-xl p-3 sm:p-5 border border-rose-200/50 dark:border-rose-700/50 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 sm:block">
-              <div className="p-2 bg-red-50 dark:bg-red-900/30 rounded-lg sm:hidden">
-                <Flag className="w-4 h-4 text-red-600 dark:text-red-400" />
+              <div className="p-2 bg-rose-100/70 dark:bg-rose-900/40 rounded-lg sm:hidden">
+                <Flag className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               </div>
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm font-medium">Muhim</p>
-                <p className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">{stats.highPriority}</p>
+                <p className="text-rose-600 dark:text-rose-400 text-xs sm:text-sm font-medium">Muhim</p>
+                <p className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-rose-600 to-red-600 bg-clip-text text-transparent">{stats.highPriority}</p>
               </div>
             </div>
-            <div className="hidden sm:block p-3 bg-red-50 dark:bg-red-900/30 rounded-lg">
-              <Flag className="w-6 h-6 text-red-600 dark:text-red-400" />
+            <div className="hidden sm:block p-3 bg-gradient-to-br from-rose-100 to-red-100 dark:from-rose-900/40 dark:to-red-900/40 rounded-lg">
+              <Flag className="w-6 h-6 text-rose-600 dark:text-rose-400" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 lg:p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="bg-gradient-to-br from-white via-rose-50/50 to-pink-50/30 dark:from-gray-800 dark:via-rose-900/30 dark:to-pink-900/20 rounded-xl p-4 lg:p-6 border border-rose-200/50 dark:border-rose-700/50 shadow-sm backdrop-blur-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2 sm:block">
-              <div className="p-2 bg-rose-50 dark:bg-rose-900/30 rounded-lg sm:hidden">
+              <div className="p-2 bg-rose-100/70 dark:bg-rose-900/40 rounded-lg sm:hidden">
                 <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               </div>
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm lg:text-base font-medium mb-1">O'tgan</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{stats.overdue}</p>
+                <p className="text-rose-600 dark:text-rose-400 text-sm lg:text-base font-medium mb-1">O'tgan</p>
+                <p className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">{stats.overdue}</p>
               </div>
             </div>
-            <div className="hidden sm:block p-3 lg:p-4 bg-rose-50 dark:bg-rose-900/30 rounded-xl">
+            <div className="hidden sm:block p-3 lg:p-4 bg-gradient-to-br from-rose-100 to-pink-100 dark:from-rose-900/40 dark:to-pink-900/40 rounded-xl">
               <AlertTriangle className="w-6 h-6 lg:w-7 lg:h-7 text-rose-600 dark:text-rose-400" />
             </div>
           </div>
