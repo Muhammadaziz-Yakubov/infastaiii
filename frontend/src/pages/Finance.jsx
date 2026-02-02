@@ -1321,53 +1321,8 @@ const Finance = () => {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )
-            }
-
-            {/* Delete Debt Confirmation Modal */}
-            {
-                showDeleteDebtModal && itemToDelete && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
-                            <div className="flex items-center gap-4 mb-4">
-                                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                                    <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Qarzni o'chirish</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Bu amalni qaytarib bo'lmaydi</p>
-                                </div>
-                            </div>
-
-                            <p className="text-gray-600 dark:text-gray-300 mb-6">
-                                <span className="font-semibold text-gray-900 dark:text-white">{itemToDelete.name}</span> bilan bog'liq qarzni o'chirmoqchimisiz?
-                            </p>
-
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => {
-                                        setShowDeleteDebtModal(false);
-                                        setItemToDelete(null);
-                                    }}
-                                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                >
-                                    Bekor qilish
-                                </button>
-                                <button
-                                    onClick={handleDeleteDebt}
-                                    className="flex-1 px-4 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
-                                >
-                                    Ha, o'chirish
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
-        </div >
-
-    );
+    </div>
+);
 };
 
 // Transaction Modal Komponenti - Mobile optimized
