@@ -15,7 +15,13 @@ import {
   AlertTriangle,
   X,
   Globe,
-  ChevronDown
+  ChevronDown,
+  ArrowLeft,
+  User,
+  Link as LinkIcon,
+  Bell,
+  Moon as MoonIcon,
+  FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DeleteAccount from '../components/Profile/DeleteAccount';
