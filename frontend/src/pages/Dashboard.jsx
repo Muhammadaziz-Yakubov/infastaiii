@@ -157,10 +157,6 @@ const Dashboard = () => {
               <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">{getGreeting()}!</p>
             </div>
           </div>
-          <button className="p-2.5 bg-gray-50 dark:bg-gray-800 rounded-full text-gray-600 dark:text-gray-300 relative">
-            <Bell className="w-6 h-6" />
-            <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
-          </button>
         </div>
 
         {/* Total Balance */}

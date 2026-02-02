@@ -1,19 +1,47 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Trophy, User, Settings, Archive, Crown, HelpCircle,
-  ChevronRight, Shield, Bell, Palette, LogOut, Star,
-  FileText, MessageCircle, Heart, Info, Users
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { 
+  Home,
+  TrendingUp,
+  QrCode,
+  CreditCard,
+  User,
+  Settings,
+  Shield,
+  HelpCircle,
+  LogOut,
+  ChevronRight,
+  Award,
+  Target,
+  CheckCircle,
+  Archive,
+  Crown,
+  Bell,
+  FileText
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const More = () => {
-  const { t } = useLanguage();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const { isDark, toggleTheme } = useTheme();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => setIsLoading(false), 1000);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/auth');
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
 
   const menuSections = [
     {
