@@ -33,6 +33,7 @@ const Dashboard = () => {
   const { user, updateUser } = useAuth();
   const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
+  const [showBalance, setShowBalance] = useState(true);
   const [stats, setStats] = useState({
     tasks: { total: 0, completed: 0, pending: 0 },
     goals: { total: 0, completed: 0, inProgress: 0 },
@@ -163,13 +164,28 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-gray-500 dark:text-gray-400 font-medium text-sm">Umumiy balans</span>
-            <button className="p-1 text-gray-400">
-              <Star className="w-4 h-4" /> {/* Replacing eye for now or using lucide-react eye if available */}
+            <button 
+              onClick={() => setShowBalance(!showBalance)}
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              {showBalance ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
           <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white flex items-baseline gap-1">
-            {(stats.finance.balance).toLocaleString()} <span className="text-xl font-bold">so'm</span>
+            {showBalance ? (stats.finance.balance).toLocaleString() : '••••••••'} <span className="text-xl font-bold">so'm</span>
           </h2>
+          {showBalance && (
+            <div className="flex gap-4 mt-2">
+              <div className="flex items-center gap-1">
+                <TrendingUp className="w-3 h-3 text-emerald-500 rotate-45" />
+                <span className="text-xs text-emerald-500 font-medium">+{(stats.finance.income).toLocaleString()}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <TrendingDown className="w-3 h-3 text-red-500 -rotate-45" />
+                <span className="text-xs text-red-500 font-medium">-{(stats.finance.expense).toLocaleString()}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Quick Actions - Circle Buttons */}
@@ -178,33 +194,19 @@ const Dashboard = () => {
             <Link to="/finance" className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95">
               <TrendingUp className="w-6 h-6 text-black rotate-45" />
             </Link>
-            <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Yuborish</span>
+            <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Kirim</span>
           </div>
           <div className="flex flex-col items-center gap-2">
             <Link to="/finance" className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95">
               <TrendingDown className="w-6 h-6 text-black -rotate-45" />
             </Link>
-            <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Qabul qilish</span>
+            <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Chiqim</span>
           </div>
           <div className="flex flex-col items-center gap-2">
             <button onClick={() => navigate('/more')} className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95">
               <Menu className="w-6 h-6 text-black" />
             </button>
             <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Boshqa</span>
-          </div>
-        </div>
-
-        {/* Promo Banner */}
-        <div className="mb-8 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] rounded-[24px] p-6 relative overflow-hidden shadow-xl shadow-indigo-500/20">
-          <div className="relative z-10 pr-24">
-            <h3 className="text-white font-bold text-lg mb-2">Do'stingizni taklif qiling va keshbek oling</h3>
-            <Link to="/more" className="text-[#D4FF00] font-bold text-sm flex items-center gap-1">
-              Taklif qilish <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="absolute right-[-10px] top-[-10px] w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-          <div className="absolute right-4 bottom-4 w-20 h-20 bg-white/20 rounded-2xl rotate-12 backdrop-blur-sm flex items-center justify-center">
-            <Star className="w-10 h-10 text-white" />
           </div>
         </div>
       </div>

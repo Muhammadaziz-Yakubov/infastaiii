@@ -773,132 +773,127 @@ const Finance = () => {
     }
 
     return (
-        <div className="w-full space-y-4 lg:space-y-6 pb-24 sm:pb-8">
-            {/* Header - Desktop optimized with side-by-side layout */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-6 shadow-sm lg:shadow-md border border-gray-200 dark:border-gray-700">
-                {/* Top row - Title and actions */}
-                <div className="flex items-center justify-between mb-4 lg:mb-6">
-                    <div className="flex items-center gap-3 lg:gap-4">
-                        <div className="p-2.5 lg:p-3 bg-indigo-600 rounded-xl lg:rounded-2xl shadow-lg">
-                            <Wallet className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24 lg:pb-8">
+            {/* Header Section - Similar to Dashboard */}
+            <div className="px-6 pt-6 pb-2">
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full border-2 border-gray-100 dark:border-gray-700 overflow-hidden bg-gray-200">
+                            <div className="w-full h-full flex items-center justify-center bg-indigo-600 text-white">
+                                <Wallet className="w-6 h-6" />
+                            </div>
                         </div>
                         <div>
-                            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Moliya</h1>
-                            <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400">Tranzaksiyalar va tahlil</p>
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                                Moliya
+                            </h1>
+                            <p className="text-gray-500 dark:text-gray-400 text-xs font-medium">Tranzaksiyalar va tahlil</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 lg:gap-3">
+                    <button
+                        onClick={() => setShowBalance(!showBalance)}
+                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    >
+                        {showBalance ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                </div>
+
+                {/* Total Balance - Similar to Dashboard */}
+                <div className="mb-8">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-gray-500 dark:text-gray-400 font-medium text-sm">Umumiy balans</span>
+                    </div>
+                    <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white flex items-baseline gap-1">
+                        {showBalance ? formatCurrency(statistics.balance) : '••••••••'} <span className="text-xl font-bold">so'm</span>
+                    </h2>
+                    {showBalance && (
+                        <div className="flex gap-4 mt-2">
+                            <div className="flex items-center gap-1">
+                                <TrendingUp className="w-3 h-3 text-emerald-500 rotate-45" />
+                                <span className="text-xs text-emerald-500 font-medium">+{formatShortCurrency(statistics.totalIncome)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <TrendingDown className="w-3 h-3 text-red-500 -rotate-45" />
+                                <span className="text-xs text-red-500 font-medium">-{formatShortCurrency(statistics.totalExpense)}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Quick Actions - Circle Buttons */}
+                <div className="flex items-center gap-6 mb-8">
+                    <div className="flex flex-col items-center gap-2">
                         <button
-                            onClick={() => setShowBalance(!showBalance)}
-                            className="p-2 lg:p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg lg:rounded-xl transition-colors"
+                            onClick={() => {
+                                resetForm();
+                                setShowAddModal(true);
+                            }}
+                            className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95"
                         >
-                            {showBalance ? <EyeOff className="w-4 h-4 lg:w-5 lg:h-5 text-gray-500" /> : <Eye className="w-4 h-4 lg:w-5 lg:h-5 text-gray-500" />}
+                            <TrendingUp className="w-6 h-6 text-black rotate-45" />
+                        </button>
+                        <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Kirim</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                        <button
+                            onClick={() => {
+                                resetForm();
+                                setShowAddModal(true);
+                            }}
+                            className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95"
+                        >
+                            <TrendingDown className="w-6 h-6 text-black -rotate-45" />
+                        </button>
+                        <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Chiqim</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2">
+                        <button
+                            onClick={() => {
+                                resetDebtForm();
+                                setShowDebtModal(true);
+                            }}
+                            className="w-14 h-14 bg-[#D4FF00] rounded-full flex items-center justify-center shadow-lg shadow-[#D4FF00]/20 hover:scale-110 transition-transform active:scale-95"
+                        >
+                            <CreditCard className="w-6 h-6 text-black" />
+                        </button>
+                        <span className="text-xs font-bold text-gray-900 dark:text-gray-300">Qarz</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-6 space-y-8">
+                {/* Tablar - Desktop optimized */}
+                <div className="bg-white dark:bg-gray-800 rounded-[24px] p-1.5 shadow-sm border border-gray-100 dark:border-gray-700 sticky top-0 z-30 backdrop-blur-md bg-white/80">
+                    <div className="flex space-x-1">
+                        <button
+                            onClick={() => setActiveTab('transactions')}
+                            className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'transactions' ? 'bg-[#6366F1] text-white shadow-lg shadow-indigo-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
+                        >
+                            <div className="flex items-center justify-center gap-2">
+                                <Wallet className="w-5 h-5" />
+                                <span>Tranzaksiyalar</span>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('debts')}
+                            className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'debts' ? 'bg-[#EC4899] text-white shadow-lg shadow-pink-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
+                        >
+                            <div className="flex items-center justify-center gap-2">
+                                <CreditCard className="w-5 h-5" />
+                                <span>Qarzlar</span>
+                            </div>
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('analytics')}
+                            className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'analytics' ? 'bg-[#8B5CF6] text-white shadow-lg shadow-violet-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
+                        >
+                            <div className="flex items-center justify-center gap-2">
+                                <Brain className="w-5 h-5" />
+                                <span>Insights</span>
+                            </div>
                         </button>
                     </div>
                 </div>
-
-                {/* Desktop: Side by side layout, Mobile: Stacked */}
-                <div className="lg:grid lg:grid-cols-3 lg:gap-6">
-                    {/* Balans - Left side on desktop */}
-                    <div className="lg:col-span-1 mb-4 lg:mb-0">
-                        <div className="h-full flex flex-col justify-center py-4 lg:py-6 px-4 lg:px-6 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl lg:rounded-2xl shadow-lg">
-                            <p className="text-white/80 text-xs lg:text-sm mb-1 lg:mb-2">{t('finance.totalBalance')}</p>
-                            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
-                                {showBalance ? formatCurrency(statistics.balance) : '••••••••'}
-                            </p>
-                            <p className="text-white/60 text-xs lg:text-sm mt-2 hidden lg:block">
-                                {new Date().toLocaleDateString('uz-UZ', { month: 'long', year: 'numeric' })}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Stats Grid - Right side on desktop */}
-                    <div className="lg:col-span-2">
-                        <div className="grid grid-cols-3 gap-2 lg:gap-4 mb-4 lg:mb-0 lg:h-full">
-                            <div className="flex flex-col justify-center text-center p-3 lg:p-5 bg-green-50 dark:bg-green-900/20 rounded-xl lg:rounded-2xl border border-green-100 dark:border-green-800/30">
-                                <div className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 bg-green-100 dark:bg-green-800/30 rounded-xl lg:rounded-2xl flex items-center justify-center">
-                                    <TrendingUp className="w-4 h-4 lg:w-6 lg:h-6 text-green-500" />
-                                </div>
-                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">{t('finance.income')}</p>
-                                <p className="text-sm sm:text-base lg:text-xl font-bold text-green-600 dark:text-green-400">
-                                    +{formatShortCurrency(statistics.totalIncome)}
-                                </p>
-                            </div>
-                            <div className="flex flex-col justify-center text-center p-3 lg:p-5 bg-red-50 dark:bg-red-900/20 rounded-xl lg:rounded-2xl border border-red-100 dark:border-red-800/30">
-                                <div className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 bg-red-100 dark:bg-red-800/30 rounded-xl lg:rounded-2xl flex items-center justify-center">
-                                    <TrendingDown className="w-4 h-4 lg:w-6 lg:h-6 text-red-500" />
-                                </div>
-                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">{t('finance.expense')}</p>
-                                <p className="text-sm sm:text-base lg:text-xl font-bold text-red-600 dark:text-red-400">
-                                    -{formatShortCurrency(statistics.totalExpense)}
-                                </p>
-                            </div>
-                            <div className="flex flex-col justify-center text-center p-3 lg:p-5 bg-purple-50 dark:bg-purple-900/20 rounded-xl lg:rounded-2xl border border-purple-100 dark:border-purple-800/30">
-                                <div className="w-8 h-8 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 bg-purple-100 dark:bg-purple-800/30 rounded-xl lg:rounded-2xl flex items-center justify-center">
-                                    <CreditCard className="w-4 h-4 lg:w-6 lg:h-6 text-purple-500" />
-                                </div>
-                                <p className="text-xs lg:text-sm text-gray-500 dark:text-gray-400 mb-1">{t('finance.debt')}</p>
-                                <p className="text-sm sm:text-base lg:text-xl font-bold text-purple-600 dark:text-purple-400">
-                                    {formatShortCurrency(Math.abs(debtStatistics.netDebt))}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Add Button - Full width on mobile, inline on desktop */}
-                <div className="mt-4 lg:mt-6">
-                    <button
-                        onClick={() => {
-                            if (activeTab === 'transactions') {
-                                resetForm();
-                                setShowAddModal(true);
-                            } else {
-                                resetDebtForm();
-                                setShowDebtModal(true);
-                            }
-                        }}
-                        className="w-full lg:w-auto bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 lg:px-8 py-3 lg:py-3.5 rounded-xl lg:rounded-2xl font-medium transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                    >
-                        <Plus className="w-5 h-5" />
-                        {activeTab === 'transactions' ? t('finance.addTransaction') : t('finance.addDebt')}
-                    </button>
-                </div>
-            </div>
-
-
-            {/* Tablar - Desktop optimized */}
-            <div className="bg-white dark:bg-gray-800 rounded-[24px] p-1.5 shadow-sm border border-gray-100 dark:border-gray-700 mb-6 sticky top-0 z-30 backdrop-blur-md bg-white/80">
-                <div className="flex space-x-1">
-                    <button
-                        onClick={() => setActiveTab('transactions')}
-                        className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'transactions' ? 'bg-[#6366F1] text-white shadow-lg shadow-indigo-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
-                    >
-                        <div className="flex items-center justify-center gap-2">
-                            <Wallet className="w-5 h-5" />
-                            <span>Tranzaksiyalar</span>
-                        </div>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('debts')}
-                        className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'debts' ? 'bg-[#EC4899] text-white shadow-lg shadow-pink-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
-                    >
-                        <div className="flex items-center justify-center gap-2">
-                            <CreditCard className="w-5 h-5" />
-                            <span>Qarzlar</span>
-                        </div>
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('analytics')}
-                        className={`flex-1 py-3 px-4 rounded-[20px] font-bold transition-all text-sm ${activeTab === 'analytics' ? 'bg-[#8B5CF6] text-white shadow-lg shadow-violet-500/30' : 'text-gray-400 hover:bg-gray-50'}`}
-                    >
-                        <div className="flex items-center justify-center gap-2">
-                            <Brain className="w-5 h-5" />
-                            <span>Insights</span>
-                        </div>
-                    </button>
-                </div>
-            </div>
 
 
 
@@ -1672,6 +1667,7 @@ const PaymentModal = ({ selectedDebt, paymentAmount, setPaymentAmount, handlePay
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </div>

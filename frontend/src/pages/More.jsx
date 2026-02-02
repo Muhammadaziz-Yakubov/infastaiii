@@ -19,7 +19,9 @@ import {
   Archive,
   Crown,
   Bell,
-  FileText
+  FileText,
+  Users,
+  Trophy
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,11 +36,6 @@ const More = () => {
     setTimeout(() => setIsLoading(false), 1000);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/auth');
-  };
-
   const handleNavigation = (path) => {
     navigate(path);
   };
@@ -47,15 +44,6 @@ const More = () => {
     {
       title: 'Sahifalar',
       items: [
-        {
-          name: 'Oila',
-          description: 'Oilavi boshqaruvi va a\'zolar',
-          icon: Users,
-          href: '/family',
-          color: 'bg-gradient-to-br from-pink-400 to-rose-500',
-          badge: 'Yangi',
-          disabled: false
-        },
         {
           name: 'Challengelar',
           description: 'Do\'stlar bilan birga odat shakllantiring',
@@ -190,33 +178,6 @@ const More = () => {
           </div>
         </div>
       ))}
-
-      {/* Theme Toggle */}
-      <div className="bg-gradient-to-br from-white via-sky-50/50 to-blue-50/30 dark:from-gray-800 dark:via-sky-900/30 dark:to-blue-900/20 rounded-2xl border border-sky-200/50 dark:border-sky-700/50 p-4 mb-6 shadow-sm backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/25">
-              <Palette className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="font-medium text-gray-900 dark:text-white">Qorong'u rejim</p>
-              <p className="text-sm text-sky-600 dark:text-sky-400">Tungi ko'rinish</p>
-            </div>
-          </div>
-          <button
-            onClick={toggleTheme}
-            className={`relative w-14 h-8 rounded-full transition-all duration-300 ${
-              isDark ? 'bg-gradient-to-r from-sky-400 to-blue-500' : 'bg-gray-300'
-            }`}
-          >
-            <div
-              className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 ${
-                isDark ? 'left-7' : 'left-1'
-              }`}
-            />
-          </button>
-        </div>
-      </div>
 
       {/* Logout Button */}
       <button
